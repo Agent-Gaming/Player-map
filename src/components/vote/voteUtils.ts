@@ -53,8 +53,10 @@ const getFromCache = <T>(cache: Map<string, CacheEntry<T>>, key: string): T | nu
 const setCache = <T>(cache: Map<string, CacheEntry<T>>, key: string, data: T, ttl: number): void => {
   // Clean up old entries if cache is too large
   if (cache.size >= MAX_CACHE_SIZE) {
-    const oldestKey = cache.keys().next().value;
-    cache.delete(oldestKey);
+    const iter = cache.keys().next();
+    if (!iter.done) {
+      cache.delete(iter.value);
+    }
   }
   
   cache.set(key, {

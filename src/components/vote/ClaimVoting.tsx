@@ -207,6 +207,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
           walletAddress={walletAddress}
           wagmiConfig={wagmiConfig}
           walletHooks={walletHooks}
+          constants={constants}
         />
       </div>
     );

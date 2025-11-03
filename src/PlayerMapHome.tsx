@@ -35,62 +35,19 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   };
 
   return (
-    <div
-      style={{
-        width: "80%",
-        display: "flex",
-        flexDirection: "column",
-        margin: "auto",
-        padding: "20px",
-        alignItems: "center",
-      }}
-    >
-      {/* Lignes horizontales en haut et bas */}
-      <div
-        style={{
-          position: "absolute",
-          top: "0",
-          left: "10%",
-          width: "80%",
-          height: "20px",
-          backgroundColor: "#FFD32A",
-          borderTopLeftRadius: "20px",
-          borderTopRightRadius: "20px",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: "0",
-          left: "10%",
-          width: "80%",
-          height: "20px",
-          backgroundColor: "#FFD32A",
-          borderBottomLeftRadius: "20px",
-          borderBottomRightRadius: "20px",
-        }}
-      />
-
+    <div style={{width: "75%", display: "flex", flexDirection: "column", margin: "auto", alignItems: "center", textAlign: "center", paddingTop: "50px" }}>
+      <div style={{top: "0", width: "100%", height: "25px", backgroundColor: "#FFD32A", borderTopLeftRadius: "20px", borderTopRightRadius: "20px" }}/>
       <img
         src={IntuitionLogo}
         alt="Intuition Logo"
-        style={{ width: "350px", marginTop: "20px" }}
+        style={{ width: "350px", marginTop: "40px" }}
         className="mx-auto block"
       />
-      <h2
-        style={{
-          fontSize: "1.0em",
-          margin: "0 0 20px 0",
-          color: "#FFD32A",
-          fontWeight: "bold",
-          textAlign: "center",
-        }}
-        className="w-full text-center"
-      >
+      <h2 style={{fontSize: "1.0em", margin: "0 0 20px 0", color: "#FFD32A", fontWeight: "bold" }}>
         BOSS FIGHTERS COMMUNITY PLAYER MAP
       </h2>
 
-      <div className="flex flex-col gap-2 w-5/6 mx-auto text-base text-left">
+      <div style={{ textAlign: "left", maxWidth: "80%" }}>
         <p>
           At first, there was nothing. And then, suddenly, the whole community
           appeared !
@@ -117,12 +74,14 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       </div>
 
       <div
-        className="flex flex-col gap-2 w-5/6 mx-auto text-base text-left border-2 rounded-xl p-4 my-6"
         style={{
+          width: "80%",
           borderColor: "#FFD32A",
           borderStyle: "solid",
           borderWidth: 2,
-          borderRadius: 10,
+          borderRadius: 20,
+          marginTop: "10px",
+          marginBottom: "10px"
         }}
       >
         <p>
@@ -139,12 +98,12 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         <p>This keeps our attestations tidy !</p>
       </div>
 
-      <div className="flex flex-col items-center gap-2 w-5/6 mx-auto text-base">
+      <div style={{width:"80%", margin: "10px" }}>
         <p>
           You need to connect your{" "}
-          <span style={{ color: "#FFD32A" }}>wallet (ETH - Base network)</span>{" "}
+          <span style={{ color: "#FFD32A" }}>wallet (Intuition network)</span>{" "}
           and pay{" "}
-          <span style={{ color: "#FFD32A" }}>0.0001 ETH (less than $0.40)</span>{" "}
+          <span style={{ color: "#FFD32A" }}>0.05 $TRUST (less than $0.49)</span>{" "}
           to create your player !
         </p>
 
@@ -190,6 +149,9 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
           CREATE YOUR PLAYER
         </button>
       </div>
+
+      <div
+        style={{bottom: "0", width: "100%", height: "25px", backgroundColor: "#FFD32A", borderBottomLeftRadius: "20px", borderBottomRightRadius: "20px" }}/>
     </div>
   );
 };

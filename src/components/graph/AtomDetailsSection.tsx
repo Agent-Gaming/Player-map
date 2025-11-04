@@ -30,29 +30,46 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   return (
     <>
       {/* Atom header */}
-      <div className="flex flex-wrap items-center gap-4">
-        <div className="w-1/6 h-20">
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: "16px",
+        }}
+      >
+        <div
+          style={{
+            width: "100px",
+            height: "100px",
+            overflow: "hidden",
+            borderRadius: "16px",
+          }}
+        >
           {imageUrl ? (
             <img
               src={imageUrl}
               alt={atomDetails.label || "Atom image"}
-              style={{ 
-                width: "20%",
-                height: "20%",
-                objectFit: "cover",
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
                 borderRadius: "16px",
-                display: "block"
+                display: "block",
               }}
             />
           ) : (
-            <div style={{ 
-              width: "20%",
-              height: "20%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: "16px"
-            }}>
+            <div
+              style={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: "16px",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              }}
+            >
               No image
             </div>
           )}

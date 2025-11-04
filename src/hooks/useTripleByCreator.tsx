@@ -12,6 +12,7 @@ export interface Triple {
     label: string;
     type: string;
     creator_id: string;
+    image?: string;
     value?: {
       person?: {
         description: string;
@@ -57,7 +58,7 @@ export const fetchTriplesByCreator = async (
   const url = API_URLS[network];
   
   // Construire la condition where pour filtrer par creator_id, predicate_id et object_id
-  const variables = { 
+  const variables = {
     where: {
       subject: { 
         creator_id: { "_eq": creatorId }
@@ -84,6 +85,7 @@ export const fetchTriplesByCreator = async (
           label
           type
           creator_id
+          image
           value {
             person {
               description

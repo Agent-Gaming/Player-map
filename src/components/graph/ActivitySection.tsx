@@ -35,7 +35,7 @@ const ActivitySection: React.FC<ActivitySectionProps> = ({ accountId }) => {
 
   if (loading) {
     return (
-      <div style={{ marginTop: '10px' }}>
+      <div>
         <h3>Activity History</h3>
         <p>Loading activities...</p>
       </div>
@@ -43,7 +43,7 @@ const ActivitySection: React.FC<ActivitySectionProps> = ({ accountId }) => {
   }
 
   return (
-    <div style={{ marginTop: '20px' }}>
+    <div>
       <button
         onClick={() => setIsModalOpen(true)}
         style={{

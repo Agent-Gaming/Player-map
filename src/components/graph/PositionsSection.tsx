@@ -49,7 +49,7 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({ accountId, walletCo
 
   if (loading) {
     return (
-      <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+      <div>
         <h3>My Positions</h3>
         <p>Loading positions...</p>
       </div>
@@ -57,7 +57,7 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({ accountId, walletCo
   }
 
   return (
-    <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+    <div>
       <button
         onClick={() => setIsModalOpen(true)}
         style={{

@@ -20,10 +20,10 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <div style={{ marginTop: '10px' }}>
-      <h3>{title} ({activities.length})</h3>
+    <div style={{width: "100%", display: 'flex', flexWrap: 'wrap' }}>
+      <h3 style={{ width:'100%', margin:'0px' }}>{title} ({activities.length})</h3>
       {activities.length > 0 ? (
-        <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+        <div style={{ width: '100%', overflowY: 'auto' }}>
           {activities.slice(0, 3).map((claim) => (
             <div
               key={claim.term_id}

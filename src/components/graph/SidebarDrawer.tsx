@@ -15,11 +15,11 @@ export default function SidebarDrawer({
     <div
       style={{
         position: "absolute",
-        top: "25%",
+        top: "18%",
         left: "5px",
-        height: "70%",
+        height: "68%",
         width: open ? "28.67vw" : 0,
-        minWidth: open ? "350px" : 0,
+        minWidth: open ? "490px" : 0,
         backgroundColor: "rgba(0, 0, 0, 0.85)",
         borderRadius: 18,
         transition: "width 0.35s cubic-bezier(0.4, 1.3, 0.5, 1)",
@@ -36,10 +36,11 @@ export default function SidebarDrawer({
               background: "none",
               border: "none",
               color: "#ffd32a",
-              fontSize: 32,
+              fontSize: 50,
               position: "absolute",
-              top: 10,
-              right: 18,
+              padding: 0,
+              top: 5,
+              right: 15,
               cursor: "pointer",
               zIndex: 1302,
               transition: "color 0.2s",
@@ -50,6 +51,8 @@ export default function SidebarDrawer({
           </button>
           <div
             style={{
+              display: "flex", 
+              flexWrap: "wrap", 
               padding: "24px",
               overflowY: "auto",
               height: "100%",

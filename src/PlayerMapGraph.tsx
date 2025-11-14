@@ -338,15 +338,23 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
 
               {/* Afficher les autres sections seulement si c'est mon atom */}
               {isMyNode && (
-                <div style={{ width: '100%', display: 'flex', justifyContent: 'center', gap: '16px' }}>
-                  <div style={{ width: '48%' }}>
+                <div
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "16px",
+                  }}
+                >
+                  <div style={{ width: "48%" }}>
                     <PositionsSection
                       accountId={walletAddress || ""}
                       walletConnected={walletConnected}
                       walletAddress={walletAddress}
+                      publicClient={wagmiConfig?.publicClient}
                     />
                   </div>
-                  <div style={{ width: '48%' }}>
+                  <div style={{ width: "48%" }}>
                     <ActivitySection accountId={walletAddress || ""} />
                   </div>
                 </div>

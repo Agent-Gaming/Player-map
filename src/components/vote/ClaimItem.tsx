@@ -174,7 +174,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             borderRadius: "4px",
           }}
         >
-          {costInEth.toFixed(2)} tTRUST
+          {costInEth.toFixed(2)} TRUST
         </div>
       )}
 

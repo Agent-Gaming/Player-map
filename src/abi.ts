@@ -1,6 +1,6 @@
 // Définir des constantes pour le contrat
 export const ATOM_CONTRACT_ADDRESS = import.meta.env.VITE_ATOM_CONTRACT_ADDRESS;
-export const ATOM_CONTRACT_CHAIN_ID = Number(import.meta.env.VITE_ATOM_CONTRACT_CHAIN_ID); // Base Sepolia chain ID
+export const ATOM_CONTRACT_CHAIN_ID = Number(import.meta.env.VITE_ATOM_CONTRACT_CHAIN_ID);
 export const VALUE_PER_ATOM = BigInt(import.meta.env.VITE_VALUE_PER_ATOM); // Valeur pour un atome, à ajuster selon votre contrat
 export const VALUE_PER_TRIPLE = BigInt(import.meta.env.VITE_VALUE_PER_TRIPLE);
 

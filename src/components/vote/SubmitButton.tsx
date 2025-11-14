@@ -44,7 +44,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       >
         {isSubmitting || isDepositLoading
           ? "Processing..." 
-          : totalUnits > 0 ? `Submit votes (${calculateEthCost(totalUnits)} tTRUST)` : "Submit votes"}
+          : totalUnits > 0 ? `Submit votes (${calculateEthCost(totalUnits)} TRUST)` : "Submit votes"}
       </button>
     </div>
   );

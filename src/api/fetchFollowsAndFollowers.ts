@@ -32,12 +32,7 @@ export const fetchFollowsAndFollowers = async (
               }
             ) {
               term_id
-              object {
-                term_id
-                label
-                image
-                creator_id
-              }
+              object_id
             }
             followers: triples(
               where: {
@@ -48,12 +43,7 @@ export const fetchFollowsAndFollowers = async (
               }
             ) {
               term_id
-              creator_id
-              subject {
-                term_id
-                label
-                image
-              }
+              subject_id
             }
           }
         `,
@@ -62,15 +52,47 @@ export const fetchFollowsAndFollowers = async (
     });
 
     const data = await response.json();
+    
+    // Fetch atom details for objects (follows) and subjects (followers)
+    const objectIds = [...new Set((data.data?.follows || []).map((f: any) => f.object_id).filter(Boolean))];
+    const subjectIds = [...new Set((data.data?.followers || []).map((f: any) => f.subject_id).filter(Boolean))];
+    const allAtomIds = [...new Set([...objectIds, ...subjectIds])];
+
+    let atomsMap = new Map();
+    if (allAtomIds.length > 0) {
+      const atomsResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            query GetAtoms($termIds: [String!]!) {
+              atoms(where: { term_id: { _in: $termIds } }) {
+                term_id
+                label
+                image
+                creator_id
+              }
+            }
+          `,
+          variables: { termIds: allAtomIds }
+        })
+      });
+
+      const atomsData = await atomsResponse.json();
+      atomsMap = new Map(
+        (atomsData.data?.atoms || []).map((atom: any) => [atom.term_id, atom])
+      );
+    }
+
     return {
-      follows: data.data?.follows?.map((f: any) => ({
+      follows: (data.data?.follows || []).map((f: any) => ({
         ...f,
-        object: { ...f.object, id: f.object.term_id }
-      })) || [],
-      followers: data.data?.followers?.map((f: any) => ({
+        object: atomsMap.get(f.object_id) || { term_id: f.object_id, label: '', image: null, creator_id: '' }
+      })),
+      followers: (data.data?.followers || []).map((f: any) => ({
         ...f,
-        subject: { ...f.subject, id: f.subject.term_id }
-      })) || []
+        subject: atomsMap.get(f.subject_id) || { term_id: f.subject_id, label: '', image: null }
+      }))
     };
   } catch (error) {
     console.error('Error fetching follows and followers:', error);

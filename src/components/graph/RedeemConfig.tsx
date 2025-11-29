@@ -221,10 +221,10 @@ const RedeemConfig: React.FC<RedeemConfigProps> = ({
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "flex-end",
-        gap: "6px",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "flex-end",
+      gap: "6px",
         minWidth: "200px",
       }}
     >
@@ -265,7 +265,7 @@ const RedeemConfig: React.FC<RedeemConfigProps> = ({
         <p style={{ color: "#9ca3af", fontSize: "10px" }}>
           Max: {isLoadingMaxTrust ? "Loading..." : maxTrustAmount || "N/A"}
         </p>
-
+        
         <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
           {[
             { label: "25%", multiplier: 0.25 },

@@ -36,46 +36,12 @@ export const useCheckSpecificTriplePosition = ({
             body: JSON.stringify({
               query: `
                 query GetTripleUserPosition($tripleId: String!, $walletAddress: String!) {
-                  # Get the triple with vault information
                   triple(term_id: $tripleId) {
                     term_id
-                    subject {
-                      label
-                    }
-                    predicate {
-                      label
-                    }
-                    object {
-                      label
-                    }
-                    term_id
+                    subject_id
+                    predicate_id
+                    object_id
                     counter_term_id
-                    
-                    # Get vault positions (user only)
-                    term {
-                      id
-                      positions_aggregate(where: {account: {id: {_ilike: $walletAddress}}, shares: {_gt: 0}}) {
-                        aggregate {
-                          count
-                        }
-                        nodes {
-                          id
-                        }
-                      }
-                    }
-                    
-                    # Get counter vault positions (user only)
-                    counter_term {
-                      id
-                      positions_aggregate(where: {account: {id: {_ilike: $walletAddress}}, shares: {_gt: 0}}) {
-                        aggregate {
-                          count
-                        }
-                        nodes {
-                          id
-                        }
-                      }
-                    }
                   }
                 }
               `,
@@ -97,19 +63,66 @@ export const useCheckSpecificTriplePosition = ({
             throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
           }
 
-          // Check if user has a position in any of the queried places
           const tripleInfo = result.data?.triple;
-          if (!tripleInfo) {
-          setHasPosition(false);
-          setIsFor(null);
-          setLoading(false);
-          return;
+          if (!tripleInfo || !tripleInfo.term_id) {
+            setHasPosition(false);
+            setIsFor(null);
+            setLoading(false);
+            return;
           }
 
-          const hasTermPositions = tripleInfo.term?.positions_aggregate?.aggregate?.count > 0 || tripleInfo.term?.positions_aggregate?.nodes?.length > 0;
-          const hasCounterTermPositions = tripleInfo.counter_term?.positions_aggregate?.aggregate?.count > 0 || tripleInfo.counter_term?.positions_aggregate?.nodes?.length > 0;
-        setTermPositionCount(tripleInfo.term?.positions_aggregate?.aggregate?.count || 0);
-        setCounterTermPositionCount(tripleInfo.counter_term?.positions_aggregate?.aggregate?.count || 0);
+          // Fetch term and counter_term positions separately
+          const termId = tripleInfo.term_id;
+          const counterTermId = tripleInfo.counter_term_id;
+
+          const [termResponse, counterTermResponse] = await Promise.all([
+            termId ? fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query: `
+                  query GetTermPositions($termId: String!, $walletAddress: String!) {
+                    positions(where: { term_id: { _eq: $termId }, account_id: { _ilike: $walletAddress }, shares: { _gt: 0 } }) {
+                      id
+                    }
+                  }
+                `,
+                variables: {
+                  termId,
+                  walletAddress: walletAddress.toLowerCase()
+                },
+              }),
+            }) : Promise.resolve(null),
+            counterTermId ? fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query: `
+                  query GetCounterTermPositions($termId: String!, $walletAddress: String!) {
+                    positions(where: { term_id: { _eq: $termId }, account_id: { _ilike: $walletAddress }, shares: { _gt: 0 } }) {
+                      id
+                    }
+                  }
+                `,
+                variables: {
+                  termId: counterTermId,
+                  walletAddress: walletAddress.toLowerCase()
+                },
+              }),
+            }) : Promise.resolve(null),
+          ]);
+
+          const termData = termResponse ? await termResponse.json() : { data: { positions: [] } };
+          const counterTermData = counterTermResponse ? await counterTermResponse.json() : { data: { positions: [] } };
+
+          const termPositionsCount = termData.data?.positions?.length || 0;
+          const counterTermPositionsCount = counterTermData.data?.positions?.length || 0;
+
+          const hasTermPositions = termPositionsCount > 0;
+          const hasCounterTermPositions = counterTermPositionsCount > 0;
+          
+          setTermPositionCount(termPositionsCount);
+          setCounterTermPositionCount(counterTermPositionsCount);
 
           // Set states based on position findings
           const foundPosition = hasTermPositions || hasCounterTermPositions;

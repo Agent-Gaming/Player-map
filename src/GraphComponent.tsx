@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { Network, API_URLS } from "./hooks/useAtomData";
 import { useTripleByCreator } from "./hooks/useTripleByCreator";
 import { fetchPositions } from "./api/fetchPositions";
@@ -9,7 +15,10 @@ import { PLAYER_TRIPLE_TYPES } from "./utils/constants";
 import { ConnectWalletModal } from "./components/modals";
 import VotingModal from "./components/vote/VotingModal";
 import { PlayerMapQueryClientProvider } from "./contexts/QueryClientContext";
-import { PlayerMapConfig, DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
+import {
+  PlayerMapConfig,
+  DefaultPlayerMapConstants,
+} from "./types/PlayerMapConfig";
 import { usePlayerConstants } from "./hooks/usePlayerConstants";
 import initGraphql from "./config/graphql";
 
@@ -45,16 +54,16 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
 
   // État pour suivre le réseau actuel (par défaut testnet)
   const [network, setNetwork] = useState<Network>(Network.MAINNET);
-  
+
   // État local pour le formulaire d'inscription
   const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
-  
+
   // État local pour la modal de vote
   const [isVotingOpen, setIsVotingOpen] = useState(false);
-  
+
   // État pour la détection du wallet (plus fiable)
   const [isWalletReady, setIsWalletReady] = useState(false);
-  
+
   // État pour les positions actives
   const [activePositions, setActivePositions] = useState<any[]>([]);
   const [positionsLoading, setPositionsLoading] = useState(false);
@@ -76,7 +85,12 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
     loading: tripleLoading,
     error: tripleError,
     triples: playerTriplesRaw,
-  } = useTripleByCreator(lowerCaseAddress, constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId, constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId, network);
+  } = useTripleByCreator(
+    lowerCaseAddress,
+    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId,
+    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId,
+    network
+  );
 
   // Mémoriser playerTriples avec une clé stable basée sur term_id pour éviter les re-renders inutiles
   const playerTriples = useMemo(() => {
@@ -92,12 +106,21 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
     if (!playerTriples || playerTriples.length === 0) {
       return "";
     }
-    const playerGameTriples = playerTriples.filter(triple => 
-      triple.predicate_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId
-      && triple.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
+    const playerGameTriples = playerTriples.filter(
+      (triple) =>
+        triple.predicate_id ===
+          constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
+        triple.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
     );
-    return playerGameTriples.map(t => t.term_id).sort().join(",");
-  }, [playerTriples, constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId, constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId]);
+    return playerGameTriples
+      .map((t) => t.term_id)
+      .sort()
+      .join(",");
+  }, [
+    playerTriples,
+    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId,
+    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId,
+  ]);
 
   // Récupérer les positions actives quand le wallet est connecté
   useEffect(() => {
@@ -118,7 +141,9 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
       const now = Date.now();
       const timeSinceLast429 = now - last429ErrorRef.current;
       if (timeSinceLast429 < 30000) {
-        console.warn('[GraphComponent] Skip fetch: Too many requests recently (429 error)');
+        console.warn(
+          "[GraphComponent] Skip fetch: Too many requests recently (429 error)"
+        );
         return;
       }
 
@@ -136,7 +161,7 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
       // Guard 6: Éviter les fetches trop fréquents (débounce)
       const timeSinceLastFetch = now - lastFetchAttemptRef.current;
       if (timeSinceLastFetch < 1000) {
-        console.warn('[GraphComponent] Skip fetch: Too frequent requests');
+        console.warn("[GraphComponent] Skip fetch: Too frequent requests");
         return;
       }
 
@@ -147,24 +172,29 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
 
       try {
         // Filtrer les triples pour ne garder que ceux avec "is player of" + "Boss Fighters"
-        const playerGameTriples = playerTriples.filter(triple => 
-          triple.predicate_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId
-          && triple.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
+        const playerGameTriples = playerTriples.filter(
+          (triple) =>
+            triple.predicate_id ===
+              constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
+            triple.object_id ===
+              constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
         );
-        const playerTripleTermIds = playerGameTriples.map(triple => triple.term_id);
-        
+        const playerTripleTermIds = playerGameTriples.map(
+          (triple) => triple.term_id
+        );
+
         // Si pas de triples joueur, pas besoin de chercher les positions
         if (playerTripleTermIds.length === 0) {
           setActivePositions([]);
           return;
         }
-        
+
         // Faire une requête GraphQL filtrée directement sur les term_id des triples joueur
         const apiUrl = API_URLS[network];
-        
+
         const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query: `
               query GetPlayerPositions($accountId: String!, $termIds: [String!]!) {
@@ -176,87 +206,167 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
                   id
                   shares
                   curve_id
-                  account {
-                    id
-                    label
-                    image
-                    atom_id
-                    type
-                  }
-                  term {
-                    id
-                    total_market_cap
-                    total_assets
-                    atom {
-                      label
-                    }
-                    triple {
-                      subject {
-                        label
-                      }
-                      predicate {
-                        label
-                      }
-                      object {
-                        label
-                      }
-                      counter_term {
-                        id
-                        total_market_cap
-                        total_assets
-                        atom {
-                          label
-                        }
-                        triple {
-                          subject {
-                            label
-                          }
-                          predicate {
-                            label
-                          }
-                          object {
-                            label
-                          }
-                        }
-                      }
-                    }
-                  }
-                  vault {
-                    deposits {
-                      vault_type
-                    }
-                    redemptions {
-                      vault_type
-                    }
-                  }
+                  account_id
+                  term_id
                 }
               }
             `,
-            variables: { 
+            variables: {
               accountId: walletAddress,
-              termIds: playerTripleTermIds
-            }
-          })
+              termIds: playerTripleTermIds,
+            },
+          }),
         });
-        
+
         const result = await response.json();
-        
+
         if (result.errors) {
-          console.error('[GraphComponent] GraphQL errors:', result.errors);
-          throw new Error(result.errors[0]?.message || 'GraphQL error');
+          console.error("[GraphComponent] GraphQL errors:", result.errors);
+          throw new Error(result.errors[0]?.message || "GraphQL error");
         }
-        
+
         const gamePositions = result.data?.positions || [];
-        setActivePositions(gamePositions);
-      } catch (error: any) {
-        console.error('Error fetching positions:', error);
-        
-        // Si c'est une erreur 429, enregistrer le timestamp et ne pas re-fetch pendant 30 secondes
-        if (error?.message?.includes('429') || error?.status === 429 || error?.response?.status === 429) {
-          last429ErrorRef.current = Date.now();
-          console.warn('[GraphComponent] Rate limit hit (429), will retry after 30 seconds');
+
+        // Enrich positions with term details
+        if (gamePositions.length > 0) {
+          const termIds = [
+            ...new Set(
+              gamePositions.map((p: any) => p.term_id).filter(Boolean)
+            ),
+          ];
+
+          if (termIds.length > 0) {
+            const termsResponse = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                query: `
+                  query GetTerms($termIds: [String!]!) {
+                    terms(where: { id: { _in: $termIds } }) {
+                      id
+                      total_market_cap
+                      total_assets
+                      atom_id
+                      triple_id
+                    }
+                  }
+                `,
+                variables: { termIds },
+              }),
+            });
+
+            const termsResult = await termsResponse.json();
+
+            if (!termsResult.errors && termsResult.data?.terms) {
+              const terms = termsResult.data.terms;
+              const atomIds = [
+                ...new Set(terms.map((t: any) => t.atom_id).filter(Boolean)),
+              ];
+              const tripleIds = [
+                ...new Set(terms.map((t: any) => t.triple_id).filter(Boolean)),
+              ];
+
+              // Fetch atoms and triples separately
+              const [atomsResponse, triplesResponse] = await Promise.all([
+                atomIds.length > 0
+                  ? fetch(apiUrl, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        query: `
+                      query GetAtoms($atomIds: [String!]!) {
+                        atoms(where: { term_id: { _in: $atomIds } }) {
+                          term_id
+                          label
+                        }
+                      }
+                    `,
+                        variables: { atomIds },
+                      }),
+                    })
+                  : Promise.resolve(null),
+                tripleIds.length > 0
+                  ? fetch(apiUrl, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        query: `
+                      query GetTriples($tripleIds: [String!]!) {
+                        triples(where: { term_id: { _in: $tripleIds } }) {
+                          term_id
+                          subject_id
+                          predicate_id
+                          object_id
+                        }
+                      }
+                    `,
+                        variables: { tripleIds },
+                      }),
+                    })
+                  : Promise.resolve(null),
+              ]);
+
+              const atomsData = atomsResponse
+                ? await atomsResponse.json()
+                : { data: { atoms: [] } };
+              const triplesData = triplesResponse
+                ? await triplesResponse.json()
+                : { data: { triples: [] } };
+
+              const atomsMap = new Map(
+                (atomsData.data?.atoms || []).map((atom: any) => [
+                  atom.term_id,
+                  atom,
+                ])
+              );
+              const triplesMap = new Map(
+                (triplesData.data?.triples || []).map((triple: any) => [
+                  triple.term_id,
+                  triple,
+                ])
+              );
+
+              const termsMap = new Map(
+                terms.map((term: any) => [
+                  term.id,
+                  {
+                    ...term,
+                    atom: atomsMap.get(term.atom_id) || null,
+                    triple: triplesMap.get(term.triple_id) || null,
+                  },
+                ])
+              );
+
+              const enrichedPositions = gamePositions.map((pos: any) => ({
+                ...pos,
+                term: termsMap.get(pos.term_id) || null,
+              }));
+
+              setActivePositions(enrichedPositions);
+            } else {
+              setActivePositions(gamePositions);
+            }
+          } else {
+            setActivePositions(gamePositions);
+          }
+        } else {
+          setActivePositions(gamePositions);
         }
-        
+      } catch (error: any) {
+        console.error("Error fetching positions:", error);
+
+        // Si c'est une erreur 429, enregistrer le timestamp et ne pas re-fetch pendant 30 secondes
+        if (
+          error?.message?.includes("429") ||
+          error?.status === 429 ||
+          error?.response?.status === 429
+        ) {
+          last429ErrorRef.current = Date.now();
+          console.warn(
+            "[GraphComponent] Rate limit hit (429), will retry after 30 seconds"
+          );
+        }
+
         setPositionsError(error);
         // Ne pas vider activePositions en cas d'erreur pour garder les données précédentes
       } finally {
@@ -266,7 +376,14 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
     };
 
     fetchActivePositions();
-  }, [isWalletReady, walletAddress, network, playerTriplesKey, tripleLoading, tripleError]);
+  }, [
+    isWalletReady,
+    walletAddress,
+    network,
+    playerTriplesKey,
+    tripleLoading,
+    tripleError,
+  ]);
 
   // Vérifie si l'utilisateur a un player atom ET des positions actives
   const hasPlayerAtom = playerTriples.length > 0;
@@ -277,12 +394,11 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
 
   // Fonction pour gérer le clic sur le bouton Create Player dans notre composant
   const handleCreatePlayer = useCallback(() => {
-    
     // Si une fonction externe existe, appeler d'abord cette fonction
     if (onCreatePlayer) {
       onCreatePlayer();
     }
-    
+
     // Dans tous les cas, ouvrir notre formulaire interne
     setIsRegistrationFormOpen(true);
   }, [onCreatePlayer]);
@@ -305,21 +421,23 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
   // Gestion des erreurs de chargement
   if (hasError) {
     return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        height: "100%",
-        flexDirection: "column",
-        gap: "20px"
-      }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          flexDirection: "column",
+          gap: "20px",
+        }}
+      >
         <h2 style={{ color: "red", textAlign: "center" }}>
           Erreur lors du chargement des données
         </h2>
         <p style={{ textAlign: "center", color: "#666" }}>
           {hasError.message || "Une erreur inattendue s'est produite"}
         </p>
-        <button 
+        <button
           onClick={() => window.location.reload()}
           style={{
             padding: "10px 20px",
@@ -327,7 +445,7 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
             color: "#000",
             border: "none",
             borderRadius: "5px",
-            cursor: "pointer"
+            cursor: "pointer",
           }}
         >
           Recharger la page
@@ -339,22 +457,26 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
   // Affichage de chargement
   if (isLoading) {
     return (
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "center", 
-        alignItems: "center", 
-        height: "100%",
-        flexDirection: "column",
-        gap: "20px"
-      }}>
-        <div style={{
-          width: "50px",
-          height: "50px",
-          border: "4px solid #FFD32A",
-          borderTop: "4px solid transparent",
-          borderRadius: "50%",
-          animation: "spin 1s linear infinite"
-        }} />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100%",
+          flexDirection: "column",
+          gap: "20px",
+        }}
+      >
+        <div
+          style={{
+            width: "50px",
+            height: "50px",
+            border: "4px solid #FFD32A",
+            borderTop: "4px solid transparent",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+          }}
+        />
         <p style={{ textAlign: "center", color: "#666" }}>
           Chargement des données du joueur...
         </p>
@@ -374,12 +496,14 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
 
         {/* Affichage du PlayerMapHome, soit blurred en arrière-plan si wallet non connecté, soit normale si wallet connecté mais pas de player confirmé */}
         {(!isWalletReady || (isWalletReady && !hasConfirmedPlayer)) && (
-          <div style={{ 
-            filter: !isWalletReady ? "blur(3px)" : "none", 
-            opacity: !isWalletReady ? 0.7 : 1,
-            position: "relative"
-          }}>
-            <PlayerMapHome 
+          <div
+            style={{
+              filter: !isWalletReady ? "blur(3px)" : "none",
+              opacity: !isWalletReady ? 0.7 : 1,
+              position: "relative",
+            }}
+          >
+            <PlayerMapHome
               walletConnected={isWalletReady}
               walletAddress={walletAddress}
               wagmiConfig={wagmiConfig}
@@ -392,7 +516,7 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
 
         {/* Si wallet connecté et player confirmé (atom + positions actives), afficher le PlayerMapGraph */}
         {isWalletReady && hasConfirmedPlayer && (
-          <PlayerMapGraph 
+          <PlayerMapGraph
             walletAddress={walletAddress}
             walletConnected={walletConnected}
             walletHooks={walletHooks}
@@ -425,8 +549,8 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
             constants={constants} // Passer les constantes directement
           />
         )}
-        </div>
-      </PlayerMapQueryClientProvider>
+      </div>
+    </PlayerMapQueryClientProvider>
   );
 };
 

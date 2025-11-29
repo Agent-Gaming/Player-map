@@ -48,33 +48,12 @@ export const useVoteItemsManagement = ({
         setLoadingPositions(true);
         const apiUrl = API_URLS[network];
         
-        // Utiliser la même logique que useCheckSpecificTriplePosition mais en batch
+        // Fetch triples first
         const query = `
-          query BatchUserPositions($tripleIds: [String!]!, $walletAddress: String!) {
+          query BatchUserPositions($tripleIds: [String!]!) {
             triples(where: { term_id: { _in: $tripleIds } }) {
               term_id
-              term {
-                id
-                positions_aggregate(where: {account: {id: {_ilike: $walletAddress}}, shares: {_gt: 0}}) {
-                  aggregate {
-                    count
-                  }
-                  nodes {
-                    id
-                  }
-                }
-              }
-              counter_term {
-                id
-                positions_aggregate(where: {account: {id: {_ilike: $walletAddress}}, shares: {_gt: 0}}) {
-                  aggregate {
-                    count
-                  }
-                  nodes {
-                    id
-                  }
-                }
-              }
+              counter_term_id
             }
           }
         `;
@@ -85,8 +64,7 @@ export const useVoteItemsManagement = ({
           body: JSON.stringify({
             query,
             variables: {
-              tripleIds: PREDEFINED_CLAIM_IDS.map(id => id.toString()),
-              walletAddress: walletAddress.toLowerCase()
+              tripleIds: PREDEFINED_CLAIM_IDS.map(id => id.toString())
             }
           })
         });
@@ -102,22 +80,69 @@ export const useVoteItemsManagement = ({
           throw new Error(result.errors[0].message);
         }
 
-        // Traiter les résultats avec la même logique que useCheckSpecificTriplePosition
+        // Fetch term positions separately
+        const triples = result.data?.triples || [];
+        const termIds = [...new Set(triples.map((t: any) => t.term_id).filter(Boolean))];
+        const counterTermIds = [...new Set(triples.map((t: any) => t.counter_term_id).filter(Boolean))];
+        const allTermIds = [...new Set([...termIds, ...counterTermIds])];
+
+        let termPositionsMap = new Map();
+        if (allTermIds.length > 0) {
+          const positionsQuery = `
+            query GetTermPositions($termIds: [String!]!, $walletAddress: String!) {
+              positions(where: { term_id: { _in: $termIds }, account_id: { _ilike: $walletAddress }, shares: { _gt: 0 } }) {
+                term_id
+              }
+            }
+          `;
+
+          const positionsResponse = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              query: positionsQuery,
+              variables: {
+                termIds: allTermIds,
+                walletAddress: walletAddress.toLowerCase()
+              }
+            })
+          });
+
+          const positionsResult = await positionsResponse.json();
+          if (!positionsResult.errors) {
+            const positionsByTermId = new Map<string, number>();
+            (positionsResult.data?.positions || []).forEach((pos: any) => {
+              const count = positionsByTermId.get(pos.term_id) || 0;
+              positionsByTermId.set(pos.term_id, count + 1);
+            });
+            positionsByTermId.forEach((count, termId) => {
+              termPositionsMap.set(termId, {
+                term_id: termId,
+                positions_aggregate: {
+                  aggregate: { count }
+                }
+              });
+            });
+          }
+        }
+
+        // Traiter les résultats
         const positionsData: any = { triples: [] };
         
-        (result.data?.triples || []).forEach((triple: any) => {
-          const hasTermPositions = triple.term?.positions_aggregate?.aggregate?.count > 0 || 
-                                   triple.term?.positions_aggregate?.nodes?.length > 0;
-          const hasCounterTermPositions = triple.counter_term?.positions_aggregate?.aggregate?.count > 0 || 
-                                         triple.counter_term?.positions_aggregate?.nodes?.length > 0;
+        triples.forEach((triple: any) => {
+          const termPositions = termPositionsMap.get(triple.term_id);
+          const counterTermPositions = termPositionsMap.get(triple.counter_term_id);
+          
+          const hasTermPositions = (termPositions?.positions_aggregate?.aggregate?.count || 0) > 0;
+          const hasCounterTermPositions = (counterTermPositions?.positions_aggregate?.aggregate?.count || 0) > 0;
           
           positionsData.triples.push({
             term_id: triple.term_id,
             id: triple.term_id,
             hasTermPosition: hasTermPositions,
             hasCounterTermPosition: hasCounterTermPositions,
-            term: triple.term,
-            counter_term: triple.counter_term
+            term: termPositions,
+            counter_term: counterTermPositions
           });
         });
 
@@ -270,37 +295,7 @@ export const useVoteItemsManagement = ({
               subject_id
               predicate_id
               object_id
-              subject {
-                term_id
-                label
-              }
-              predicate {
-                term_id
-                label
-              }
-              object {
-                term_id
-                label
-              }
-              term {
-                total_market_cap
-                total_assets
-                positions_aggregate {
-                  aggregate {
-                    count
-                  }
-                }
-              }
               counter_term_id
-              counter_term {
-                total_market_cap
-                total_assets
-                positions_aggregate {
-                  aggregate {
-                    count
-                  }
-                }
-              }
             }
           }
         `,
@@ -318,22 +313,146 @@ export const useVoteItemsManagement = ({
         throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
       }
 
+      const triples = result.data?.triples || [];
+      
+      // Fetch atoms details
+      const allAtomIds = [...new Set(
+        triples.flatMap((t: any) => [t.subject_id, t.predicate_id, t.object_id]).filter(Boolean)
+      )];
+      
+      let atomsMap = new Map();
+      if (allAtomIds.length > 0) {
+        const atomsResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query GetAtoms($termIds: [String!]!) {
+                atoms(where: { term_id: { _in: $termIds } }) {
+                  term_id
+                  label
+                }
+              }
+            `,
+            variables: { termIds: allAtomIds }
+          })
+        });
+        
+        const atomsData = await atomsResponse.json();
+        if (!atomsData.errors) {
+          atomsMap = new Map(
+            (atomsData.data?.atoms || []).map((atom: any) => [atom.term_id, atom])
+          );
+        }
+      }
+
+      // Fetch terms details
+      const allTermIds: string[] = [...new Set(
+        triples.flatMap((t: any) => [t.term_id, t.counter_term_id]).filter(Boolean) as string[]
+      )];
+      
+      let termsMap = new Map();
+      if (allTermIds.length > 0) {
+        const termsResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query GetTerms($termIds: [String!]!) {
+                terms(where: { id: { _in: $termIds } }) {
+                  id
+                  total_market_cap
+                  total_assets
+                }
+              }
+            `,
+            variables: { termIds: allTermIds }
+          })
+        });
+        
+        const termsData = await termsResponse.json();
+        if (!termsData.errors) {
+          termsMap = new Map(
+            (termsData.data?.terms || []).map((term: any) => [term.id, term])
+          );
+        }
+      }
+
+      // Fetch positions count for all terms in one batch query
+      let positionsCountMap = new Map<string, number>();
+      if (allTermIds.length > 0) {
+        const positionsResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query GetPositionsCount($termIds: [String!]!) {
+                positions_aggregate(where: { term_id: { _in: $termIds }, shares: { _gt: 0 } }) {
+                  aggregate {
+                    count
+                  }
+                }
+              }
+            `,
+            variables: { termIds: allTermIds }
+          })
+        });
+
+        const positionsData = await positionsResponse.json();
+        if (!positionsData.errors && positionsData.data?.positions_aggregate) {
+          // Note: positions_aggregate retourne un seul résultat pour tous les termIds
+          // Il faudrait faire une requête par term_id pour avoir le détail
+          // Pour l'instant, on fait une requête séparée par term_id
+          const positionPromises = allTermIds.map(async (termId: string): Promise<{ termId: string; count: number }> => {
+            const posResponse = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query: `
+                  query GetPositionsCountForTerm($termId: String!) {
+                    positions_aggregate(where: { term_id: { _eq: $termId }, shares: { _gt: 0 } }) {
+                      aggregate {
+                        count
+                      }
+                    }
+                  }
+                `,
+                variables: { termId }
+              })
+            });
+            const posData = await posResponse.json();
+            return {
+              termId,
+              count: posData.data?.positions_aggregate?.aggregate?.count || 0
+            };
+          });
+
+          const positionResults = await Promise.all(positionPromises);
+          positionResults.forEach((result) => {
+            positionsCountMap.set(result.termId, result.count);
+          });
+        }
+      }
+
       const results = new Map<string, TripleDetails | null>();
-      (result.data?.triples || []).forEach((triple: any) => {
-        const termPositionCount = triple.term?.positions_aggregate?.aggregate?.count || 0;
-        const counterTermPositionCount = triple.counter_term?.positions_aggregate?.aggregate?.count || 0;
+      for (const triple of triples) {
+        const termDetails = termsMap.get(triple.term_id);
+        const counterTermDetails = termsMap.get(triple.counter_term_id);
+
+        const termPositionCount = positionsCountMap.get(triple.term_id) || 0;
+        const counterTermPositionCount = positionsCountMap.get(triple.counter_term_id) || 0;
 
         results.set(triple.term_id, {
           id: triple.term_id,
-          subject: triple.subject,
-          predicate: triple.predicate,
-          object: triple.object,
+          subject: atomsMap.get(triple.subject_id) || { term_id: triple.subject_id, label: '' },
+          predicate: atomsMap.get(triple.predicate_id) || { term_id: triple.predicate_id, label: '' },
+          object: atomsMap.get(triple.object_id) || { term_id: triple.object_id, label: '' },
           term_id: triple.term_id,
           counter_term_id: triple.counter_term_id,
           term_position_count: termPositionCount,
           counter_term_position_count: counterTermPositionCount
         });
-      });
+      }
 
       // Mark missing triples as null
       tripleIds.forEach(id => {

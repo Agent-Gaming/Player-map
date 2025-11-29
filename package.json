@@ -1,6 +1,6 @@
 {
   "name": "player-map",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "module",
   "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
@@ -23,7 +23,7 @@
     "@0xintuition/graphql": "1.0.0-alpha.1",
     "@tanstack/react-query": "^5.87.1",
     "axios": "^1.9.0",
-    "playermap_graph": "0.2.0",
+    "playermap_graph": "0.2.1",
     "react-icons": "^5.5.0"
   },
   "devDependencies": {

@@ -69,7 +69,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
   const [isLoadingTrust, setIsLoadingTrust] = useState(false);
   const [termValue, setTermValue] = useState<string | null>(null);
   const [isLoadingTermValue, setIsLoadingTermValue] = useState(false);
-
+  
   // Determine if this is For or Against based on vault type
   const hasDeposits =
     position.vault?.deposits && position.vault.deposits.length > 0;
@@ -77,7 +77,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
     position.vault?.redemptions && position.vault.redemptions.length > 0;
   const depositType = position.vault?.deposits?.[0]?.vault_type;
   const redemptionType = position.vault?.redemptions?.[0]?.vault_type;
-
+  
   // Determine For/Against based on vault type and shares
   const isFor =
     sharesBigInt > 0n &&
@@ -91,7 +91,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
       depositType === "CounterAtom" ||
       redemptionType === "CounterTriple" ||
       redemptionType === "CounterAtom");
-
+  
   // Get the active term based on the position
   const isAtomActivity = !term?.triple; // If no triple, it's an atom activity
   const activeTerm = isAtomActivity
@@ -100,7 +100,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
     ? term
     : term?.triple?.counter_term;
   const positionType = isFor ? "For" : "Against";
-
+  
   // Get position description components for visual display
   const getPositionComponents = () => {
     if (
@@ -124,7 +124,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
     }
     return { type: "unknown" };
   };
-
+  
   // Convert shares to TTRUST percentage - use the correct term for calculation
   const calculationTerm = isAtomActivity
     ? term
@@ -249,7 +249,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
 
     calculateTermValue();
   }, [calculationTerm?.id, calculationTerm?.total_market_cap]);
-
+  
   // Determine the action type (deposit or redeem)
   const getActionType = () => {
     if (hasDeposits && hasRedemptions) {
@@ -265,7 +265,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
 
   // Determine if this is a redeem action
   const isRedeem = getActionType() === "Redeem";
-
+  
   // Get the vault type from deposits or redemptions
   const getVaultType = () => {
     // Prioritize deposit type if available, otherwise redemption type
@@ -375,7 +375,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
             onSelect={onSelect || (() => {})}
             positionId={position.id}
           />
-
+          
           {/* Interface de configuration qui apparaît à droite quand la checkbox est cochée */}
           {isSelected && onAmountChange && (
             <RedeemConfig

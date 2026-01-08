@@ -37,7 +37,7 @@ export const ClaimList: React.FC<ClaimListProps> = ({
       <div
         style={{
           textAlign: "center",
-          padding: "30px",
+          padding: "0px 20px",
           color: "#6b7280",
           fontSize: "1.1em",
         }}
@@ -70,7 +70,7 @@ export const ClaimList: React.FC<ClaimListProps> = ({
   }
 
   return (
-    <div style={{ marginBottom: "25px" }}>
+    <div style={{ }}>
       {voteItems.map((item) => (
         <ClaimItem
           key={item.id.toString()}

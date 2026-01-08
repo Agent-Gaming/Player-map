@@ -34,49 +34,35 @@ const VotingModal: React.FC<VotingModalProps> = ({
 
   return (
     <div
-      className="flex items-center justify-center height-700px"
       style={{
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
         zIndex: 1000,
-        position: "absolute",
-        top: "15%",
-        left: "25%",
-        right: "25%",
-        bottom: "15%",
+        position: "fixed",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        inset: "10px 0px 0px 0px",
       }}
     >
       <div
         style={{
-          backgroundColor: "#18181b",
-          borderRadius: "12px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          maxWidth: "1000px",
-          width: "100%",
-          maxHeight: "700px",
-          height: "700px",
-          display: "flex",
-          flexDirection: "column",
+          width: "75%",
+          height: "90%",
           overflow: "hidden",
-          opacity: 0.85,
+          borderRadius: "18px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
         }}
       >
-        <div
-          style={{
-            flex: 1,
-            overflow: "auto",
-            padding: "0",
-          }}
-        >
-          <ClaimVoting
-            walletConnected={walletConnected}
-            walletAddress={walletAddress}
-            publicClient={publicClient}
-            onClose={onClose}
-            network={Network.MAINNET}
-            wagmiConfig={wagmiConfig}
-            constants={constants}
-          />
-        </div>
+        <ClaimVoting
+          walletConnected={walletConnected}
+          walletAddress={walletAddress}
+          publicClient={publicClient}
+          onClose={onClose}
+          network={Network.MAINNET}
+          wagmiConfig={wagmiConfig}
+          constants={constants}
+        />
       </div>
     </div>
   );

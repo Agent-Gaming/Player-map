@@ -7087,23 +7087,19 @@ const kle = (r) => {
         return `Chain ID: ${s}`;
     }
   };
-  return /* @__PURE__ */ I.jsxs("div", { style: {
-    padding: "15px",
-    backgroundColor: "#2e2e40",
-    borderRadius: "8px",
+  return /* @__PURE__ */ I.jsx("div", { style: {
+    padding: "0px 10px",
     margin: "10px 0",
     textAlign: "center"
-  }, children: [
-    /* @__PURE__ */ I.jsx("p", { style: { color: "#ff4444", marginBottom: "10px" }, children: "You are not on the correct network" }),
-    /* @__PURE__ */ I.jsxs("p", { style: { color: "#aaa", fontSize: "0.9em", marginBottom: "10px" }, children: [
-      "Current network: ",
-      r ? n(r) : "Not connected",
-      /* @__PURE__ */ I.jsx("br", {}),
-      "Required network: ",
-      n(13579)
-    ] }),
-    /* @__PURE__ */ I.jsx("p", { style: { color: "#fff", fontSize: "0.9em" }, children: "Please switch to Intuition Testnet (13579) in your wallet to continue" })
-  ] });
+  }, children: /* @__PURE__ */ I.jsxs("p", { style: { color: "#ff4444" }, children: [
+    "You are not on the correct network : Current network: ",
+    r ? n(r) : "Not connected",
+    " - Required network: ",
+    n(13579),
+    " ",
+    /* @__PURE__ */ I.jsx("br", {}),
+    "Please switch to Intuition Testnet (13579) in your wallet to continue"
+  ] }) });
 }, yC = ({
   isOpen: r,
   onClose: e,
@@ -66130,71 +66126,60 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
   numberOfTransactions: r,
   totalUnits: e,
   onResetAll: i
-}) => /* @__PURE__ */ I.jsxs(
+}) => /* @__PURE__ */ I.jsx(
   "div",
   {
     style: {
-      backgroundColor: "rgba(0, 0, 0, 0.85)",
-      padding: "10px",
+      padding: "10px, 20px",
       borderRadius: "8px",
       marginBottom: "25px",
       display: "flex",
-      flexDirection: "column",
-      border: "1px solid rgb(105, 105, 105)"
+      flexDirection: "column"
     },
-    children: [
-      /* @__PURE__ */ I.jsxs("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "15px" }, children: [
-        /* @__PURE__ */ I.jsxs("div", { children: [
-          /* @__PURE__ */ I.jsx("div", { style: { fontSize: "0.9em", color: "#6b7280" }, children: "Unit value:" }),
-          /* @__PURE__ */ I.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
-            NO(e),
-            " tTRUST"
-          ] })
-        ] }),
-        /* @__PURE__ */ I.jsxs("div", { children: [
-          /* @__PURE__ */ I.jsx("div", { style: { fontSize: "0.9em", color: "#6b7280" }, children: "Number of transactions:" }),
-          /* @__PURE__ */ I.jsx("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: r })
-        ] }),
-        /* @__PURE__ */ I.jsxs("div", { children: [
-          /* @__PURE__ */ I.jsx("div", { style: { fontSize: "0.9em", color: "#6b7280" }, children: "Estimated gas cost:" }),
-          /* @__PURE__ */ I.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
-            "~",
-            ele(r),
-            " tTRUST"
-          ] })
+    children: /* @__PURE__ */ I.jsxs("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "15px" }, children: [
+      /* @__PURE__ */ I.jsxs("div", { children: [
+        /* @__PURE__ */ I.jsx("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: "Unit value" }),
+        /* @__PURE__ */ I.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
+          NO(e),
+          " $TRUST"
         ] })
       ] }),
-      /* @__PURE__ */ I.jsxs("div", { style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }, children: [
-        /* @__PURE__ */ I.jsxs("div", { style: { fontSize: "1em", fontWeight: "bold" }, children: [
-          "Total units selected:",
-          /* @__PURE__ */ I.jsxs("span", { style: { fontSize: "1.6em", marginLeft: "10px", color: "#FFD32A" }, children: [
-            e,
-            " ",
-            e === 1 ? "unit" : "units"
-          ] })
-        ] }),
-        e > 0 && /* @__PURE__ */ I.jsx(
-          "button",
-          {
-            onClick: i,
-            style: {
-              backgroundColor: "transparent",
-              border: "1px solid #6b7280",
-              color: "#FFF",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "0.9em"
-            },
-            children: "Reset all"
-          }
-        )
-      ] })
-    ]
+      /* @__PURE__ */ I.jsxs("div", { children: [
+        /* @__PURE__ */ I.jsx("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: "Nb transactions" }),
+        /* @__PURE__ */ I.jsx("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: r })
+      ] }),
+      /* @__PURE__ */ I.jsxs("div", { children: [
+        /* @__PURE__ */ I.jsx("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: "Estimated gas cost" }),
+        /* @__PURE__ */ I.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
+          "~",
+          ele(r),
+          " $TRUST"
+        ] })
+      ] }),
+      /* @__PURE__ */ I.jsxs("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: [
+        "Total units selected:",
+        /* @__PURE__ */ I.jsxs("span", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
+          e,
+          " ",
+          e === 1 ? "unit" : "units"
+        ] })
+      ] }),
+      e > 0 && /* @__PURE__ */ I.jsx(
+        "button",
+        {
+          onClick: i,
+          style: {
+            backgroundColor: "#FFD32A",
+            color: "#000",
+            padding: "6px 12px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontSize: "0.9em"
+          },
+          children: "Reset all"
+        }
+      )
+    ] })
   }
 ), ile = ({ onClose: r }) => /* @__PURE__ */ I.jsxs(
   "div",
@@ -66202,12 +66187,10 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     style: {
       display: "flex",
       justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "25px",
-      borderBottom: "1px solid rgb(105, 105, 105)"
+      alignItems: "center"
     },
     children: [
-      /* @__PURE__ */ I.jsx("h2", { style: { fontSize: "1.3em", color: "#FFD32A", margin: 0, fontWeight: "bold" }, children: "VOTE ON CLAIMS" }),
+      /* @__PURE__ */ I.jsx("h2", { style: { fontSize: "1.5em", color: "#FFD32A", margin: "10px", fontWeight: "bold" }, children: "VOTE ON CLAIMS" }),
       r && /* @__PURE__ */ I.jsx(
         "button",
         {
@@ -66217,7 +66200,8 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
             border: "none",
             color: "#FFF",
             cursor: "pointer",
-            fontSize: "1.5em"
+            fontSize: "2.5em",
+            padding: "0px"
           },
           children: "×"
         }
@@ -66272,15 +66256,12 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     "div",
     {
       style: {
-        padding: "20px",
-        marginBottom: "20px",
+        padding: "0px 20px",
+        marginBottom: "10px",
         borderRadius: "8px",
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
         position: "relative",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
         borderBottom: B ? C === lt.For ? "12px solid #006FE8" : "12px solid #FF9500" : "1px solid rgb(105, 105, 105)",
-        borderTop: "1px solid rgb(105, 105, 105)",
-        borderLeft: "1px solid rgb(105, 105, 105)",
-        borderRight: "1px solid rgb(105, 105, 105)",
         boxShadow: "0 4px 10px rgba(0, 0, 0, 0.3)"
       },
       children: [
@@ -66289,18 +66270,18 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
           {
             style: {
               position: "absolute",
-              top: "5px",
+              bottom: "5px",
               left: "5px",
               backgroundColor: "#FFD32A",
               color: "#000000",
-              padding: "3px 6px",
-              fontSize: "10px",
+              padding: "3px 10px",
+              fontSize: "12px",
               fontWeight: "bold",
               borderRadius: "4px"
             },
             children: [
               F.toFixed(2),
-              " tTRUST"
+              " $TRUST"
             ]
           }
         ),
@@ -66310,26 +66291,126 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
             style: {
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center"
+              alignItems: "center",
+              gap: "8px"
             },
             children: [
               /* @__PURE__ */ I.jsxs(
                 "div",
                 {
                   style: {
+                    width: "60%",
+                    display: "flex",
+                    padding: "10px",
+                    gap: "5px"
+                  },
+                  children: [
+                    /* @__PURE__ */ I.jsx(
+                      "span",
+                      {
+                        title: u,
+                        style: {
+                          display: "inline-block",
+                          maxWidth: "300px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          backgroundColor: "#FFB300",
+                          padding: "4px 8px",
+                          height: "35px",
+                          alignContent: "center",
+                          borderRadius: "4px",
+                          fontSize: "0.9em",
+                          color: "#000000",
+                          fontWeight: "bold"
+                        },
+                        children: u
+                      }
+                    ),
+                    "-",
+                    /* @__PURE__ */ I.jsx(
+                      "span",
+                      {
+                        title: c,
+                        style: {
+                          display: "inline-block",
+                          maxWidth: "100px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          backgroundColor: "#ccd3d3",
+                          padding: "4px 8px",
+                          height: "35px",
+                          alignContent: "center",
+                          borderRadius: "4px",
+                          fontSize: "0.9em",
+                          color: "#000000",
+                          fontWeight: "bold"
+                        },
+                        children: c
+                      }
+                    ),
+                    "-",
+                    /* @__PURE__ */ I.jsx(
+                      "span",
+                      {
+                        title: h,
+                        style: {
+                          display: "inline-block",
+                          maxWidth: "300px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          backgroundColor: "#43A047",
+                          padding: "4px 8px",
+                          height: "35px",
+                          alignContent: "center",
+                          borderRadius: "4px",
+                          fontSize: "0.9em",
+                          color: "#000000",
+                          fontWeight: "bold"
+                        },
+                        children: h
+                      }
+                    )
+                  ]
+                }
+              ),
+              /* @__PURE__ */ I.jsxs(
+                "div",
+                {
+                  style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
                     display: "flex",
                     alignItems: "center",
-                    position: "relative"
+                    position: "relative",
+                    backgroundColor: "#0073e6",
+                    padding: "2px 10px",
+                    borderRadius: "5px",
+                    justifyContent: "center"
                   },
                   children: [
                     /* @__PURE__ */ I.jsx(
                       "div",
                       {
-                        style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px" },
-                        children: "For ▲:"
+                        style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px", fontWeight: "bold" },
+                        children: "Support"
                       }
                     ),
                     C === lt.For || C === lt.None ? /* @__PURE__ */ I.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
+                      /* @__PURE__ */ I.jsx(
+                        "span",
+                        {
+                          style: {
+                            margin: "0 10px",
+                            color: "#ffffff",
+                            fontWeight: "bold"
+                          },
+                          children: V ? d : 0
+                        }
+                      ),
                       /* @__PURE__ */ I.jsx(
                         "button",
                         {
@@ -66342,7 +66423,8 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                             border: "none",
                             borderRadius: "4px",
                             color: "#ffffff",
-                            fontSize: "16px",
+                            fontSize: "18px",
+                            fontWeight: "bold",
                             cursor: O && g > 0 ? "pointer" : "not-allowed",
                             display: "flex",
                             alignItems: "center",
@@ -66352,17 +66434,6 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                             userSelect: "none"
                           },
                           children: "-"
-                        }
-                      ),
-                      /* @__PURE__ */ I.jsx(
-                        "span",
-                        {
-                          style: {
-                            margin: "0 10px",
-                            color: "#ffffff",
-                            fontWeight: "bold"
-                          },
-                          children: V ? d : 0
                         }
                       ),
                       /* @__PURE__ */ I.jsxs(
@@ -66380,11 +66451,12 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                                 style: {
                                   width: "30px",
                                   height: "30px",
-                                  backgroundColor: O ? "#1976d2" : "#606060",
+                                  backgroundColor: "transparent",
+                                  color: O ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
                                   border: !O && B ? "2px solid #F44336" : "none",
                                   borderRadius: "4px",
-                                  color: "#ffffff",
-                                  fontSize: "16px",
+                                  fontSize: "18px",
+                                  fontWeight: "bold",
                                   cursor: O ? "pointer" : "not-allowed",
                                   display: "flex",
                                   alignItems: "center",
@@ -66406,7 +66478,7 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                                   transform: "translateX(-50%)",
                                   backgroundColor: "#F44336",
                                   color: "white",
-                                  padding: "5px 10px",
+                                  padding: "2px 10px",
                                   borderRadius: "4px",
                                   fontSize: "12px",
                                   whiteSpace: "nowrap",
@@ -66426,11 +66498,11 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                           backgroundColor: "#606060",
                           borderRadius: "4px",
                           color: "#ffffff",
-                          padding: "5px 10px",
+                          padding: "2px 10px",
                           fontSize: "12px",
                           marginLeft: "10px"
                         },
-                        children: "You have voted AGAINST ▼"
+                        children: "Oppose position"
                       }
                     )
                   ]
@@ -66440,213 +66512,196 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                 "div",
                 {
                   style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
                     display: "flex",
-                    marginBottom: "20px",
-                    gap: "5px",
-                    marginTop: "20px"
+                    alignItems: "center",
+                    position: "relative",
+                    backgroundColor: "#ff8000",
+                    padding: "2px 10px",
+                    borderRadius: "5px",
+                    justifyContent: "center"
                   },
                   children: [
                     /* @__PURE__ */ I.jsx(
-                      "span",
+                      "div",
                       {
-                        style: {
-                          backgroundColor: "#FFB300",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "0.9em",
-                          color: "#000000",
-                          fontWeight: "bold"
-                        },
-                        children: u
+                        style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px", fontWeight: "bold" },
+                        children: "Oppose"
                       }
                     ),
-                    "-",
-                    /* @__PURE__ */ I.jsx(
-                      "span",
+                    C === lt.Against || C === lt.None ? /* @__PURE__ */ I.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
+                      /* @__PURE__ */ I.jsx(
+                        "span",
+                        {
+                          style: {
+                            margin: "0 10px",
+                            color: "#ffffff",
+                            fontWeight: "bold"
+                          },
+                          children: X ? d : 0
+                        }
+                      ),
+                      /* @__PURE__ */ I.jsx(
+                        "button",
+                        {
+                          onClick: P && g < 0 ? H : void 0,
+                          disabled: !P || g >= 0,
+                          style: {
+                            width: "30px",
+                            height: "30px",
+                            backgroundColor: "transparent",
+                            color: P && g < 0 ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
+                            border: "none",
+                            borderRadius: "4px",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            cursor: P && g < 0 ? "pointer" : "not-allowed",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: P && g < 0 ? 1 : 0.4,
+                            pointerEvents: P && g < 0 ? "auto" : "none",
+                            userSelect: "none"
+                          },
+                          children: "-"
+                        }
+                      ),
+                      /* @__PURE__ */ I.jsxs(
+                        "div",
+                        {
+                          style: { position: "relative" },
+                          onMouseEnter: () => G && E(!0),
+                          onMouseLeave: () => G && E(!1),
+                          children: [
+                            /* @__PURE__ */ I.jsx(
+                              "button",
+                              {
+                                onClick: P ? L : void 0,
+                                disabled: !P,
+                                style: {
+                                  width: "30px",
+                                  height: "30px",
+                                  backgroundColor: "transparent",
+                                  color: P ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
+                                  border: !P && B ? "2px solid #4CAF50" : "none",
+                                  borderRadius: "4px",
+                                  fontSize: "18px",
+                                  fontWeight: "bold",
+                                  cursor: P ? "pointer" : "not-allowed",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  opacity: P ? 1 : 0.4,
+                                  pointerEvents: P ? "auto" : "none",
+                                  userSelect: "none"
+                                },
+                                children: "+"
+                              }
+                            ),
+                            (!P && B || T && G) && /* @__PURE__ */ I.jsx(
+                              "div",
+                              {
+                                style: {
+                                  position: "absolute",
+                                  bottom: "100%",
+                                  left: "50%",
+                                  transform: "translateX(-50%)",
+                                  backgroundColor: "#F44336",
+                                  color: "white",
+                                  padding: "2px 10px",
+                                  borderRadius: "4px",
+                                  fontSize: "12px",
+                                  whiteSpace: "nowrap",
+                                  zIndex: 10,
+                                  marginBottom: "5px"
+                                },
+                                children: G
+                              }
+                            )
+                          ]
+                        }
+                      )
+                    ] }) : /* @__PURE__ */ I.jsx(
+                      "div",
                       {
                         style: {
-                          backgroundColor: "#ccd3d3",
-                          padding: "4px 8px",
+                          backgroundColor: "#606060",
                           borderRadius: "4px",
-                          fontSize: "0.9em",
-                          color: "#000000",
-                          fontWeight: "bold"
+                          color: "#ffffff",
+                          padding: "2px 10px",
+                          fontSize: "12px",
+                          marginLeft: "10px"
                         },
-                        children: c
-                      }
-                    ),
-                    "-",
-                    /* @__PURE__ */ I.jsx(
-                      "span",
-                      {
-                        style: {
-                          backgroundColor: "#43A047",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "0.9em",
-                          color: "#000000",
-                          fontWeight: "bold"
-                        },
-                        children: h
+                        children: "Support position"
                       }
                     )
                   ]
                 }
-              ),
-              /* @__PURE__ */ I.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
-                /* @__PURE__ */ I.jsx(
-                  "div",
-                  {
-                    style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px" },
-                    children: "Against ▼:"
-                  }
-                ),
-                C === lt.Against || C === lt.None ? /* @__PURE__ */ I.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
-                  /* @__PURE__ */ I.jsx(
-                    "button",
-                    {
-                      onClick: P && g < 0 ? H : void 0,
-                      disabled: !P || g >= 0,
-                      style: {
-                        width: "30px",
-                        height: "30px",
-                        backgroundColor: P && g < 0 ? "#1e2030" : "#606060",
-                        border: "none",
-                        borderRadius: "4px",
-                        color: "#ffffff",
-                        fontSize: "16px",
-                        cursor: P && g < 0 ? "pointer" : "not-allowed",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: P && g < 0 ? 1 : 0.4,
-                        pointerEvents: P && g < 0 ? "auto" : "none",
-                        userSelect: "none"
-                      },
-                      children: "-"
-                    }
-                  ),
-                  /* @__PURE__ */ I.jsx(
-                    "span",
-                    {
-                      style: {
-                        margin: "0 10px",
-                        color: "#ffffff",
-                        fontWeight: "bold"
-                      },
-                      children: X ? d : 0
-                    }
-                  ),
-                  /* @__PURE__ */ I.jsxs(
-                    "div",
-                    {
-                      style: { position: "relative" },
-                      onMouseEnter: () => G && E(!0),
-                      onMouseLeave: () => G && E(!1),
-                      children: [
-                        /* @__PURE__ */ I.jsx(
-                          "button",
-                          {
-                            onClick: P ? L : void 0,
-                            disabled: !P,
-                            style: {
-                              width: "30px",
-                              height: "30px",
-                              backgroundColor: P ? "#dc3545" : "#606060",
-                              border: !P && B ? "2px solid #4CAF50" : "none",
-                              borderRadius: "4px",
-                              color: "#ffffff",
-                              fontSize: "16px",
-                              cursor: P ? "pointer" : "not-allowed",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              opacity: P ? 1 : 0.4,
-                              pointerEvents: P ? "auto" : "none",
-                              userSelect: "none"
-                            },
-                            children: "+"
-                          }
-                        ),
-                        (!P && B || T && G) && /* @__PURE__ */ I.jsx(
-                          "div",
-                          {
-                            style: {
-                              position: "absolute",
-                              bottom: "100%",
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                              backgroundColor: "#F44336",
-                              color: "white",
-                              padding: "5px 10px",
-                              borderRadius: "4px",
-                              fontSize: "12px",
-                              whiteSpace: "nowrap",
-                              zIndex: 10,
-                              marginBottom: "5px"
-                            },
-                            children: G
-                          }
-                        )
-                      ]
-                    }
-                  )
-                ] }) : /* @__PURE__ */ I.jsx(
-                  "div",
-                  {
-                    style: {
-                      backgroundColor: "#606060",
-                      borderRadius: "4px",
-                      color: "#ffffff",
-                      padding: "5px 10px",
-                      fontSize: "12px",
-                      marginLeft: "10px"
-                    },
-                    children: "You have voted FOR ▲"
-                  }
-                )
-              ] })
+              )
             ]
           }
         ),
-        /* @__PURE__ */ I.jsxs("div", { className: "flex flex-row justify-between", children: [
-          /* @__PURE__ */ I.jsxs(
-            "div",
-            {
-              style: {
-                fontSize: "0.7em",
-                color: "#4CAF50",
-                marginBottom: "8px",
-                backgroundColor: "rgba(76, 175, 80, 0.1)",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                fontWeight: "bold"
-              },
-              children: [
-                S,
-                " positions"
-              ]
-            }
-          ),
-          /* @__PURE__ */ I.jsxs(
-            "div",
-            {
-              style: {
-                fontSize: "0.7em",
-                color: "#F44336",
-                marginBottom: "8px",
-                backgroundColor: "rgba(244, 67, 54, 0.1)",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                fontWeight: "bold"
-              },
-              children: [
-                w,
-                " positions"
-              ]
-            }
-          )
-        ] })
+        /* @__PURE__ */ I.jsxs(
+          "div",
+          {
+            style: {
+              display: "flex",
+              gap: "8px",
+              width: "100%",
+              justifyContent: "flex-end"
+            },
+            children: [
+              /* @__PURE__ */ I.jsxs(
+                "div",
+                {
+                  style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
+                    fontSize: "0.8em",
+                    color: "#0073e6",
+                    marginBottom: "5px",
+                    backgroundColor: "transparent",
+                    padding: "2px 10px",
+                    borderRadius: "4px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    alignContent: "center"
+                  },
+                  children: [
+                    S,
+                    " positions"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ I.jsxs(
+                "div",
+                {
+                  style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
+                    fontSize: "0.8em",
+                    color: "#ff8000",
+                    marginBottom: "5px",
+                    backgroundColor: "transparent",
+                    padding: "2px 10px",
+                    borderRadius: "4px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    alignContent: "center"
+                  },
+                  children: [
+                    w,
+                    " positions"
+                  ]
+                }
+              )
+            ]
+          }
+        )
       ]
     }
   );
@@ -66667,7 +66722,7 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
       {
         style: {
           textAlign: "center",
-          padding: "30px",
+          padding: "0px 20px",
           color: "#6b7280",
           fontSize: "1.1em"
         },
@@ -66700,7 +66755,7 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
       }
     );
   }
-  return /* @__PURE__ */ I.jsx("div", { style: { marginBottom: "25px" }, children: i.map((u) => /* @__PURE__ */ I.jsx(
+  return /* @__PURE__ */ I.jsx("div", { style: {}, children: i.map((u) => /* @__PURE__ */ I.jsx(
     rle,
     {
       voteItem: u,
@@ -66839,8 +66894,8 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
         minHeight: "100%",
         color: "#fff",
         padding: "15px",
-        border: "1px solid rgb(105, 105, 105)",
-        borderRadius: "8px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        borderRadius: "18px",
         maxWidth: "100%",
         margin: "0 auto",
         position: "relative",
@@ -66873,29 +66928,22 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     "div",
     {
       style: {
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
-        minHeight: "100%",
-        opacity: "0.9",
-        color: "#fff",
+        width: "100%",
+        height: "100%",
         padding: "15px",
-        border: "1px solid rgb(105, 105, 105)",
-        borderRadius: "8px",
-        maxWidth: "100%",
-        margin: "0 auto",
-        position: "relative",
-        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)"
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
+        color: "#fff",
+        borderRadius: "18px"
       },
       children: [
         /* @__PURE__ */ I.jsx(ile, { onClose: n }),
-        /* @__PURE__ */ I.jsx(
-          tle,
-          {
-            numberOfTransactions: M,
-            totalUnits: E,
-            onResetAll: S
-          }
-        ),
-        /* @__PURE__ */ I.jsx(
+        /* @__PURE__ */ I.jsx("div", { style: {
+          height: "60%",
+          overflow: "auto",
+          padding: "10px",
+          marginBottom: "25px"
+        }, children: /* @__PURE__ */ I.jsx(
           nle,
           {
             isLoading: T || g,
@@ -66905,6 +66953,14 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
             walletAddress: e,
             network: s,
             constants: c
+          }
+        ) }),
+        /* @__PURE__ */ I.jsx(
+          tle,
+          {
+            numberOfTransactions: M,
+            totalUnits: E,
+            onResetAll: S
           }
         ),
         /* @__PURE__ */ I.jsx(
@@ -66937,8 +66993,8 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
         opacity: "0.9",
         color: "#fff",
         padding: "15px",
-        border: "1px solid rgb(105, 105, 105)",
-        borderRadius: "8px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        borderRadius: "18px",
         maxWidth: "100%",
         margin: "0 auto",
         position: "relative",
@@ -66966,52 +67022,36 @@ const joe = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
 }), []), /* @__PURE__ */ I.jsx(
   "div",
   {
-    className: "flex items-center justify-center height-700px",
     style: {
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
       zIndex: 1e3,
-      position: "absolute",
-      top: "15%",
-      left: "25%",
-      right: "25%",
-      bottom: "15%"
+      position: "fixed",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      inset: "10px 0px 0px 0px"
     },
     children: /* @__PURE__ */ I.jsx(
       "div",
       {
         style: {
-          backgroundColor: "#18181b",
-          borderRadius: "12px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          maxWidth: "1000px",
-          width: "100%",
-          maxHeight: "700px",
-          height: "700px",
-          display: "flex",
-          flexDirection: "column",
+          width: "70%",
+          height: "80%",
           overflow: "hidden",
-          opacity: 0.85
+          borderRadius: "18px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)"
         },
         children: /* @__PURE__ */ I.jsx(
-          "div",
+          ole,
           {
-            style: {
-              flex: 1,
-              overflow: "auto",
-              padding: "0"
-            },
-            children: /* @__PURE__ */ I.jsx(
-              ole,
-              {
-                walletConnected: r,
-                walletAddress: e,
-                publicClient: i,
-                onClose: n,
-                network: ii.MAINNET,
-                wagmiConfig: a,
-                constants: s
-              }
-            )
+            walletConnected: r,
+            walletAddress: e,
+            publicClient: i,
+            onClose: n,
+            network: ii.MAINNET,
+            wagmiConfig: a,
+            constants: s
           }
         )
       }

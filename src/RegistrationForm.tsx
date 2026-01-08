@@ -62,7 +62,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const publicClient = wagmiConfig?.publicClient;
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // State variables for tracking creation steps
   const [step, setStep] = useState(1);
   const [isCreatingAtom, setIsCreatingAtom] = useState(false);
@@ -71,16 +71,17 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
   // Use the complete player creation service that handles both atoms and triples
   const { createPlayer } = usePlayerCreationService(
-    walletConnected, 
-    walletAddress || '',
+    walletConnected,
+    walletAddress || "",
     constants, // Passer les constantes personnalisées !
     publicClient
   );
 
-  const { isCorrectNetwork, currentChainId, targetChainId, allowedChainIds } = useNetworkCheck({
-    walletConnected,
-    publicClient: wagmiConfig?.publicClient
-  });
+  const { isCorrectNetwork, currentChainId, targetChainId, allowedChainIds } =
+    useNetworkCheck({
+      walletConnected,
+      publicClient: wagmiConfig?.publicClient,
+    });
 
   useEffect(() => {
     const checkExistingAtom = async () => {
@@ -88,33 +89,34 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       try {
         // Utiliser getEventSelector pour calculer la signature de l'événement AtomCreated
-        const eventHash = getEventSelector("AtomCreated(address,address,bytes,uint256)");
+        const eventHash = getEventSelector(
+          "AtomCreated(address,address,bytes,uint256)"
+        );
 
         // Utiliser fetch directement pour contourner le bug viem
-        const response = await fetch('https://testnet.rpc.intuition.systems', {
-          method: 'POST',
+        const response = await fetch("https://rpc.intuition.systems", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            jsonrpc: '2.0',
-            method: 'eth_getLogs',
-            params: [{
-              address: ATOM_CONTRACT_ADDRESS,
-              topics: [
-                eventHash,
-                walletAddress
-              ],
-              fromBlock: '0x0',
-              toBlock: 'latest'
-            }],
-            id: 1
-          })
+            jsonrpc: "2.0",
+            method: "eth_getLogs",
+            params: [
+              {
+                address: ATOM_CONTRACT_ADDRESS,
+                topics: [eventHash, walletAddress],
+                fromBlock: "0x0",
+                toBlock: "latest",
+              },
+            ],
+            id: 1,
+          }),
         });
 
         const data = await response.json();
         const logs = data.result || [];
-        
+
         setHasExistingAtom(logs.length > 0);
       } catch (error) {
         console.error("Error checking atom ownership:", error);
@@ -193,15 +195,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
       setAtomId(result.atomId.toString());
       setIsCreatingAtom(false);
-      
+
       // Update the step
       setStep(2);
       setIsCreatingTriples(true);
-      
+
       // Wait a bit for the display of triples creation
       // (they are already being created via createPlayer)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       setIsCreatingTriples(false);
       setTripleCreated(result.tripleCreated);
       setStep(3);

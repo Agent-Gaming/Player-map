@@ -69,39 +69,56 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
     }
   };
 
-  // Fonction pour créer plusieurs triples en une seule transaction
+  // Function to calculate required amount for a triple (uses VALUE_PER_TRIPLE directly)
+  const calculateTripleAmount = async (
+    subjectId: bigint,
+    predicateId: bigint,
+    objectId: bigint
+  ): Promise<bigint> => {
+    return VALUE_PER_TRIPLE;
+  };
+
+  // Function to create multiple triples in a single transaction
   const batchCreateTriple = async (triples: TripleToCreate[]): Promise<any> => {
     if (!walletConnected || !walletAddress) {
       throw new Error("Wallet not connected");
     }
 
     try {
-      // Préparation des arrays pour la fonction createTriples (v2)
+      // Calculate required amounts for each triple (uses VALUE_PER_TRIPLE directly)
+      const assets: bigint[] = [];
+      let totalValue = 0n;
+
+      for (const triple of triples) {
+        assets.push(VALUE_PER_TRIPLE);
+        totalValue += VALUE_PER_TRIPLE;
+      }
+
+      // Prepare arrays for createTriples function (v2)
       const subjectIds = triples.map((t) => `0x${t.subjectId.toString(16).padStart(64, '0')}` as `0x${string}`);
       const predicateIds = triples.map((t) => `0x${t.predicateId.toString(16).padStart(64, '0')}` as `0x${string}`);
       const objectIds = triples.map((t) => `0x${t.objectId.toString(16).padStart(64, '0')}` as `0x${string}`);
-      const assets = triples.map(() => VALUE_PER_TRIPLE); // Ajouté le paramètre assets
 
-      // Appel au contrat
+      // Call the contract
       const txHash = await walletConnected.writeContract({
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
-        functionName: "createTriples", // Changé de "batchCreateTriple" à "createTriples"
-        args: [subjectIds, predicateIds, objectIds, assets], // Ajouté le paramètre assets
-        value: VALUE_PER_TRIPLE * BigInt(triples.length), // Valeur pour chaque triple
-        gas: 5000000n
+        functionName: "createTriples",
+        args: [subjectIds, predicateIds, objectIds, assets],
+        value: totalValue,
+        gas: 5000000n, // Limit gas to 5M to prevent MetaMask from using excessive values
       });
 
-      // Attendre la confirmation en utilisant une méthode compatible
+      // Wait for confirmation using a compatible method
       let receipt;
       if (walletConnected.waitForTransactionReceipt) {
-        // Nouvelle approche (Viem)
+        // New approach (Viem)
         receipt = await walletConnected.waitForTransactionReceipt({ hash: txHash });
       } else if (txHash.wait) {
-        // Ancienne approche (ethers.js)
+        // Old approach (ethers.js)
         receipt = await txHash.wait();
       } else {
-        // Attente passive si aucune méthode n'est disponible
+        // Passive wait if no method is available
         await new Promise(resolve => setTimeout(resolve, 3000));
       }
 

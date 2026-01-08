@@ -8,8 +8,8 @@ export enum Network {
 
 // URLs des API GraphQL
 export const API_URLS = {
-  [Network.MAINNET]: "https://testnet.intuition.sh/v1/graphql",
-  [Network.TESTNET]: API_URL_DEV // TODO: change to mainnet
+  [Network.MAINNET]: "https://mainnet.intuition.sh/v1/graphql",
+  [Network.TESTNET]: "https://testnet.intuition.sh/v1/graphql"
 };
 
 // Fonction pour créer un client avec le réseau approprié

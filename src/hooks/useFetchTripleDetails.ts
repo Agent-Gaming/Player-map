@@ -49,33 +49,12 @@ export const useFetchTripleDetails = ({
               subject_id
               predicate_id
               object_id
-              subject {
-                term_id
-                label
-              }
-              predicate {
-                term_id
-                label
-              }
-              object {
-                term_id
-                label
-              }
-              term_id
-              term {
-                total_market_cap
-                total_assets
-              }
               counter_term_id
-              counter_term {
-                total_market_cap
-                total_assets
-              }
             }
           }
         `,
 
-          variables: { tripleId: tripleId.toString() }, // Convertir en string pour v2
+          variables: { tripleId: tripleId.toString() },
         }),
       });
 
@@ -97,20 +76,111 @@ export const useFetchTripleDetails = ({
         return null;
       }
 
-      // Extract position counts from the nested structure v2
-      const termPositionCount = result.data.triple.term?.positions_aggregate?.aggregate?.count || 0;
-      const counterTermPositionCount = result.data.triple.counter_term?.positions_aggregate?.aggregate?.count || 0;
+      const triple = result.data.triple;
+      const { subject_id, predicate_id, object_id, term_id, counter_term_id } = triple;
+
+      // Fetch subject, predicate, object details
+      const atomsResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: `
+            query GetAtoms($termIds: [String!]!) {
+              atoms(where: { term_id: { _in: $termIds } }) {
+                term_id
+                label
+              }
+            }
+          `,
+          variables: { termIds: [subject_id, predicate_id, object_id].filter(Boolean) }
+        }),
+      });
+
+      const atomsData = await atomsResponse.json();
+      const atomsMap = new Map(
+        (atomsData.data?.atoms || []).map((atom: any) => [atom.term_id, atom])
+      );
+
+      // Fetch term and counter_term details
+      const termIds = [term_id, counter_term_id].filter(Boolean);
+      let termDetailsMap = new Map();
+      
+      if (termIds.length > 0) {
+        const termsResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query GetTerms($termIds: [String!]!) {
+                terms(where: { id: { _in: $termIds } }) {
+                  id
+                  total_market_cap
+                  total_assets
+                }
+              }
+            `,
+            variables: { termIds }
+          }),
+        });
+
+        const termsData = await termsResponse.json();
+        termDetailsMap = new Map(
+          (termsData.data?.terms || []).map((term: any) => [term.id, term])
+        );
+      }
+
+      const termDetails = termDetailsMap.get(term_id);
+      const counterTermDetails = termDetailsMap.get(counter_term_id);
+
+      // Fetch positions count separately
+      const [termPositionsResponse, counterTermPositionsResponse] = await Promise.all([
+        term_id ? fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query GetPositionsCount($termId: String!) {
+                positions_aggregate(where: { term_id: { _eq: $termId }, shares: { _gt: 0 } }) {
+                  aggregate {
+                    count
+                  }
+                }
+              }
+            `,
+            variables: { termId: term_id }
+          })
+        }) : Promise.resolve(null),
+        counter_term_id ? fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query GetCounterPositionsCount($termId: String!) {
+                positions_aggregate(where: { term_id: { _eq: $termId }, shares: { _gt: 0 } }) {
+                  aggregate {
+                    count
+                  }
+                }
+              }
+            `,
+            variables: { termId: counter_term_id }
+          })
+        }) : Promise.resolve(null),
+      ]);
+
+      const termPositionsData = termPositionsResponse ? await termPositionsResponse.json() : { data: { positions_aggregate: { aggregate: { count: 0 } } } };
+      const counterTermPositionsData = counterTermPositionsResponse ? await counterTermPositionsResponse.json() : { data: { positions_aggregate: { aggregate: { count: 0 } } } };
 
       setIsLoading(false);
       return {
         id: String(tripleId),
-        subject: result.data.triple.subject,
-        predicate: result.data.triple.predicate,
-        object: result.data.triple.object,
-        term_id: result.data.triple.term_id,
-        counter_term_id: result.data.triple.counter_term_id,
-        term_position_count: termPositionCount,
-        counter_term_position_count: counterTermPositionCount
+        subject: atomsMap.get(subject_id) || { term_id: subject_id, label: '' },
+        predicate: atomsMap.get(predicate_id) || { term_id: predicate_id, label: '' },
+        object: atomsMap.get(object_id) || { term_id: object_id, label: '' },
+        term_id: term_id,
+        counter_term_id: counter_term_id,
+        term_position_count: termPositionsData.data?.positions_aggregate?.aggregate?.count || 0,
+        counter_term_position_count: counterTermPositionsData.data?.positions_aggregate?.aggregate?.count || 0
       };
     } catch (error) {
 

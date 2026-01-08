@@ -7,6 +7,7 @@ import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
 import { useFetchTripleDetails, TripleDetails } from "../../hooks/useFetchTripleDetails";
 import { useDisplayTriplesWithPosition } from "../../hooks/useDisplayTriplesWithPosition";
+import { fetchPositions } from "../../api/fetchPositions";
 
 // Cache interfaces
 interface CacheEntry<T> {
@@ -186,53 +187,90 @@ export const useVoteItemsManagementOptimized = ({
 
   // Use enhanced hooks
   const { fetchTripleDetails } = useVoteFetchTripleDetails(network);
-  const { data: userPositionsData, loading: loadingPositions } = useVoteDisplayTriplesWithPosition(walletAddress);
+  const [loadingPositions, setLoadingPositions] = useState(false);
 
-  // Process user positions data when it arrives
+  // Fetch user positions directly using fetchPositions
   useEffect(() => {
-    if (userPositionsData && !loadingPositions && walletAddress) {
-      const positions: Record<string, VoteDirection> = {};
-
-      // Process positions data (same logic as original)
-      if (userPositionsData.triples && Array.isArray(userPositionsData.triples)) {
-        userPositionsData.triples.forEach((triple: any) => {
-          if (!triple.id) return;
-
-          const termPositions = triple.term?.positions || [];
-          const counterTermPositions = triple.counter_term?.positions || [];
-
-          const userTermPosition = termPositions.find((position: any) => {
-            return position.account?.id?.toLowerCase() === walletAddress.toLowerCase();
-          });
-
-          const userCounterTermPosition = counterTermPositions.find((position: any) => {
-            return position.account?.id?.toLowerCase() === walletAddress.toLowerCase();
-          });
-
-          if (userTermPosition) {
-            positions[String(triple.id)] = VoteDirection.For;
-          } else if (userCounterTermPosition) {
-            positions[String(triple.id)] = VoteDirection.Against;
-          }
-        });
+    const loadUserPositions = async () => {
+      if (!walletAddress) {
+        setUserPositions({});
+        return;
       }
 
-      setUserPositions(positions);
+      try {
+        setLoadingPositions(true);
+        const positions = await fetchPositions(walletAddress, network);
+        
+        // Map positions to triple IDs (term_id) and determine direction
+        const positionsMap: Record<string, VoteDirection> = {};
+        
+        positions.forEach((pos: any) => {
+          if (!pos.term_id || !pos.term) return;
+          
+          const termId = pos.term_id; // term_id de la position = id du term
+          const term = pos.term;
+          
+          // Check if this is a triple term or counter term
+          if (term.triple) {
+            // This is a triple term
+            const triple = term.triple;
+            const tripleId = triple.term_id; // term_id du triple (ID du triple lui-même)
+            
+            // Determine if it's FOR (term) or AGAINST (counter_term)
+            // Le triple a:
+            // - term_id: ID du triple (qui est aussi l'ID du term principal)
+            // - counter_term_id: ID du counter_term
+            // term.id correspond au term_id de la position
+            
+            // Normalize tripleId to lowercase hex format for consistent comparison
+            // Ensure it starts with 0x if it's a hex string
+            let normalizedTripleId = tripleId.toLowerCase();
+            if (!normalizedTripleId.startsWith('0x') && /^[0-9a-f]+$/.test(normalizedTripleId)) {
+              normalizedTripleId = '0x' + normalizedTripleId;
+            }
+            
+            if (term.id === triple.term_id) {
+              // Position sur le term principal (même ID que le triple) = FOR
+              positionsMap[normalizedTripleId] = VoteDirection.For;
+            } else if (term.id === triple.counter_term_id) {
+              // Position sur le counter_term = AGAINST
+              positionsMap[normalizedTripleId] = VoteDirection.Against;
+            }
+          } else {
+            // Atom position - not a triple, skip for now
+            // Could be handled differently if needed
+          }
+        });
 
-      // Update existing vote items with user position information
-      setVoteItems(prevItems =>
-        prevItems.map(item => {
-          const positionDirection = positions[String(item.id)] || VoteDirection.None;
-          const hasPosition = positionDirection !== VoteDirection.None;
-          return {
-            ...item,
-            userHasPosition: hasPosition,
-            userPositionDirection: positionDirection
-          };
-        })
-      );
-    }
-  }, [userPositionsData, loadingPositions, walletAddress]);
+        setUserPositions(positionsMap);
+
+        // Update existing vote items with user position information
+        // Convert BigInt to hex string for comparison (same format as tripleId)
+        setVoteItems(prevItems =>
+          prevItems.map(item => {
+            // Convert BigInt to hex string (0x...) to match tripleId format in positionsMap
+            // item.id is a BigInt, convert it to hex string
+            const itemIdHex = '0x' + item.id.toString(16).toLowerCase();
+            // Try both hex format and string format for backward compatibility
+            const positionDirection = positionsMap[itemIdHex] || positionsMap[String(item.id)] || VoteDirection.None;
+            const hasPosition = positionDirection !== VoteDirection.None;
+            return {
+              ...item,
+              userHasPosition: hasPosition,
+              userPositionDirection: positionDirection
+            };
+          })
+        );
+      } catch (error) {
+        console.error('Error loading user positions:', error);
+        setUserPositions({});
+      } finally {
+        setLoadingPositions(false);
+      }
+    };
+
+    loadUserPositions();
+  }, [walletAddress, network]);
 
   // Load triple details with progress tracking
   const loadTripleDetails = async () => {
@@ -284,7 +322,9 @@ export const useVoteItemsManagementOptimized = ({
               userPositionDirection: VoteDirection.None,
             } as VoteItem;
           } else {
-            const userPositionDirection = userPositions[String(id)] || VoteDirection.None;
+            // Normalize id to lowercase hex format for comparison with positionsMap
+            const normalizedId = id.toLowerCase();
+            const userPositionDirection = userPositions[normalizedId] || userPositions[String(id)] || VoteDirection.None;
 
             voteItem = {
               id: BigInt(details.id),

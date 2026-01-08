@@ -1,4 +1,5 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
 
 // Interface pour les détails d'un atom
 export interface AtomDetails {
@@ -44,23 +45,7 @@ export const fetchAtomDetails = async (atomId: string, network: Network = Networ
               emoji
               type
               creator_id
-              value {
-                person {
-                  description
-                }
-                organization {
-                  description
-                }
-                thing {
-                  description
-                }
-                book {
-                  description
-                }
-              }
-              term {
-                total_market_cap
-              }
+              data
             }
           }
         `,
@@ -73,8 +58,59 @@ export const fetchAtomDetails = async (atomId: string, network: Network = Networ
 
     if (!atom) return null;
 
+    // Fetch term details separately
+    let termDetails = null;
+    if (atom.term_id) {
+      try {
+        const termResponse = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query GetTerm($termId: String!) {
+                terms(where: { id: { _eq: $termId } }) {
+                  id
+                  total_market_cap
+                }
+              }
+            `,
+            variables: { termId: atom.term_id }
+          })
+        });
+        const termData = await termResponse.json();
+        termDetails = termData.data?.terms?.[0] || null;
+      } catch (error) {
+        console.warn('Error fetching term details:', error);
+      }
+    }
+
+    // Fetch description from IPFS if data field exists
+    let description = undefined;
+    if (atom.data) {
+      try {
+        const dataUrl = isIpfsUrl(atom.data) ? await ipfsToHttpUrl(atom.data) : atom.data;
+        const dataResponse = await fetch(dataUrl);
+        if (dataResponse.ok) {
+          const ipfsData = await dataResponse.json();
+          description = ipfsData.description || undefined;
+        }
+      } catch (error) {
+        console.warn('Error fetching atom description from IPFS:', error);
+      }
+    }
+
     // Retourner l'atom avec la structure complète
-    return atom as AtomDetails;
+    // Structure value pour compatibilité avec AtomDetailsSection
+    return {
+      ...atom,
+      term: termDetails ? { total_market_cap: termDetails.total_market_cap } : undefined,
+      value: description ? {
+        person: { description },
+        organization: { description },
+        thing: { description },
+        book: { description }
+      } : undefined
+    } as AtomDetails;
   } catch (error) {
     console.error('Error fetching atom details:', error);
     return null;

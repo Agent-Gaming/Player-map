@@ -18,23 +18,23 @@ interface WalletError {
   message: string;
 }
 
-// Configuration pour Intuition Testnet
-const INTUITION_TESTNET_CONFIG = {
-  chainId: 13579, // Chain ID d'Intuition testnet
-  chainName: 'Intuition Testnet',
+// Configuration pour Intuition Mainnet
+const INTUITION_MAINNET_CONFIG = {
+  chainId: 1155, // Chain ID d'Intuition mainnet
+  chainName: 'Intuition Mainnet',
   nativeCurrency: {
-    name: 'tTRUST',
-    symbol: 'tTRUST',
+    name: 'TRUST',
+    symbol: 'TRUST',
     decimals: 18,
   },
-  rpcUrls: ['https://testnet.rpc.intuition.systems'],
-  blockExplorerUrls: ['https://intuition-testnet.explorer.caldera.xyz'],
+  rpcUrls: ['https://rpc.intuition.systems'],
+  blockExplorerUrls: ['https://explorer.intuition.systems'],
 };
 
 export const useNetworkCheck = ({ walletConnected, publicClient }: UseNetworkCheckProps): NetworkCheckResult => {
   const [currentChainId, setCurrentChainId] = useState<number | null>(null);
-  const allowedChainIds = [13579]; // Intuition Testnet uniquement
-  const targetChainId = Number(ATOM_CONTRACT_CHAIN_ID); // 13579 pour Intuition testnet
+  const allowedChainIds = [1155]; // Intuition Mainnet uniquement
+  const targetChainId = Number(ATOM_CONTRACT_CHAIN_ID); // 1155 pour Intuition mainnet
 
   useEffect(() => {
     const checkNetwork = async () => {
@@ -63,7 +63,7 @@ export const useNetworkCheck = ({ walletConnected, publicClient }: UseNetworkChe
 
       if (walletError.code === 4902) {
         try {
-          await walletConnected.addChain(INTUITION_TESTNET_CONFIG);
+          await walletConnected.addChain(INTUITION_MAINNET_CONFIG);
           await walletConnected.switchChain({ chainId: targetChainId });
         } catch (addError) {
           console.error('Error adding Intuition network:', addError);

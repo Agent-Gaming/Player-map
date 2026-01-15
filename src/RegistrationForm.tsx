@@ -94,7 +94,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         );
 
         // Utiliser fetch directement pour contourner le bug viem
-        const response = await fetch("https://rpc.intuition.systems", {
+        const response = await fetch(import.meta.env.VITE_INTUITION_RPC_URL, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

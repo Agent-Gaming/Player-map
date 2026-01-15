@@ -9,38 +9,26 @@ interface NetworkSwitchMessageProps {
 export const NetworkSwitchMessage = ({
   currentChainId,
   targetChainId,
-  allowedChainIds = [1155],
+  allowedChainIds = [1155]
 }: NetworkSwitchMessageProps) => {
   const getNetworkName = (chainId: number): string => {
     switch (chainId) {
       case 1155:
-        return "Intuition Mainnet";
+        return 'Intuition MainNet';
       default:
         return `Chain ID: ${chainId}`;
     }
   };
 
   return (
-    <div
-      style={{
-        padding: "15px",
-        backgroundColor: "#2e2e40",
-        borderRadius: "8px",
-        margin: "10px 0",
-        textAlign: "center",
-      }}
-    >
-      <p style={{ color: "#ff4444", marginBottom: "10px" }}>
-        You are not on the correct network
-      </p>
-      <p style={{ color: "#aaa", fontSize: "0.9em", marginBottom: "10px" }}>
-        Current network:{" "}
-        {currentChainId ? getNetworkName(currentChainId) : "Not connected"}
-        <br />
-        Required network: {getNetworkName(1155)}
-      </p>
-      <p style={{ color: "#fff", fontSize: "0.9em" }}>
-        Please switch to Intuition Mainnet (1155) in your wallet to continue
+    <div style={{
+      padding: '0px 10px',
+      margin: '10px 0',
+      textAlign: 'center',
+    }}>
+      <p style={{ color: '#ff4444' }}>
+        You are not on the correct network : Current network: {currentChainId ? getNetworkName(currentChainId) : 'Not connected'} - Required network: {getNetworkName(13579)} <br />
+        Please switch to Intuition MainNet (1155) in your wallet to continue
       </p>
     </div>
   );

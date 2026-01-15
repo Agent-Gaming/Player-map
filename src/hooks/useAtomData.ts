@@ -8,7 +8,8 @@ export enum Network {
 
 // URLs des API GraphQL
 export const API_URLS = {
-  [Network.MAINNET]: "https://mainnet.intuition.sh/v1/graphql",
+  [Network.MAINNET]: import.meta.env.VITE_INTUITION_GRAPHQL_URL ??
+  "http://localhost:3000",
   [Network.TESTNET]: "https://testnet.intuition.sh/v1/graphql"
 };
 

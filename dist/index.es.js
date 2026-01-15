@@ -7621,35 +7621,24 @@ const pue = (r) => {
   const n = (s) => {
     switch (s) {
       case 1155:
-        return "Intuition Mainnet";
+        return "Intuition MainNet";
       default:
         return `Chain ID: ${s}`;
     }
   };
-  return /* @__PURE__ */ O.jsxs(
-    "div",
-    {
-      style: {
-        padding: "15px",
-        backgroundColor: "#2e2e40",
-        borderRadius: "8px",
-        margin: "10px 0",
-        textAlign: "center"
-      },
-      children: [
-        /* @__PURE__ */ O.jsx("p", { style: { color: "#ff4444", marginBottom: "10px" }, children: "You are not on the correct network" }),
-        /* @__PURE__ */ O.jsxs("p", { style: { color: "#aaa", fontSize: "0.9em", marginBottom: "10px" }, children: [
-          "Current network:",
-          " ",
-          r ? n(r) : "Not connected",
-          /* @__PURE__ */ O.jsx("br", {}),
-          "Required network: ",
-          n(1155)
-        ] }),
-        /* @__PURE__ */ O.jsx("p", { style: { color: "#fff", fontSize: "0.9em" }, children: "Please switch to Intuition Mainnet (1155) in your wallet to continue" })
-      ]
-    }
-  );
+  return /* @__PURE__ */ O.jsx("div", { style: {
+    padding: "0px 10px",
+    margin: "10px 0",
+    textAlign: "center"
+  }, children: /* @__PURE__ */ O.jsxs("p", { style: { color: "#ff4444" }, children: [
+    "You are not on the correct network : Current network: ",
+    r ? n(r) : "Not connected",
+    " - Required network: ",
+    n(13579),
+    " ",
+    /* @__PURE__ */ O.jsx("br", {}),
+    "Please switch to Intuition MainNet (1155) in your wallet to continue"
+  ] }) });
 }, OC = ({
   isOpen: r,
   onClose: e,
@@ -7680,7 +7669,7 @@ const pue = (r) => {
         try {
           const q = __(
             "AtomCreated(address,address,bytes,uint256)"
-          ), W = (await (await fetch("https://rpc.intuition.systems", {
+          ), W = (await (await fetch(void 0, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
@@ -7881,7 +7870,7 @@ const pue = (r) => {
     }
   ) : null;
 };
-var eU = Object.defineProperty, tU = (r, e, i) => e in r ? eU(r, e, { enumerable: !0, configurable: !0, writable: !0, value: i }) : r[e] = i, Zh = (r, e, i) => tU(r, typeof e != "symbol" ? e + "" : e, i);
+var e5 = Object.defineProperty, t5 = (r, e, i) => e in r ? e5(r, e, { enumerable: !0, configurable: !0, writable: !0, value: i }) : r[e] = i, Zh = (r, e, i) => t5(r, typeof e != "symbol" ? e + "" : e, i);
 function A_(r) {
   return r && r.__esModule && Object.prototype.hasOwnProperty.call(r, "default") ? r.default : r;
 }
@@ -7896,7 +7885,7 @@ var Xv = { exports: {} }, ah = {};
  * LICENSE file in the root directory of this source tree.
  */
 var oT;
-function iU() {
+function i5() {
   if (oT) return ah;
   oT = 1;
   var r = si, e = Symbol.for("react.element"), i = Symbol.for("react.fragment"), n = Object.prototype.hasOwnProperty, s = r.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, a = { key: !0, ref: !0, __self: !0, __source: !0 };
@@ -7920,7 +7909,7 @@ var fp = {};
  * LICENSE file in the root directory of this source tree.
  */
 var lT;
-function rU() {
+function r5() {
   return lT || (lT = 1, process.env.NODE_ENV !== "production" && function() {
     var r = si, e = Symbol.for("react.element"), i = Symbol.for("react.portal"), n = Symbol.for("react.fragment"), s = Symbol.for("react.strict_mode"), a = Symbol.for("react.profiler"), o = Symbol.for("react.provider"), l = Symbol.for("react.context"), u = Symbol.for("react.forward_ref"), c = Symbol.for("react.suspense"), h = Symbol.for("react.suspense_list"), d = Symbol.for("react.memo"), p = Symbol.for("react.lazy"), f = Symbol.for("react.offscreen"), m = Symbol.iterator, v = "@@iterator";
     function y(N) {
@@ -8509,7 +8498,7 @@ React keys must be passed directly to JSX without using spread:
     fp.Fragment = n, fp.jsx = zl, fp.jsxs = jl;
   }()), fp;
 }
-process.env.NODE_ENV === "production" ? Xv.exports = iU() : Xv.exports = rU();
+process.env.NODE_ENV === "production" ? Xv.exports = i5() : Xv.exports = r5();
 var ae = Xv.exports;
 const Si = {
   SUBJECT: "#FFB300",
@@ -8670,28 +8659,28 @@ class qu extends Error {
 }
 const cT = (r) => r.toUpperCase(), my = (r) => typeof r == "function" ? r() : r, DC = (r, e) => r.map((i, n) => [i, e[n]]), Gl = (r) => {
   let e = {};
-  return r instanceof Headers ? e = nU(r) : Array.isArray(r) ? r.forEach(([i, n]) => {
+  return r instanceof Headers ? e = n5(r) : Array.isArray(r) ? r.forEach(([i, n]) => {
     i && n !== void 0 && (e[i] = n);
   }) : r && (e = r), e;
-}, nU = (r) => {
+}, n5 = (r) => {
   const e = {};
   return r.forEach((i, n) => {
     e[n] = i;
   }), e;
-}, sU = (r) => {
+}, s5 = (r) => {
   try {
     const e = r();
-    return aU(e) ? e.catch((i) => hT(i)) : e;
+    return a5(e) ? e.catch((i) => hT(i)) : e;
   } catch (e) {
     return hT(e);
   }
-}, hT = (r) => r instanceof Error ? r : new Error(String(r)), aU = (r) => typeof r == "object" && r !== null && "then" in r && typeof r.then == "function" && "catch" in r && typeof r.catch == "function" && "finally" in r && typeof r.finally == "function", C_ = (r) => {
+}, hT = (r) => r instanceof Error ? r : new Error(String(r)), a5 = (r) => typeof r == "object" && r !== null && "then" in r && typeof r.then == "function" && "catch" in r && typeof r.catch == "function" && "finally" in r && typeof r.finally == "function", C_ = (r) => {
   throw new Error(`Unhandled case: ${String(r)}`);
-}, qf = (r) => typeof r == "object" && r !== null && !Array.isArray(r), oU = (r, e) => r.documents ? r : {
+}, qf = (r) => typeof r == "object" && r !== null && !Array.isArray(r), o5 = (r, e) => r.documents ? r : {
   documents: r,
   requestHeaders: e,
   signal: void 0
-}, lU = (r, e, i) => r.query ? r : {
+}, l5 = (r, e, i) => r.query ? r : {
   query: r,
   variables: e,
   requestHeaders: i,
@@ -8700,19 +8689,19 @@ const cT = (r) => r.toUpperCase(), my = (r) => typeof r == "function" ? r() : r,
 function Xf(r, e) {
   throw new Error(e);
 }
-function uU(r) {
+function u5(r) {
   return typeof r == "object" && r !== null;
 }
-function cU(r, e) {
+function c5(r, e) {
   throw new Error(
     "Unexpected invariant triggered."
   );
 }
-const hU = /\r\n|[\n\r]/g;
+const h5 = /\r\n|[\n\r]/g;
 function Yv(r, e) {
   let i = 0, n = 1;
-  for (const s of r.body.matchAll(hU)) {
-    if (typeof s.index == "number" || cU(), s.index >= e)
+  for (const s of r.body.matchAll(h5)) {
+    if (typeof s.index == "number" || c5(), s.index >= e)
       break;
     i = s.index + s[0].length, n += 1;
   }
@@ -8721,7 +8710,7 @@ function Yv(r, e) {
     column: e + 1 - i
   };
 }
-function dU(r) {
+function d5(r) {
   return LC(
     r.source,
     Yv(r.source, r.start)
@@ -8754,7 +8743,7 @@ function dT(r) {
   return e.map(([n, s]) => n.padStart(i) + (s ? " " + s : "")).join(`
 `);
 }
-function pU(r) {
+function p5(r) {
   const e = r[0];
   return e == null || "kind" in e || "length" in e ? {
     nodes: e,
@@ -8806,7 +8795,7 @@ class R_ extends Error {
    */
   constructor(e, ...i) {
     var n, s, a;
-    const { nodes: o, source: l, positions: u, path: c, originalError: h, extensions: d } = pU(i);
+    const { nodes: o, source: l, positions: u, path: c, originalError: h, extensions: d } = p5(i);
     super(e), this.name = "GraphQLError", this.path = c ?? void 0, this.originalError = h ?? void 0, this.nodes = pT(
       Array.isArray(o) ? o : o ? [o] : void 0
     );
@@ -8814,7 +8803,7 @@ class R_ extends Error {
       (n = this.nodes) === null || n === void 0 ? void 0 : n.map((m) => m.loc).filter((m) => m != null)
     );
     this.source = l ?? (p == null || (s = p[0]) === null || s === void 0 ? void 0 : s.source), this.positions = u ?? (p == null ? void 0 : p.map((m) => m.start)), this.locations = u && l ? u.map((m) => Yv(l, m)) : p == null ? void 0 : p.map((m) => Yv(m.source, m.start));
-    const f = uU(
+    const f = u5(
       h == null ? void 0 : h.extensions
     ) ? h == null ? void 0 : h.extensions : void 0;
     this.extensions = (a = d ?? f) !== null && a !== void 0 ? a : /* @__PURE__ */ Object.create(null), Object.defineProperties(this, {
@@ -8856,7 +8845,7 @@ class R_ extends Error {
       for (const i of this.nodes)
         i.loc && (e += `
 
-` + dU(i.loc));
+` + d5(i.loc));
     else if (this.source && this.locations)
       for (const i of this.locations)
         e += `
@@ -8880,7 +8869,7 @@ function Zi(r, e, i) {
     positions: [e]
   });
 }
-class fU {
+class f5 {
   /**
    * The character offset at which this Node begins.
    */
@@ -9025,10 +9014,10 @@ const UC = {
   UnionTypeExtension: ["name", "directives", "types"],
   EnumTypeExtension: ["name", "directives", "values"],
   InputObjectTypeExtension: ["name", "directives", "fields"]
-}, mU = new Set(Object.keys(UC));
+}, m5 = new Set(Object.keys(UC));
 function fT(r) {
   const e = r == null ? void 0 : r.kind;
-  return typeof e == "string" && mU.has(e);
+  return typeof e == "string" && m5.has(e);
 }
 var al;
 (function(r) {
@@ -9055,15 +9044,15 @@ function FC(r) {
 function BC(r) {
   return FC(r) || r === 95;
 }
-function gU(r) {
+function g5(r) {
   return FC(r) || fd(r) || r === 95;
 }
-function yU(r) {
+function y5(r) {
   var e;
   let i = Number.MAX_SAFE_INTEGER, n = null, s = -1;
   for (let o = 0; o < r.length; ++o) {
     var a;
-    const l = r[o], u = vU(l);
+    const l = r[o], u = v5(l);
     u !== l.length && (n = (a = n) !== null && a !== void 0 ? a : o, s = o, o !== 0 && u < i && (i = u));
   }
   return r.map((o, l) => l === 0 ? o : o.slice(i)).slice(
@@ -9071,13 +9060,13 @@ function yU(r) {
     s + 1
   );
 }
-function vU(r) {
+function v5(r) {
   let e = 0;
   for (; e < r.length && Kv(r.charCodeAt(e)); )
     ++e;
   return e;
 }
-function bU(r, e) {
+function b5(r, e) {
   const i = r.replace(/"""/g, '\\"""'), n = i.split(/\r\n|[\n\r]/g), s = n.length === 1, a = n.length > 1 && n.slice(1).every((f) => f.length === 0 || Kv(f.charCodeAt(0))), o = i.endsWith('\\"""'), l = r.endsWith('"') && !o, u = r.endsWith("\\"), c = l || u, h = (
     // add leading and trailing new lines only if it improves readability
     !s || r.length > 70 || c || a || o
@@ -9092,7 +9081,7 @@ var Se;
 (function(r) {
   r.SOF = "<SOF>", r.EOF = "<EOF>", r.BANG = "!", r.DOLLAR = "$", r.AMP = "&", r.PAREN_L = "(", r.PAREN_R = ")", r.SPREAD = "...", r.COLON = ":", r.EQUALS = "=", r.AT = "@", r.BRACKET_L = "[", r.BRACKET_R = "]", r.BRACE_L = "{", r.PIPE = "|", r.BRACE_R = "}", r.NAME = "Name", r.INT = "Int", r.FLOAT = "Float", r.STRING = "String", r.BLOCK_STRING = "BlockString", r.COMMENT = "Comment";
 })(Se || (Se = {}));
-class xU {
+class x5 {
   /**
    * The previously focused non-ignored token.
    */
@@ -9129,14 +9118,14 @@ class xU {
         if (e.next)
           e = e.next;
         else {
-          const i = wU(this, e.end);
+          const i = w5(this, e.end);
           e.next = i, i.prev = e, e = i;
         }
       while (e.kind === Se.COMMENT);
     return e;
   }
 }
-function _U(r) {
+function _5(r) {
   return r === Se.BANG || r === Se.DOLLAR || r === Se.AMP || r === Se.PAREN_L || r === Se.PAREN_R || r === Se.SPREAD || r === Se.COLON || r === Se.EQUALS || r === Se.AT || r === Se.BRACKET_L || r === Se.BRACKET_R || r === Se.BRACE_L || r === Se.PIPE || r === Se.BRACE_R;
 }
 function Fc(r) {
@@ -9165,7 +9154,7 @@ function Li(r, e, i, n, s) {
   const a = r.line, o = 1 + i - r.lineStart;
   return new kC(e, i, n, a, o, s);
 }
-function wU(r, e) {
+function w5(r, e) {
   const i = r.source.body, n = i.length;
   let s = e;
   for (; s < n; ) {
@@ -9184,7 +9173,7 @@ function wU(r, e) {
         i.charCodeAt(s + 1) === 10 ? s += 2 : ++s, ++r.line, r.lineStart = s;
         continue;
       case 35:
-        return TU(r, s);
+        return T5(r, s);
       case 33:
         return Li(r, Se.BANG, s, s + 1);
       case 36:
@@ -9216,12 +9205,12 @@ function wU(r, e) {
       case 125:
         return Li(r, Se.BRACE_R, s, s + 1);
       case 34:
-        return i.charCodeAt(s + 1) === 34 && i.charCodeAt(s + 2) === 34 ? RU(r, s) : EU(r, s);
+        return i.charCodeAt(s + 1) === 34 && i.charCodeAt(s + 2) === 34 ? R5(r, s) : E5(r, s);
     }
     if (fd(a) || a === 45)
-      return SU(r, s, a);
+      return S5(r, s, a);
     if (BC(a))
-      return NU(r, s);
+      return N5(r, s);
     throw Zi(
       r.source,
       s,
@@ -9230,7 +9219,7 @@ function wU(r, e) {
   }
   return Li(r, Se.EOF, n, n);
 }
-function TU(r, e) {
+function T5(r, e) {
   const i = r.source.body, n = i.length;
   let s = e + 1;
   for (; s < n; ) {
@@ -9252,7 +9241,7 @@ function TU(r, e) {
     i.slice(e + 1, s)
   );
 }
-function SU(r, e, i) {
+function S5(r, e, i) {
   const n = r.source.body;
   let s = e, a = i, o = !1;
   if (a === 45 && (a = n.charCodeAt(++s)), a === 48) {
@@ -9300,7 +9289,7 @@ function gy(r, e, i) {
     ++s;
   return s;
 }
-function EU(r, e) {
+function E5(r, e) {
   const i = r.source.body, n = i.length;
   let s = e + 1, a = s, o = "";
   for (; s < n; ) {
@@ -9309,7 +9298,7 @@ function EU(r, e) {
       return o += i.slice(a, s), Li(r, Se.STRING, e, s + 1, o);
     if (l === 92) {
       o += i.slice(a, s);
-      const u = i.charCodeAt(s + 1) === 117 ? i.charCodeAt(s + 2) === 123 ? MU(r, s) : AU(r, s) : CU(r, s);
+      const u = i.charCodeAt(s + 1) === 117 ? i.charCodeAt(s + 2) === 123 ? M5(r, s) : A5(r, s) : C5(r, s);
       o += u.value, s += u.size, a = s;
       continue;
     }
@@ -9331,7 +9320,7 @@ function EU(r, e) {
   }
   throw Zi(r.source, s, "Unterminated string.");
 }
-function MU(r, e) {
+function M5(r, e) {
   const i = r.source.body;
   let n = 0, s = 3;
   for (; s < 12; ) {
@@ -9356,7 +9345,7 @@ function MU(r, e) {
     )}".`
   );
 }
-function AU(r, e) {
+function A5(r, e) {
   const i = r.source.body, n = mT(i, e + 2);
   if (Fc(n))
     return {
@@ -9383,7 +9372,7 @@ function mT(r, e) {
 function jh(r) {
   return r >= 48 && r <= 57 ? r - 48 : r >= 65 && r <= 70 ? r - 55 : r >= 97 && r <= 102 ? r - 87 : -1;
 }
-function CU(r, e) {
+function C5(r, e) {
   const i = r.source.body;
   switch (i.charCodeAt(e + 1)) {
     case 34:
@@ -9437,7 +9426,7 @@ function CU(r, e) {
     )}".`
   );
 }
-function RU(r, e) {
+function R5(r, e) {
   const i = r.source.body, n = i.length;
   let s = r.lineStart, a = e + 3, o = a, l = "";
   const u = [];
@@ -9451,7 +9440,7 @@ function RU(r, e) {
         e,
         a + 3,
         // Return a string of the lines joined with U+000A.
-        yU(u).join(`
+        y5(u).join(`
 `)
       );
       return r.line += u.length - 1, r.lineStart = s, h;
@@ -9480,12 +9469,12 @@ function RU(r, e) {
   }
   throw Zi(r.source, a, "Unterminated string.");
 }
-function NU(r, e) {
+function N5(r, e) {
   const i = r.source.body, n = i.length;
   let s = e + 1;
   for (; s < n; ) {
     const a = i.charCodeAt(s);
-    if (gU(a))
+    if (g5(a))
       ++s;
     else
       break;
@@ -9498,7 +9487,7 @@ function NU(r, e) {
     i.slice(e, s)
   );
 }
-const PU = 10, VC = 2;
+const P5 = 10, VC = 2;
 function N_(r) {
   return wg(r, []);
 }
@@ -9509,45 +9498,45 @@ function wg(r, e) {
     case "function":
       return r.name ? `[function ${r.name}]` : "[function]";
     case "object":
-      return IU(r, e);
+      return I5(r, e);
     default:
       return String(r);
   }
 }
-function IU(r, e) {
+function I5(r, e) {
   if (r === null)
     return "null";
   if (e.includes(r))
     return "[Circular]";
   const i = [...e, r];
-  if (OU(r)) {
+  if (O5(r)) {
     const n = r.toJSON();
     if (n !== r)
       return typeof n == "string" ? n : wg(n, i);
   } else if (Array.isArray(r))
-    return LU(r, i);
-  return DU(r, i);
+    return L5(r, i);
+  return D5(r, i);
 }
-function OU(r) {
+function O5(r) {
   return typeof r.toJSON == "function";
 }
-function DU(r, e) {
+function D5(r, e) {
   const i = Object.entries(r);
-  return i.length === 0 ? "{}" : e.length > VC ? "[" + kU(r) + "]" : "{ " + i.map(
+  return i.length === 0 ? "{}" : e.length > VC ? "[" + k5(r) + "]" : "{ " + i.map(
     ([n, s]) => n + ": " + wg(s, e)
   ).join(", ") + " }";
 }
-function LU(r, e) {
+function L5(r, e) {
   if (r.length === 0)
     return "[]";
   if (e.length > VC)
     return "[Array]";
-  const i = Math.min(PU, r.length), n = r.length - i, s = [];
+  const i = Math.min(P5, r.length), n = r.length - i, s = [];
   for (let a = 0; a < i; ++a)
     s.push(wg(r[a], e));
   return n === 1 ? s.push("... 1 more item") : n > 1 && s.push(`... ${n} more items`), "[" + s.join(", ") + "]";
 }
-function kU(r) {
+function k5(r) {
   const e = Object.prototype.toString.call(r).replace(/^\[object /, "").replace(/]$/, "");
   if (e === "Object" && typeof r.constructor == "function") {
     const i = r.constructor.name;
@@ -9556,11 +9545,11 @@ function kU(r) {
   }
   return e;
 }
-const UU = globalThis.process && // eslint-disable-next-line no-undef
-process.env.NODE_ENV === "production", FU = (
+const U5 = globalThis.process && // eslint-disable-next-line no-undef
+process.env.NODE_ENV === "production", F5 = (
   /* c8 ignore next 6 */
   // FIXME: https://github.com/graphql/graphql-js/issues/2317
-  UU ? function(r, e) {
+  U5 ? function(r, e) {
     return r instanceof e;
   } : function(r, e) {
     if (r instanceof e)
@@ -9607,20 +9596,20 @@ let GC = class {
     return "Source";
   }
 };
-function BU(r) {
-  return FU(r, GC);
+function B5(r) {
+  return F5(r, GC);
 }
-function zU(r, e) {
-  const i = new jU(r, e), n = i.parseDocument();
+function z5(r, e) {
+  const i = new j5(r, e), n = i.parseDocument();
   return Object.defineProperty(n, "tokenCount", {
     enumerable: !1,
     value: i.tokenCount
   }), n;
 }
-class jU {
+class j5 {
   constructor(e, i = {}) {
-    const n = BU(e) ? e : new GC(e);
-    this._lexer = new xU(n), this._options = i, this._tokenCounter = 0;
+    const n = B5(e) ? e : new GC(e);
+    this._lexer = new x5(n), this._options = i, this._tokenCounter = 0;
   }
   get tokenCount() {
     return this._tokenCounter;
@@ -10590,7 +10579,7 @@ class jU {
    * given parsed object.
    */
   node(e, i) {
-    return this._options.noLocation !== !0 && (i.loc = new fU(
+    return this._options.noLocation !== !0 && (i.loc = new f5(
       e,
       this._lexer.lastToken,
       this._lexer.source
@@ -10726,16 +10715,16 @@ function mp(r) {
   return HC(r.kind) + (e != null ? ` "${e}"` : "");
 }
 function HC(r) {
-  return _U(r) ? `"${r}"` : r;
+  return _5(r) ? `"${r}"` : r;
 }
-function VU(r) {
-  return `"${r.replace(GU, HU)}"`;
+function V5(r) {
+  return `"${r.replace(G5, H5)}"`;
 }
-const GU = /[\x00-\x1f\x22\x5c\x7f-\x9f]/g;
-function HU(r) {
-  return WU[r.charCodeAt(0)];
+const G5 = /[\x00-\x1f\x22\x5c\x7f-\x9f]/g;
+function H5(r) {
+  return W5[r.charCodeAt(0)];
 }
-const WU = [
+const W5 = [
   "\\u0000",
   "\\u0001",
   "\\u0002",
@@ -10901,11 +10890,11 @@ const WU = [
   "\\u009D",
   "\\u009E",
   "\\u009F"
-], qU = Object.freeze({});
-function XU(r, e, i = UC) {
+], q5 = Object.freeze({});
+function X5(r, e, i = UC) {
   const n = /* @__PURE__ */ new Map();
   for (const g of Object.values(gt))
-    n.set(g, YU(e, g));
+    n.set(g, Y5(e, g));
   let s, a = Array.isArray(r), o = [r], l = -1, u = [], c = r, h, d;
   const p = [], f = [];
   do {
@@ -10939,7 +10928,7 @@ function XU(r, e, i = UC) {
       var m, v;
       fT(c) || Xf(!1, `Invalid AST Node: ${N_(c)}.`);
       const b = g ? (m = n.get(c.kind)) === null || m === void 0 ? void 0 : m.leave : (v = n.get(c.kind)) === null || v === void 0 ? void 0 : v.enter;
-      if (x = b == null ? void 0 : b.call(e, c, h, d, p, f), x === qU)
+      if (x = b == null ? void 0 : b.call(e, c, h, d, p, f), x === q5)
         break;
       if (x === !1) {
         if (!g) {
@@ -10969,7 +10958,7 @@ function XU(r, e, i = UC) {
   } while (s !== void 0);
   return u.length !== 0 ? u[u.length - 1][1] : r;
 }
-function YU(r, e) {
+function Y5(r, e) {
   const i = r[e];
   return typeof i == "object" ? i : typeof i == "function" ? {
     enter: i,
@@ -10979,10 +10968,10 @@ function YU(r, e) {
     leave: r.leave
   };
 }
-function $U(r) {
-  return XU(r, ZU);
+function $5(r) {
+  return X5(r, Z5);
 }
-const KU = 80, ZU = {
+const K5 = 80, Z5 = {
   Name: {
     leave: (r) => r.value
   },
@@ -11018,7 +11007,7 @@ const KU = 80, ZU = {
     leave({ alias: r, name: e, arguments: i, directives: n, selectionSet: s }) {
       const a = Ut("", r, ": ") + e;
       let o = a + Ut("(", tt(i, ", "), ")");
-      return o.length > KU && (o = a + Ut(`(
+      return o.length > K5 && (o = a + Ut(`(
 `, Yf(tt(i, `
 `)), `
 )`)), tt([o, tt(n, " "), s], " ");
@@ -11056,7 +11045,7 @@ const KU = 80, ZU = {
     leave: ({ value: r }) => r
   },
   StringValue: {
-    leave: ({ value: r, block: e }) => e ? bU(r) : VU(r)
+    leave: ({ value: r, block: e }) => e ? b5(r) : V5(r)
   },
   BooleanValue: {
     leave: ({ value: r }) => r ? "true" : "false"
@@ -11241,7 +11230,7 @@ function gT(r) {
   return (e = r == null ? void 0 : r.some((i) => i.includes(`
 `))) !== null && e !== void 0 ? e : !1;
 }
-const yT = "Accept", Zv = "Content-Type", Qv = "application/json", WC = "application/graphql-response+json", vT = (r) => r.replace(/([\s,]|#[^\n\r]+)+/g, " ").trim(), QU = (r) => {
+const yT = "Accept", Zv = "Content-Type", Qv = "application/json", WC = "application/graphql-response+json", vT = (r) => r.replace(/([\s,]|#[^\n\r]+)+/g, " ").trim(), Q5 = (r) => {
   const e = r.toLowerCase();
   return e.includes(WC) || e.includes(Qv);
 }, bT = (r) => {
@@ -11286,22 +11275,22 @@ ${String(r)}`);
     errors: e,
     extensions: n
   };
-}, JU = (r) => r._tag === "Batch" ? r.executionResults.some(_T) : _T(r.executionResult), _T = (r) => Array.isArray(r.errors) ? r.errors.length > 0 : !!r.errors, qC = (r) => typeof r == "object" && r !== null && "kind" in r && r.kind === gt.OPERATION_DEFINITION, e5 = (r) => {
+}, J5 = (r) => r._tag === "Batch" ? r.executionResults.some(_T) : _T(r.executionResult), _T = (r) => Array.isArray(r.errors) ? r.errors.length > 0 : !!r.errors, qC = (r) => typeof r == "object" && r !== null && "kind" in r && r.kind === gt.OPERATION_DEFINITION, eU = (r) => {
   var e;
   let i;
   const n = r.definitions.filter(qC);
   return n.length === 1 && (i = (e = n[0].name) == null ? void 0 : e.value), i;
-}, t5 = (r) => {
+}, tU = (r) => {
   let e = !1;
   const i = r.definitions.filter(qC);
   return i.length === 1 && (e = i[0].operation === al.MUTATION), e;
 }, yy = (r, e) => {
-  const i = typeof r == "string" ? r : $U(r);
+  const i = typeof r == "string" ? r : $5(r);
   let n = !1, s;
   if (e)
     return { expression: i, isMutation: n, operationName: s };
-  const a = sU(() => typeof r == "string" ? zU(r) : r);
-  return a instanceof Error ? { expression: i, isMutation: n, operationName: s } : (s = e5(a), n = t5(a), { expression: i, operationName: s, isMutation: n });
+  const a = s5(() => typeof r == "string" ? z5(r) : r);
+  return a instanceof Error ? { expression: i, isMutation: n, operationName: s } : (s = eU(a), n = tU(a), { expression: i, operationName: s, isMutation: n });
 }, P_ = JSON, vy = async (r) => {
   const e = {
     ...r,
@@ -11310,20 +11299,20 @@ ${String(r)}`);
       ...r.fetchOptions,
       errorPolicy: r.fetchOptions.errorPolicy ?? "none"
     }
-  }, i = await r5(e.method)(e);
+  }, i = await rU(e.method)(e);
   if (!i.ok)
     return new qu({ status: i.status, headers: i.headers }, {
       query: r.request._tag === "Single" ? r.request.document.expression : r.request.query,
       variables: r.request.variables
     });
-  const n = await i5(i, r.fetchOptions.jsonSerializer ?? P_);
+  const n = await iU(i, r.fetchOptions.jsonSerializer ?? P_);
   if (n instanceof Error)
     throw n;
   const s = {
     status: i.status,
     headers: i.headers
   };
-  if (JU(n) && e.fetchOptions.errorPolicy === "none") {
+  if (J5(n) && e.fetchOptions.errorPolicy === "none") {
     const a = n._tag === "Batch" ? { ...n.executionResults, ...s } : {
       ...n.executionResult,
       ...s
@@ -11351,13 +11340,13 @@ ${String(r)}`);
   extensions: e.extensions,
   data: e.data,
   errors: r.fetchOptions.errorPolicy === "all" ? e.errors : void 0
-}), i5 = async (r, e) => {
+}), iU = async (r, e) => {
   const i = r.headers.get(Zv), n = await r.text();
-  return i && QU(i) ? bT(e.parse(n)) : bT(n);
-}, r5 = (r) => async (e) => {
+  return i && Q5(i) ? bT(e.parse(n)) : bT(n);
+}, rU = (r) => async (e) => {
   const i = new Headers(e.headers);
   let n = null, s;
-  i.has(yT) || i.set(yT, [WC, Qv].join(", ")), r === "POST" ? (s = (e.fetchOptions.jsonSerializer ?? P_).stringify(n5(e)), typeof s == "string" && !i.has(Zv) && i.set(Zv, Qv)) : n = s5(e);
+  i.has(yT) || i.set(yT, [WC, Qv].join(", ")), r === "POST" ? (s = (e.fetchOptions.jsonSerializer ?? P_).stringify(nU(e)), typeof s == "string" && !i.has(Zv) && i.set(Zv, Qv)) : n = sU(e);
   const a = { method: r, headers: i, body: s, ...e.fetchOptions };
   let o = new URL(e.url), l = a;
   if (e.middleware) {
@@ -11372,7 +11361,7 @@ ${String(r)}`);
   return n && n.forEach((u, c) => {
     o.searchParams.append(c, u);
   }), await (e.fetch ?? fetch)(o, l);
-}, n5 = (r) => {
+}, nU = (r) => {
   switch (r.request._tag) {
     case "Single":
       return {
@@ -11388,7 +11377,7 @@ ${String(r)}`);
     default:
       throw C_(r.request);
   }
-}, s5 = (r) => {
+}, sU = (r) => {
   var e;
   const i = r.fetchOptions.jsonSerializer ?? P_, n = new URLSearchParams();
   switch (r.request._tag) {
@@ -11408,7 +11397,7 @@ ${String(r)}`);
 class XC {
   constructor(e, i = {}) {
     Zh(this, "url"), Zh(this, "requestConfig"), Zh(this, "rawRequest", async (...n) => {
-      const [s, a, o] = n, l = lU(s, a, o), { headers: u, fetch: c = globalThis.fetch, method: h = "POST", requestMiddleware: d, responseMiddleware: p, excludeOperationName: f, ...m } = this.requestConfig, { url: v } = this;
+      const [s, a, o] = n, l = l5(s, a, o), { headers: u, fetch: c = globalThis.fetch, method: h = "POST", requestMiddleware: d, responseMiddleware: p, excludeOperationName: f, ...m } = this.requestConfig, { url: v } = this;
       l.signal !== void 0 && (m.signal = l.signal);
       const y = yy(l.query, f), g = await vy({
         url: v,
@@ -11436,7 +11425,7 @@ class XC {
     }), this.url = e, this.requestConfig = i;
   }
   async request(e, ...i) {
-    const [n, s] = i, a = a5(e, n, s), { headers: o, fetch: l = globalThis.fetch, method: u = "POST", requestMiddleware: c, responseMiddleware: h, excludeOperationName: d, ...p } = this.requestConfig, { url: f } = this;
+    const [n, s] = i, a = aU(e, n, s), { headers: o, fetch: l = globalThis.fetch, method: u = "POST", requestMiddleware: c, responseMiddleware: h, excludeOperationName: d, ...p } = this.requestConfig, { url: f } = this;
     a.signal !== void 0 && (p.signal = a.signal);
     const m = yy(a.document, d), v = await vy({
       url: f,
@@ -11463,7 +11452,7 @@ class XC {
     return v.data;
   }
   async batchRequests(e, i) {
-    const n = oU(e, i), { headers: s, excludeOperationName: a, ...o } = this.requestConfig;
+    const n = o5(e, i), { headers: s, excludeOperationName: a, ...o } = this.requestConfig;
     n.signal !== void 0 && (o.signal = n.signal);
     const l = n.documents.map(({ document: p }) => yy(p, a)), u = l.map(({ expression: p }) => p), c = l.some(({ isMutation: p }) => p), h = n.documents.map(({ variables: p }) => p), d = await vy({
       url: this.url,
@@ -11508,7 +11497,7 @@ class XC {
     return this.url = e, this;
   }
 }
-const a5 = (r, e, i) => r.document ? r : {
+const aU = (r, e, i) => r.document ? r : {
   document: r,
   variables: e,
   requestHeaders: i,
@@ -11518,7 +11507,7 @@ const a5 = (r, e, i) => r.document ? r : {
     url: " https://prod.base.intuition-api.com/v1/graphql",
     displayName: "Base Mainnet"
   }
-}, Xd = (r) => new XC(YC[r].url), o5 = async (r, e = "baseSepolia") => {
+}, Xd = (r) => new XC(YC[r].url), oU = async (r, e = "baseSepolia") => {
   const i = Xd(e);
   let n;
   n = Ji`
@@ -11542,7 +11531,7 @@ const a5 = (r, e, i) => r.document ? r : {
   } catch (a) {
     throw console.error("Error fetching atom details:", a), a;
   }
-}, l5 = async (r = "baseSepolia") => {
+}, lU = async (r = "baseSepolia") => {
   const e = Xd(r);
   let i, n;
   return i = Ji`
@@ -11574,7 +11563,7 @@ const a5 = (r, e, i) => r.document ? r : {
   `, n = await e.request(i), {
     items: n.triples
   }.items;
-}, u5 = async (r, e = "baseSepolia") => {
+}, uU = async (r, e = "baseSepolia") => {
   const i = Xd(e);
   let n, s, a;
   return n = Ji`
@@ -11624,7 +11613,7 @@ const a5 = (r, e, i) => r.document ? r : {
       ]
     }
   }, s = await i.request(n, a), s.triples;
-}, c5 = async (r, e = "baseSepolia") => {
+}, cU = async (r, e = "baseSepolia") => {
   const i = Xd(e), n = Ji`
     query SearchTriples($where: triples_bool_exp) {
       triples(where: $where) {
@@ -11681,21 +11670,21 @@ const a5 = (r, e, i) => r.document ? r : {
   } catch (o) {
     throw console.error("Error executing search query:", o), o;
   }
-}, h5 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, hU = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   ENDPOINTS: YC,
   createClient: Xd,
-  fetchAtomDetails: o5,
-  fetchTriples: l5,
-  fetchTriplesForNode: u5,
-  searchTriples: c5
+  fetchAtomDetails: oU,
+  fetchTriples: lU,
+  fetchTriplesForNode: uU,
+  searchTriples: cU
 }, Symbol.toStringTag, { value: "Module" })), $C = {
   baseSepolia: {
     url: "https://testnet.intuition.sh/v1/graphql",
     displayName: "Intuition Testnet"
   },
   base: {
-    url: "https://mainnet.intuition.sh/v1/graphql",
+    url: "https://proxy.agent-bossfighters.com/graphql",
     displayName: "Intuition Mainnet"
   }
 }, Bc = (r) => new XC($C[r].url), Sm = (r) => ({
@@ -11717,7 +11706,7 @@ const a5 = (r, e, i) => r.document ? r : {
     type: r.object.type,
     image: r.object.image
   }
-}), d5 = async (r, e = "base") => {
+}), dU = async (r, e = "base") => {
   const i = Bc(e);
   let n;
   n = Ji`
@@ -11741,7 +11730,7 @@ const a5 = (r, e, i) => r.document ? r : {
   } catch (a) {
     throw console.error("Error fetching atom details:", a), a;
   }
-}, p5 = async (r = "base") => {
+}, pU = async (r = "base") => {
   const e = Bc(r);
   try {
     const i = Ji`
@@ -11816,7 +11805,7 @@ const a5 = (r, e, i) => r.document ? r : {
   } catch (i) {
     return console.error("Error fetching triples:", i), [];
   }
-}, f5 = async (r, e = "base") => {
+}, fU = async (r, e = "base") => {
   const i = Bc(e);
   try {
     const n = Ji`
@@ -11911,7 +11900,7 @@ const a5 = (r, e, i) => r.document ? r : {
   } catch (n) {
     return console.error("Error fetching triples for node:", n), [];
   }
-}, m5 = async (r, e = "base") => {
+}, mU = async (r, e = "base") => {
   const i = Bc(e);
   try {
     const n = [], s = [], a = [];
@@ -12183,16 +12172,16 @@ const a5 = (r, e, i) => r.document ? r : {
   __proto__: null,
   ENDPOINTS: $C,
   createClient: Bc,
-  fetchAtomDetails: d5,
-  fetchTriples: p5,
+  fetchAtomDetails: dU,
+  fetchTriples: pU,
   fetchTriplesForAgent: KC,
-  fetchTriplesForNode: f5,
-  searchTriples: m5
+  fetchTriplesForNode: fU,
+  searchTriples: mU
 }, Symbol.toStringTag, { value: "Module" })), by = {
   railsMockApi: {
     url: "https://api-i7n.thp-lab.org/api/v1/graph",
     displayName: "[OffChain] Playground API",
-    module: h5
+    module: hU
     // Default to Base module for railsMockApi
   },
   baseSepolia: {
@@ -12201,7 +12190,7 @@ const a5 = (r, e, i) => r.document ? r : {
     module: TT
   },
   base: {
-    url: "https://mainnet.intuition.sh/v1/graphql",
+    url: "https://proxy.agent-bossfighters.com/graphql",
     displayName: "Intuition Mainnet",
     module: TT
   }
@@ -12216,7 +12205,7 @@ const a5 = (r, e, i) => r.document ? r : {
   } catch (i) {
     throw console.error(`Error fetching triples for endpoint ${r}:`, i), i;
   }
-}, g5 = async (r, e = "base") => {
+}, gU = async (r, e = "base") => {
   const i = Tg(e);
   try {
     return i.fetchTriplesForNode(r, e);
@@ -12226,7 +12215,7 @@ const a5 = (r, e, i) => r.document ? r : {
       n
     ), n;
   }
-}, y5 = async (r, e = "base") => {
+}, yU = async (r, e = "base") => {
   const i = Tg(e);
   try {
     return i.fetchAtomDetails(r, e);
@@ -12243,7 +12232,7 @@ const a5 = (r, e, i) => r.document ? r : {
   } catch (n) {
     throw console.error(`Error searching triples with endpoint ${e}:`, n), n;
   }
-}, v5 = async (r, e = "baseSepolia", i = 1e3) => KC(r, e, i), O_ = ({ triple: r, endpoint: e, onClose: i }) => {
+}, vU = async (r, e = "baseSepolia", i = 1e3) => KC(r, e, i), O_ = ({ triple: r, endpoint: e, onClose: i }) => {
   var n;
   const [s, a] = fe(null), [o, l] = fe(null), [u, c] = fe(!1), [h, d] = fe(null);
   Ot(() => {
@@ -12256,7 +12245,7 @@ const a5 = (r, e, i) => r.document ? r : {
           }
         );
         if (a(v), r.id) {
-          const y = await y5(
+          const y = await yU(
             r.id,
             e
           );
@@ -12551,7 +12540,7 @@ const a5 = (r, e, i) => r.document ? r : {
       ]
     }
   );
-}, b5 = ({ graphData: r, onNodeClick: e, onBack: i, onForward: n, selectedTriple: s, endpoint: a, disableNodeDetailsSidebar: o = !1 }) => {
+}, bU = ({ graphData: r, onNodeClick: e, onBack: i, onForward: n, selectedTriple: s, endpoint: a, disableNodeDetailsSidebar: o = !1 }) => {
   const l = Wi(), u = Wi(), [c, h] = fe({ width: 100, height: 100 });
   return Ot(() => {
     const d = () => {
@@ -12785,7 +12774,7 @@ const a5 = (r, e, i) => r.document ? r : {
           }
         ` })
   ] });
-}, x5 = ({
+}, xU = ({
   subjectFilter: r,
   predicateFilter: e,
   objectFilter: i,
@@ -12949,7 +12938,7 @@ const a5 = (r, e, i) => r.document ? r : {
     ]
   }
 );
-function _5(r, e) {
+function _U(r, e) {
   var i = r == null ? null : typeof Symbol < "u" && r[Symbol.iterator] || r["@@iterator"];
   if (i != null) {
     var n, s, a, o, l = [], u = !0, c = !1;
@@ -12970,8 +12959,8 @@ function _5(r, e) {
     return l;
   }
 }
-function w5(r, e, i) {
-  return e = N5(e), e in r ? Object.defineProperty(r, e, {
+function wU(r, e, i) {
+  return e = NU(e), e in r ? Object.defineProperty(r, e, {
     value: i,
     enumerable: !0,
     configurable: !0,
@@ -12979,18 +12968,18 @@ function w5(r, e, i) {
   }) : r[e] = i, r;
 }
 function ST(r, e) {
-  return E5(r) || _5(r, e) || QC(r, e) || C5();
+  return EU(r) || _U(r, e) || QC(r, e) || CU();
 }
-function T5(r) {
-  return S5(r) || M5(r) || QC(r) || A5();
+function TU(r) {
+  return SU(r) || MU(r) || QC(r) || AU();
 }
-function S5(r) {
+function SU(r) {
   if (Array.isArray(r)) return Jv(r);
 }
-function E5(r) {
+function EU(r) {
   if (Array.isArray(r)) return r;
 }
-function M5(r) {
+function MU(r) {
   if (typeof Symbol < "u" && r[Symbol.iterator] != null || r["@@iterator"] != null) return Array.from(r);
 }
 function QC(r, e) {
@@ -13006,15 +12995,15 @@ function Jv(r, e) {
   for (var i = 0, n = new Array(e); i < e; i++) n[i] = r[i];
   return n;
 }
-function A5() {
+function AU() {
   throw new TypeError(`Invalid attempt to spread non-iterable instance.
 In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`);
 }
-function C5() {
+function CU() {
   throw new TypeError(`Invalid attempt to destructure non-iterable instance.
 In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`);
 }
-function R5(r, e) {
+function RU(r, e) {
   if (typeof r != "object" || r === null) return r;
   var i = r[Symbol.toPrimitive];
   if (i !== void 0) {
@@ -13024,18 +13013,18 @@ function R5(r, e) {
   }
   return (e === "string" ? String : Number)(r);
 }
-function N5(r) {
-  var e = R5(r, "string");
+function NU(r) {
+  var e = RU(r, "string");
   return typeof e == "symbol" ? e : String(e);
 }
-var P5 = function(r, e) {
+var PU = function(r, e) {
   var i = new Set(e);
-  return Object.assign.apply(Object, [{}].concat(T5(Object.entries(r).filter(function(n) {
+  return Object.assign.apply(Object, [{}].concat(TU(Object.entries(r).filter(function(n) {
     var s = ST(n, 1), a = s[0];
     return !i.has(a);
   }).map(function(n) {
     var s = ST(n, 2), a = s[0], o = s[1];
-    return w5({}, a, o);
+    return wU({}, a, o);
   }))));
 };
 function eb(r, e) {
@@ -13043,16 +13032,16 @@ function eb(r, e) {
   for (var i = 0, n = Array(e); i < e; i++) n[i] = r[i];
   return n;
 }
-function I5(r) {
+function IU(r) {
   if (Array.isArray(r)) return r;
 }
-function O5(r) {
+function OU(r) {
   if (Array.isArray(r)) return eb(r);
 }
-function D5(r) {
+function DU(r) {
   if (typeof Symbol < "u" && r[Symbol.iterator] != null || r["@@iterator"] != null) return Array.from(r);
 }
-function L5(r, e) {
+function LU(r, e) {
   var i = r == null ? null : typeof Symbol < "u" && r[Symbol.iterator] || r["@@iterator"];
   if (i != null) {
     var n, s, a, o, l = [], u = !0, c = !1;
@@ -13070,19 +13059,19 @@ function L5(r, e) {
     return l;
   }
 }
-function k5() {
+function kU() {
   throw new TypeError(`Invalid attempt to destructure non-iterable instance.
 In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`);
 }
-function U5() {
+function UU() {
   throw new TypeError(`Invalid attempt to spread non-iterable instance.
 In order to be iterable, non-array objects must have a [Symbol.iterator]() method.`);
 }
-function F5(r, e) {
-  return I5(r) || L5(r, e) || JC(r, e) || k5();
+function FU(r, e) {
+  return IU(r) || LU(r, e) || JC(r, e) || kU();
 }
 function ET(r) {
-  return O5(r) || D5(r) || JC(r) || U5();
+  return OU(r) || DU(r) || JC(r) || UU();
 }
 function JC(r, e) {
   if (r) {
@@ -13117,7 +13106,7 @@ function Sg(r) {
       },
       [f]
     ), v = Wi({});
-    return Object.keys(P5(h, [].concat(ET(l), ET(c)))).filter(function(y) {
+    return Object.keys(PU(h, [].concat(ET(l), ET(c)))).filter(function(y) {
       return v.current[y] !== h[y];
     }).forEach(function(y) {
       return m(y, h[y]);
@@ -13135,7 +13124,7 @@ function Sg(r) {
   });
 }
 function MT(r) {
-  var e = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : Ot, i = Wi(), n = Wi(!1), s = Wi(!1), a = fe(0), o = F5(a, 2);
+  var e = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : Ot, i = Wi(), n = Wi(!1), s = Wi(!1), a = fe(0), o = FU(a, 2);
   o[0];
   var l = o[1];
   n.current && (s.current = !0), e(function() {
@@ -13156,7 +13145,7 @@ var tb = { exports: {} }, xy = { exports: {} }, Yt = {};
  * LICENSE file in the root directory of this source tree.
  */
 var AT;
-function B5() {
+function BU() {
   if (AT) return Yt;
   AT = 1;
   var r = typeof Symbol == "function" && Symbol.for, e = r ? Symbol.for("react.element") : 60103, i = r ? Symbol.for("react.portal") : 60106, n = r ? Symbol.for("react.fragment") : 60107, s = r ? Symbol.for("react.strict_mode") : 60108, a = r ? Symbol.for("react.profiler") : 60114, o = r ? Symbol.for("react.provider") : 60109, l = r ? Symbol.for("react.context") : 60110, u = r ? Symbol.for("react.async_mode") : 60111, c = r ? Symbol.for("react.concurrent_mode") : 60111, h = r ? Symbol.for("react.forward_ref") : 60112, d = r ? Symbol.for("react.suspense") : 60113, p = r ? Symbol.for("react.suspense_list") : 60120, f = r ? Symbol.for("react.memo") : 60115, m = r ? Symbol.for("react.lazy") : 60116, v = r ? Symbol.for("react.block") : 60121, y = r ? Symbol.for("react.fundamental") : 60117, g = r ? Symbol.for("react.responder") : 60118, _ = r ? Symbol.for("react.scope") : 60119;
@@ -13231,7 +13220,7 @@ var Jt = {};
  * LICENSE file in the root directory of this source tree.
  */
 var CT;
-function z5() {
+function zU() {
   return CT || (CT = 1, process.env.NODE_ENV !== "production" && function() {
     var r = typeof Symbol == "function" && Symbol.for, e = r ? Symbol.for("react.element") : 60103, i = r ? Symbol.for("react.portal") : 60106, n = r ? Symbol.for("react.fragment") : 60107, s = r ? Symbol.for("react.strict_mode") : 60108, a = r ? Symbol.for("react.profiler") : 60114, o = r ? Symbol.for("react.provider") : 60109, l = r ? Symbol.for("react.context") : 60110, u = r ? Symbol.for("react.async_mode") : 60111, c = r ? Symbol.for("react.concurrent_mode") : 60111, h = r ? Symbol.for("react.forward_ref") : 60112, d = r ? Symbol.for("react.suspense") : 60113, p = r ? Symbol.for("react.suspense_list") : 60120, f = r ? Symbol.for("react.memo") : 60115, m = r ? Symbol.for("react.lazy") : 60116, v = r ? Symbol.for("react.block") : 60121, y = r ? Symbol.for("react.fundamental") : 60117, g = r ? Symbol.for("react.responder") : 60118, _ = r ? Symbol.for("react.scope") : 60119;
     function x(ye) {
@@ -13315,7 +13304,7 @@ function z5() {
 }
 var RT;
 function eR() {
-  return RT || (RT = 1, process.env.NODE_ENV === "production" ? xy.exports = B5() : xy.exports = z5()), xy.exports;
+  return RT || (RT = 1, process.env.NODE_ENV === "production" ? xy.exports = BU() : xy.exports = zU()), xy.exports;
 }
 /*
 object-assign
@@ -13323,7 +13312,7 @@ object-assign
 @license MIT
 */
 var _y, NT;
-function j5() {
+function jU() {
   if (NT) return _y;
   NT = 1;
   var r = Object.getOwnPropertySymbols, e = Object.prototype.hasOwnProperty, i = Object.prototype.propertyIsEnumerable;
@@ -13380,7 +13369,7 @@ function tR() {
   return OT || (OT = 1, IT = Function.call.bind(Object.prototype.hasOwnProperty)), IT;
 }
 var Ty, DT;
-function V5() {
+function VU() {
   if (DT) return Ty;
   DT = 1;
   var r = function() {
@@ -13429,10 +13418,10 @@ function V5() {
   }, Ty = s, Ty;
 }
 var Sy, LT;
-function G5() {
+function GU() {
   if (LT) return Sy;
   LT = 1;
-  var r = eR(), e = j5(), i = D_(), n = tR(), s = V5(), a = function() {
+  var r = eR(), e = jU(), i = D_(), n = tR(), s = VU(), a = function() {
   };
   process.env.NODE_ENV !== "production" && (a = function(l) {
     var u = "Warning: " + l;
@@ -13750,7 +13739,7 @@ Valid keys: ` + JSON.stringify(Object.keys(z), null, "  ")
   }, Sy;
 }
 var Ey, kT;
-function H5() {
+function HU() {
   if (kT) return Ey;
   kT = 1;
   var r = D_();
@@ -13798,18 +13787,18 @@ function H5() {
   }, Ey;
 }
 if (process.env.NODE_ENV !== "production") {
-  var W5 = eR(), q5 = !0;
-  tb.exports = G5()(W5.isElement, q5);
+  var WU = eR(), qU = !0;
+  tb.exports = GU()(WU.isElement, qU);
 } else
-  tb.exports = H5()();
-var X5 = tb.exports;
-const ne = /* @__PURE__ */ A_(X5);
+  tb.exports = HU()();
+var XU = tb.exports;
+const ne = /* @__PURE__ */ A_(XU);
 /**
  * @license
  * Copyright 2010-2024 Three.js Authors
  * SPDX-License-Identifier: MIT
  */
-const Eg = "170", sr = { ROTATE: 0, DOLLY: 1, PAN: 2 }, sa = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 }, Y5 = 0, UT = 1, $5 = 2, iR = 1, K5 = 2, qs = 3, vo = 0, Ir = 1, ea = 2, ha = 0, Xu = 1, FT = 2, BT = 3, zT = 4, Z5 = 5, Zo = 100, Q5 = 101, J5 = 102, eF = 103, tF = 104, iF = 200, rF = 201, nF = 202, sF = 203, ib = 204, rb = 205, aF = 206, oF = 207, lF = 208, uF = 209, cF = 210, hF = 211, dF = 212, pF = 213, fF = 214, nb = 0, sb = 1, ab = 2, mc = 3, ob = 4, lb = 5, ub = 6, cb = 7, L_ = 0, mF = 1, gF = 2, co = 0, yF = 1, vF = 2, bF = 3, xF = 4, _F = 5, wF = 6, TF = 7, rR = 300, gc = 301, yc = 302, hb = 303, db = 304, Mg = 306, pb = 1e3, ol = 1001, fb = 1002, Jn = 1003, SF = 1004, gp = 1005, ms = 1006, My = 1007, ll = 1008, wa = 1009, nR = 1010, sR = 1011, md = 1012, k_ = 1013, Sl = 1014, aa = 1015, zc = 1016, U_ = 1017, F_ = 1018, vc = 1020, aR = 35902, oR = 1021, lR = 1022, Kn = 1023, uR = 1024, cR = 1025, Yu = 1026, bc = 1027, hR = 1028, B_ = 1029, dR = 1030, z_ = 1031, j_ = 1033, $f = 33776, Kf = 33777, Zf = 33778, Qf = 33779, mb = 35840, gb = 35841, yb = 35842, vb = 35843, bb = 36196, xb = 37492, _b = 37496, wb = 37808, Tb = 37809, Sb = 37810, Eb = 37811, Mb = 37812, Ab = 37813, Cb = 37814, Rb = 37815, Nb = 37816, Pb = 37817, Ib = 37818, Ob = 37819, Db = 37820, Lb = 37821, Jf = 36492, kb = 36494, Ub = 36495, pR = 36283, Fb = 36284, Bb = 36285, zb = 36286, EF = 3200, MF = 3201, fR = 0, AF = 1, to = "", un = "srgb", jc = "srgb-linear", Ag = "linear", ti = "srgb", Hl = 7680, jT = 519, CF = 512, RF = 513, NF = 514, mR = 515, PF = 516, IF = 517, OF = 518, DF = 519, jb = 35044, VT = "300 es", oa = 2e3, Em = 2001;
+const Eg = "170", sr = { ROTATE: 0, DOLLY: 1, PAN: 2 }, sa = { ROTATE: 0, PAN: 1, DOLLY_PAN: 2, DOLLY_ROTATE: 3 }, YU = 0, UT = 1, $U = 2, iR = 1, KU = 2, qs = 3, vo = 0, Ir = 1, ea = 2, ha = 0, Xu = 1, FT = 2, BT = 3, zT = 4, ZU = 5, Zo = 100, QU = 101, JU = 102, eF = 103, tF = 104, iF = 200, rF = 201, nF = 202, sF = 203, ib = 204, rb = 205, aF = 206, oF = 207, lF = 208, uF = 209, cF = 210, hF = 211, dF = 212, pF = 213, fF = 214, nb = 0, sb = 1, ab = 2, mc = 3, ob = 4, lb = 5, ub = 6, cb = 7, L_ = 0, mF = 1, gF = 2, co = 0, yF = 1, vF = 2, bF = 3, xF = 4, _F = 5, wF = 6, TF = 7, rR = 300, gc = 301, yc = 302, hb = 303, db = 304, Mg = 306, pb = 1e3, ol = 1001, fb = 1002, Jn = 1003, SF = 1004, gp = 1005, ms = 1006, My = 1007, ll = 1008, wa = 1009, nR = 1010, sR = 1011, md = 1012, k_ = 1013, Sl = 1014, aa = 1015, zc = 1016, U_ = 1017, F_ = 1018, vc = 1020, aR = 35902, oR = 1021, lR = 1022, Kn = 1023, uR = 1024, cR = 1025, Yu = 1026, bc = 1027, hR = 1028, B_ = 1029, dR = 1030, z_ = 1031, j_ = 1033, $f = 33776, Kf = 33777, Zf = 33778, Qf = 33779, mb = 35840, gb = 35841, yb = 35842, vb = 35843, bb = 36196, xb = 37492, _b = 37496, wb = 37808, Tb = 37809, Sb = 37810, Eb = 37811, Mb = 37812, Ab = 37813, Cb = 37814, Rb = 37815, Nb = 37816, Pb = 37817, Ib = 37818, Ob = 37819, Db = 37820, Lb = 37821, Jf = 36492, kb = 36494, Ub = 36495, pR = 36283, Fb = 36284, Bb = 36285, zb = 36286, EF = 3200, MF = 3201, fR = 0, AF = 1, to = "", un = "srgb", jc = "srgb-linear", Ag = "linear", ti = "srgb", Hl = 7680, jT = 519, CF = 512, RF = 513, NF = 514, mR = 515, PF = 516, IF = 517, OF = 518, DF = 519, jb = 35044, VT = "300 es", oa = 2e3, Em = 2001;
 let Il = class {
   addEventListener(r, e) {
     this._listeners === void 0 && (this._listeners = {});
@@ -24409,7 +24398,7 @@ function NS(r) {
 }
 function S6(r) {
   let e = "SHADOWMAP_TYPE_BASIC";
-  return r.shadowMapType === iR ? e = "SHADOWMAP_TYPE_PCF" : r.shadowMapType === K5 ? e = "SHADOWMAP_TYPE_PCF_SOFT" : r.shadowMapType === qs && (e = "SHADOWMAP_TYPE_VSM"), e;
+  return r.shadowMapType === iR ? e = "SHADOWMAP_TYPE_PCF" : r.shadowMapType === KU ? e = "SHADOWMAP_TYPE_PCF_SOFT" : r.shadowMapType === qs && (e = "SHADOWMAP_TYPE_VSM"), e;
 }
 function E6(r) {
   let e = "ENVMAP_TYPE_CUBE";
@@ -25729,8 +25718,8 @@ function $6(r, e) {
   }
   const ye = {
     [Zo]: r.FUNC_ADD,
-    [Q5]: r.FUNC_SUBTRACT,
-    [J5]: r.FUNC_REVERSE_SUBTRACT
+    [QU]: r.FUNC_SUBTRACT,
+    [JU]: r.FUNC_REVERSE_SUBTRACT
   };
   ye[eF] = r.MIN, ye[tF] = r.MAX;
   const ct = {
@@ -25755,7 +25744,7 @@ function $6(r, e) {
       v === !0 && (ce(r.BLEND), v = !1);
       return;
     }
-    if (v === !1 && (ie(r.BLEND), v = !0), te !== Z5) {
+    if (v === !1 && (ie(r.BLEND), v = !0), te !== ZU) {
       if (te !== y || zt !== E) {
         if ((g !== Zo || b !== Zo) && (r.blendEquation(r.FUNC_ADD), g = Zo, b = Zo), zt)
           switch (te) {
@@ -25810,7 +25799,7 @@ function $6(r, e) {
     S !== te && (te ? r.frontFace(r.CW) : r.frontFace(r.CCW), S = te);
   }
   function vt(te) {
-    te !== Y5 ? (ie(r.CULL_FACE), te !== R && (te === UT ? r.cullFace(r.BACK) : te === $5 ? r.cullFace(r.FRONT) : r.cullFace(r.FRONT_AND_BACK))) : ce(r.CULL_FACE), R = te;
+    te !== YU ? (ie(r.CULL_FACE), te !== R && (te === UT ? r.cullFace(r.BACK) : te === $U ? r.cullFace(r.FRONT) : r.cullFace(r.FRONT_AND_BACK))) : ce(r.CULL_FACE), R = te;
   }
   function qe(te) {
     te !== P && (L && r.lineWidth(te), P = te);
@@ -61170,7 +61159,7 @@ const hA = {
     m(!0);
     try {
       let B;
-      e === "agent" ? B = await v5(s, r) : B = await I_(r);
+      e === "agent" ? B = await vU(s, r) : B = await I_(r);
       const q = bm(B);
       o(q), u(q);
     } catch (B) {
@@ -61192,7 +61181,7 @@ const hA = {
             x: B.x,
             y: B.y,
             z: B.z || 0
-          }, W = await g5(B.id, r), J = bm(W), ie = J.nodes.find((ce) => ce.id === B.id);
+          }, W = await gU(B.id, r), J = bm(W), ie = J.nodes.find((ce) => ce.id === B.id);
           ie && (ie.x = F.x, ie.y = F.y, V === "3D" && (ie.z = F.z), ie.fx = F.x, ie.fy = F.y, V === "3D" && (ie.fz = F.z)), y((ce) => {
             const ge = ce.slice(
               0,
@@ -62121,7 +62110,7 @@ const aoe = 15 * 60 * 1e3, ooe = async (r) => {
                         position: "relative"
                       },
                       children: /* @__PURE__ */ ae.jsx(
-                        x5,
+                        xU,
                         {
                           subjectFilter: R,
                           predicateFilter: P,
@@ -62169,7 +62158,7 @@ const aoe = 15 * 60 * 1e3, ooe = async (r) => {
           }
         ),
         u === "VR" && /* @__PURE__ */ ae.jsx(
-          b5,
+          bU,
           {
             graphData: ge,
             onNodeClick: (qe) => {
@@ -64435,7 +64424,7 @@ function Yoe(r) {
 }
 var Zt = /* @__PURE__ */ ((r) => (r.MAINNET = "mainnet", r.TESTNET = "testnet", r))(Zt || {});
 const ur = {
-  mainnet: "https://mainnet.intuition.sh/v1/graphql",
+  mainnet: "https://proxy.agent-bossfighters.com/graphql",
   testnet: "https://testnet.intuition.sh/v1/graphql"
 }, Ew = async (r, e = Zt.MAINNET) => {
   var i, n, s, a, o, l, u, c, h;
@@ -65548,7 +65537,7 @@ const Ko = {
   const a = [];
   let o = 0, l = !0;
   for (; l; ) {
-    const d = await (await fetch(r, {
+    const d = await (await fetch("https://proxy.agent-bossfighters.com/graphql", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -67702,71 +67691,60 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
   numberOfTransactions: r,
   totalUnits: e,
   onResetAll: i
-}) => /* @__PURE__ */ O.jsxs(
+}) => /* @__PURE__ */ O.jsx(
   "div",
   {
     style: {
-      backgroundColor: "rgba(0, 0, 0, 0.85)",
-      padding: "10px",
+      padding: "10px, 20px",
       borderRadius: "8px",
       marginBottom: "25px",
       display: "flex",
-      flexDirection: "column",
-      border: "1px solid rgb(105, 105, 105)"
+      flexDirection: "column"
     },
-    children: [
-      /* @__PURE__ */ O.jsxs("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "15px" }, children: [
-        /* @__PURE__ */ O.jsxs("div", { children: [
-          /* @__PURE__ */ O.jsx("div", { style: { fontSize: "0.9em", color: "#6b7280" }, children: "Unit value:" }),
-          /* @__PURE__ */ O.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
-            WO(e),
-            " TRUST"
-          ] })
-        ] }),
-        /* @__PURE__ */ O.jsxs("div", { children: [
-          /* @__PURE__ */ O.jsx("div", { style: { fontSize: "0.9em", color: "#6b7280" }, children: "Number of transactions:" }),
-          /* @__PURE__ */ O.jsx("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: r })
-        ] }),
-        /* @__PURE__ */ O.jsxs("div", { children: [
-          /* @__PURE__ */ O.jsx("div", { style: { fontSize: "0.9em", color: "#6b7280" }, children: "Estimated gas cost:" }),
-          /* @__PURE__ */ O.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
-            "~",
-            Ple(r),
-            " TRUST"
-          ] })
+    children: /* @__PURE__ */ O.jsxs("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: "15px" }, children: [
+      /* @__PURE__ */ O.jsxs("div", { children: [
+        /* @__PURE__ */ O.jsx("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: "Unit value" }),
+        /* @__PURE__ */ O.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
+          WO(e),
+          " $TRUST"
         ] })
       ] }),
-      /* @__PURE__ */ O.jsxs("div", { style: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-      }, children: [
-        /* @__PURE__ */ O.jsxs("div", { style: { fontSize: "1em", fontWeight: "bold" }, children: [
-          "Total units selected:",
-          /* @__PURE__ */ O.jsxs("span", { style: { fontSize: "1.6em", marginLeft: "10px", color: "#FFD32A" }, children: [
-            e,
-            " ",
-            e === 1 ? "unit" : "units"
-          ] })
-        ] }),
-        e > 0 && /* @__PURE__ */ O.jsx(
-          "button",
-          {
-            onClick: i,
-            style: {
-              backgroundColor: "transparent",
-              border: "1px solid #6b7280",
-              color: "#FFF",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "0.9em"
-            },
-            children: "Reset all"
-          }
-        )
-      ] })
-    ]
+      /* @__PURE__ */ O.jsxs("div", { children: [
+        /* @__PURE__ */ O.jsx("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: "Nb transactions" }),
+        /* @__PURE__ */ O.jsx("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: r })
+      ] }),
+      /* @__PURE__ */ O.jsxs("div", { children: [
+        /* @__PURE__ */ O.jsx("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: "Estimated gas cost" }),
+        /* @__PURE__ */ O.jsxs("div", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
+          "~",
+          Ple(r),
+          " $TRUST"
+        ] })
+      ] }),
+      /* @__PURE__ */ O.jsxs("div", { style: { fontSize: "0.9em", color: "#FFFFFF" }, children: [
+        "Total units selected:",
+        /* @__PURE__ */ O.jsxs("span", { style: { fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }, children: [
+          e,
+          " ",
+          e === 1 ? "unit" : "units"
+        ] })
+      ] }),
+      e > 0 && /* @__PURE__ */ O.jsx(
+        "button",
+        {
+          onClick: i,
+          style: {
+            backgroundColor: "#FFD32A",
+            color: "#000",
+            padding: "6px 12px",
+            borderRadius: "4px",
+            cursor: "pointer",
+            fontSize: "0.9em"
+          },
+          children: "Reset all"
+        }
+      )
+    ] })
   }
 ), Ole = ({ onClose: r }) => /* @__PURE__ */ O.jsxs(
   "div",
@@ -67774,12 +67752,10 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     style: {
       display: "flex",
       justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "25px",
-      borderBottom: "1px solid rgb(105, 105, 105)"
+      alignItems: "center"
     },
     children: [
-      /* @__PURE__ */ O.jsx("h2", { style: { fontSize: "1.3em", color: "#FFD32A", margin: 0, fontWeight: "bold" }, children: "VOTE ON CLAIMS" }),
+      /* @__PURE__ */ O.jsx("h2", { style: { fontSize: "1.5em", color: "#FFD32A", margin: "10px", fontWeight: "bold" }, children: "VOTE ON CLAIMS" }),
       r && /* @__PURE__ */ O.jsx(
         "button",
         {
@@ -67789,7 +67765,8 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
             border: "none",
             color: "#FFF",
             cursor: "pointer",
-            fontSize: "1.5em"
+            fontSize: "2.5em",
+            padding: "0px"
           },
           children: "×"
         }
@@ -67844,15 +67821,12 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     "div",
     {
       style: {
-        padding: "20px",
-        marginBottom: "20px",
+        padding: "0px 20px",
+        marginBottom: "10px",
         borderRadius: "8px",
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
         position: "relative",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
         borderBottom: B ? A === lt.For ? "12px solid #006FE8" : "12px solid #FF9500" : "1px solid rgb(105, 105, 105)",
-        borderTop: "1px solid rgb(105, 105, 105)",
-        borderLeft: "1px solid rgb(105, 105, 105)",
-        borderRight: "1px solid rgb(105, 105, 105)",
         boxShadow: "0 4px 10px rgba(0, 0, 0, 0.3)"
       },
       children: [
@@ -67861,18 +67835,18 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
           {
             style: {
               position: "absolute",
-              top: "5px",
+              bottom: "5px",
               left: "5px",
               backgroundColor: "#FFD32A",
               color: "#000000",
-              padding: "3px 6px",
-              fontSize: "10px",
+              padding: "3px 10px",
+              fontSize: "12px",
               fontWeight: "bold",
               borderRadius: "4px"
             },
             children: [
               z.toFixed(2),
-              " TRUST"
+              " $TRUST"
             ]
           }
         ),
@@ -67882,26 +67856,126 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
             style: {
               display: "flex",
               justifyContent: "space-between",
-              alignItems: "center"
+              alignItems: "center",
+              gap: "8px"
             },
             children: [
               /* @__PURE__ */ O.jsxs(
                 "div",
                 {
                   style: {
+                    width: "60%",
+                    display: "flex",
+                    padding: "10px",
+                    gap: "5px"
+                  },
+                  children: [
+                    /* @__PURE__ */ O.jsx(
+                      "span",
+                      {
+                        title: u,
+                        style: {
+                          display: "inline-block",
+                          maxWidth: "300px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          backgroundColor: "#FFB300",
+                          padding: "4px 8px",
+                          height: "35px",
+                          alignContent: "center",
+                          borderRadius: "4px",
+                          fontSize: "0.9em",
+                          color: "#000000",
+                          fontWeight: "bold"
+                        },
+                        children: u
+                      }
+                    ),
+                    "-",
+                    /* @__PURE__ */ O.jsx(
+                      "span",
+                      {
+                        title: c,
+                        style: {
+                          display: "inline-block",
+                          maxWidth: "100px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          backgroundColor: "#ccd3d3",
+                          padding: "4px 8px",
+                          height: "35px",
+                          alignContent: "center",
+                          borderRadius: "4px",
+                          fontSize: "0.9em",
+                          color: "#000000",
+                          fontWeight: "bold"
+                        },
+                        children: c
+                      }
+                    ),
+                    "-",
+                    /* @__PURE__ */ O.jsx(
+                      "span",
+                      {
+                        title: h,
+                        style: {
+                          display: "inline-block",
+                          maxWidth: "300px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          backgroundColor: "#43A047",
+                          padding: "4px 8px",
+                          height: "35px",
+                          alignContent: "center",
+                          borderRadius: "4px",
+                          fontSize: "0.9em",
+                          color: "#000000",
+                          fontWeight: "bold"
+                        },
+                        children: h
+                      }
+                    )
+                  ]
+                }
+              ),
+              /* @__PURE__ */ O.jsxs(
+                "div",
+                {
+                  style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
                     display: "flex",
                     alignItems: "center",
-                    position: "relative"
+                    position: "relative",
+                    backgroundColor: "#0073e6",
+                    padding: "2px 10px",
+                    borderRadius: "5px",
+                    justifyContent: "center"
                   },
                   children: [
                     /* @__PURE__ */ O.jsx(
                       "div",
                       {
-                        style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px" },
-                        children: "For ▲:"
+                        style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px", fontWeight: "bold" },
+                        children: "Support"
                       }
                     ),
                     A === lt.For || A === lt.None ? /* @__PURE__ */ O.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
+                      /* @__PURE__ */ O.jsx(
+                        "span",
+                        {
+                          style: {
+                            margin: "0 10px",
+                            color: "#ffffff",
+                            fontWeight: "bold"
+                          },
+                          children: G ? d : 0
+                        }
+                      ),
                       /* @__PURE__ */ O.jsx(
                         "button",
                         {
@@ -67914,7 +67988,8 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                             border: "none",
                             borderRadius: "4px",
                             color: "#ffffff",
-                            fontSize: "16px",
+                            fontSize: "18px",
+                            fontWeight: "bold",
                             cursor: P && g > 0 ? "pointer" : "not-allowed",
                             display: "flex",
                             alignItems: "center",
@@ -67924,17 +67999,6 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                             userSelect: "none"
                           },
                           children: "-"
-                        }
-                      ),
-                      /* @__PURE__ */ O.jsx(
-                        "span",
-                        {
-                          style: {
-                            margin: "0 10px",
-                            color: "#ffffff",
-                            fontWeight: "bold"
-                          },
-                          children: G ? d : 0
                         }
                       ),
                       /* @__PURE__ */ O.jsxs(
@@ -67952,11 +68016,12 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                                 style: {
                                   width: "30px",
                                   height: "30px",
-                                  backgroundColor: P ? "#1976d2" : "#606060",
+                                  backgroundColor: "transparent",
+                                  color: P ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
                                   border: !P && B ? "2px solid #F44336" : "none",
                                   borderRadius: "4px",
-                                  color: "#ffffff",
-                                  fontSize: "16px",
+                                  fontSize: "18px",
+                                  fontWeight: "bold",
                                   cursor: P ? "pointer" : "not-allowed",
                                   display: "flex",
                                   alignItems: "center",
@@ -67978,7 +68043,7 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                                   transform: "translateX(-50%)",
                                   backgroundColor: "#F44336",
                                   color: "white",
-                                  padding: "5px 10px",
+                                  padding: "2px 10px",
                                   borderRadius: "4px",
                                   fontSize: "12px",
                                   whiteSpace: "nowrap",
@@ -67998,11 +68063,11 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                           backgroundColor: "#606060",
                           borderRadius: "4px",
                           color: "#ffffff",
-                          padding: "5px 10px",
+                          padding: "2px 10px",
                           fontSize: "12px",
                           marginLeft: "10px"
                         },
-                        children: "You have voted AGAINST ▼"
+                        children: "Oppose position"
                       }
                     )
                   ]
@@ -68012,213 +68077,196 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                 "div",
                 {
                   style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
                     display: "flex",
-                    marginBottom: "20px",
-                    gap: "5px",
-                    marginTop: "20px"
+                    alignItems: "center",
+                    position: "relative",
+                    backgroundColor: "#ff8000",
+                    padding: "2px 10px",
+                    borderRadius: "5px",
+                    justifyContent: "center"
                   },
                   children: [
                     /* @__PURE__ */ O.jsx(
-                      "span",
+                      "div",
                       {
-                        style: {
-                          backgroundColor: "#FFB300",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "0.9em",
-                          color: "#000000",
-                          fontWeight: "bold"
-                        },
-                        children: u
+                        style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px", fontWeight: "bold" },
+                        children: "Oppose"
                       }
                     ),
-                    "-",
-                    /* @__PURE__ */ O.jsx(
-                      "span",
+                    A === lt.Against || A === lt.None ? /* @__PURE__ */ O.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
+                      /* @__PURE__ */ O.jsx(
+                        "span",
+                        {
+                          style: {
+                            margin: "0 10px",
+                            color: "#ffffff",
+                            fontWeight: "bold"
+                          },
+                          children: X ? d : 0
+                        }
+                      ),
+                      /* @__PURE__ */ O.jsx(
+                        "button",
+                        {
+                          onClick: I && g < 0 ? H : void 0,
+                          disabled: !I || g >= 0,
+                          style: {
+                            width: "30px",
+                            height: "30px",
+                            backgroundColor: "transparent",
+                            color: I && g < 0 ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
+                            border: "none",
+                            borderRadius: "4px",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            cursor: I && g < 0 ? "pointer" : "not-allowed",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: I && g < 0 ? 1 : 0.4,
+                            pointerEvents: I && g < 0 ? "auto" : "none",
+                            userSelect: "none"
+                          },
+                          children: "-"
+                        }
+                      ),
+                      /* @__PURE__ */ O.jsxs(
+                        "div",
+                        {
+                          style: { position: "relative" },
+                          onMouseEnter: () => V && T(!0),
+                          onMouseLeave: () => V && T(!1),
+                          children: [
+                            /* @__PURE__ */ O.jsx(
+                              "button",
+                              {
+                                onClick: I ? L : void 0,
+                                disabled: !I,
+                                style: {
+                                  width: "30px",
+                                  height: "30px",
+                                  backgroundColor: "transparent",
+                                  color: I ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
+                                  border: !I && B ? "2px solid #4CAF50" : "none",
+                                  borderRadius: "4px",
+                                  fontSize: "18px",
+                                  fontWeight: "bold",
+                                  cursor: I ? "pointer" : "not-allowed",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  opacity: I ? 1 : 0.4,
+                                  pointerEvents: I ? "auto" : "none",
+                                  userSelect: "none"
+                                },
+                                children: "+"
+                              }
+                            ),
+                            (!I && B || w && V) && /* @__PURE__ */ O.jsx(
+                              "div",
+                              {
+                                style: {
+                                  position: "absolute",
+                                  bottom: "100%",
+                                  left: "50%",
+                                  transform: "translateX(-50%)",
+                                  backgroundColor: "#F44336",
+                                  color: "white",
+                                  padding: "2px 10px",
+                                  borderRadius: "4px",
+                                  fontSize: "12px",
+                                  whiteSpace: "nowrap",
+                                  zIndex: 10,
+                                  marginBottom: "5px"
+                                },
+                                children: V
+                              }
+                            )
+                          ]
+                        }
+                      )
+                    ] }) : /* @__PURE__ */ O.jsx(
+                      "div",
                       {
                         style: {
-                          backgroundColor: "#ccd3d3",
-                          padding: "4px 8px",
+                          backgroundColor: "#606060",
                           borderRadius: "4px",
-                          fontSize: "0.9em",
-                          color: "#000000",
-                          fontWeight: "bold"
+                          color: "#ffffff",
+                          padding: "2px 10px",
+                          fontSize: "12px",
+                          marginLeft: "10px"
                         },
-                        children: c
-                      }
-                    ),
-                    "-",
-                    /* @__PURE__ */ O.jsx(
-                      "span",
-                      {
-                        style: {
-                          backgroundColor: "#43A047",
-                          padding: "4px 8px",
-                          borderRadius: "4px",
-                          fontSize: "0.9em",
-                          color: "#000000",
-                          fontWeight: "bold"
-                        },
-                        children: h
+                        children: "Support position"
                       }
                     )
                   ]
                 }
-              ),
-              /* @__PURE__ */ O.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
-                /* @__PURE__ */ O.jsx(
-                  "div",
-                  {
-                    style: { fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px" },
-                    children: "Against ▼:"
-                  }
-                ),
-                A === lt.Against || A === lt.None ? /* @__PURE__ */ O.jsxs("div", { style: { display: "flex", alignItems: "center" }, children: [
-                  /* @__PURE__ */ O.jsx(
-                    "button",
-                    {
-                      onClick: I && g < 0 ? H : void 0,
-                      disabled: !I || g >= 0,
-                      style: {
-                        width: "30px",
-                        height: "30px",
-                        backgroundColor: I && g < 0 ? "#1e2030" : "#606060",
-                        border: "none",
-                        borderRadius: "4px",
-                        color: "#ffffff",
-                        fontSize: "16px",
-                        cursor: I && g < 0 ? "pointer" : "not-allowed",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        opacity: I && g < 0 ? 1 : 0.4,
-                        pointerEvents: I && g < 0 ? "auto" : "none",
-                        userSelect: "none"
-                      },
-                      children: "-"
-                    }
-                  ),
-                  /* @__PURE__ */ O.jsx(
-                    "span",
-                    {
-                      style: {
-                        margin: "0 10px",
-                        color: "#ffffff",
-                        fontWeight: "bold"
-                      },
-                      children: X ? d : 0
-                    }
-                  ),
-                  /* @__PURE__ */ O.jsxs(
-                    "div",
-                    {
-                      style: { position: "relative" },
-                      onMouseEnter: () => V && T(!0),
-                      onMouseLeave: () => V && T(!1),
-                      children: [
-                        /* @__PURE__ */ O.jsx(
-                          "button",
-                          {
-                            onClick: I ? L : void 0,
-                            disabled: !I,
-                            style: {
-                              width: "30px",
-                              height: "30px",
-                              backgroundColor: I ? "#dc3545" : "#606060",
-                              border: !I && B ? "2px solid #4CAF50" : "none",
-                              borderRadius: "4px",
-                              color: "#ffffff",
-                              fontSize: "16px",
-                              cursor: I ? "pointer" : "not-allowed",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              opacity: I ? 1 : 0.4,
-                              pointerEvents: I ? "auto" : "none",
-                              userSelect: "none"
-                            },
-                            children: "+"
-                          }
-                        ),
-                        (!I && B || w && V) && /* @__PURE__ */ O.jsx(
-                          "div",
-                          {
-                            style: {
-                              position: "absolute",
-                              bottom: "100%",
-                              left: "50%",
-                              transform: "translateX(-50%)",
-                              backgroundColor: "#F44336",
-                              color: "white",
-                              padding: "5px 10px",
-                              borderRadius: "4px",
-                              fontSize: "12px",
-                              whiteSpace: "nowrap",
-                              zIndex: 10,
-                              marginBottom: "5px"
-                            },
-                            children: V
-                          }
-                        )
-                      ]
-                    }
-                  )
-                ] }) : /* @__PURE__ */ O.jsx(
-                  "div",
-                  {
-                    style: {
-                      backgroundColor: "#606060",
-                      borderRadius: "4px",
-                      color: "#ffffff",
-                      padding: "5px 10px",
-                      fontSize: "12px",
-                      marginLeft: "10px"
-                    },
-                    children: "You have voted FOR ▲"
-                  }
-                )
-              ] })
+              )
             ]
           }
         ),
-        /* @__PURE__ */ O.jsxs("div", { className: "flex flex-row justify-between", children: [
-          /* @__PURE__ */ O.jsxs(
-            "div",
-            {
-              style: {
-                fontSize: "0.7em",
-                color: "#4CAF50",
-                marginBottom: "8px",
-                backgroundColor: "rgba(76, 175, 80, 0.1)",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                fontWeight: "bold"
-              },
-              children: [
-                E,
-                " positions"
-              ]
-            }
-          ),
-          /* @__PURE__ */ O.jsxs(
-            "div",
-            {
-              style: {
-                fontSize: "0.7em",
-                color: "#F44336",
-                marginBottom: "8px",
-                backgroundColor: "rgba(244, 67, 54, 0.1)",
-                padding: "2px 6px",
-                borderRadius: "4px",
-                fontWeight: "bold"
-              },
-              children: [
-                S,
-                " positions"
-              ]
-            }
-          )
-        ] })
+        /* @__PURE__ */ O.jsxs(
+          "div",
+          {
+            style: {
+              display: "flex",
+              gap: "8px",
+              width: "100%",
+              justifyContent: "flex-end"
+            },
+            children: [
+              /* @__PURE__ */ O.jsxs(
+                "div",
+                {
+                  style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
+                    fontSize: "0.8em",
+                    color: "#0073e6",
+                    marginBottom: "5px",
+                    backgroundColor: "transparent",
+                    padding: "2px 10px",
+                    borderRadius: "4px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    alignContent: "center"
+                  },
+                  children: [
+                    E,
+                    " positions"
+                  ]
+                }
+              ),
+              /* @__PURE__ */ O.jsxs(
+                "div",
+                {
+                  style: {
+                    width: "20%",
+                    minWidth: "200px",
+                    height: "35px",
+                    fontSize: "0.8em",
+                    color: "#ff8000",
+                    marginBottom: "5px",
+                    backgroundColor: "transparent",
+                    padding: "2px 10px",
+                    borderRadius: "4px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    alignContent: "center"
+                  },
+                  children: [
+                    S,
+                    " positions"
+                  ]
+                }
+              )
+            ]
+          }
+        )
       ]
     }
   );
@@ -68239,7 +68287,7 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
       {
         style: {
           textAlign: "center",
-          padding: "30px",
+          padding: "0px 20px",
           color: "#6b7280",
           fontSize: "1.1em"
         },
@@ -68272,7 +68320,7 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
       }
     );
   }
-  return /* @__PURE__ */ O.jsx("div", { style: { marginBottom: "25px" }, children: i.map((u) => /* @__PURE__ */ O.jsx(
+  return /* @__PURE__ */ O.jsx("div", { style: {}, children: i.map((u) => /* @__PURE__ */ O.jsx(
     Dle,
     {
       voteItem: u,
@@ -68411,8 +68459,8 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
         minHeight: "100%",
         color: "#fff",
         padding: "15px",
-        border: "1px solid rgb(105, 105, 105)",
-        borderRadius: "8px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        borderRadius: "18px",
         maxWidth: "100%",
         margin: "0 auto",
         position: "relative",
@@ -68445,29 +68493,19 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     "div",
     {
       style: {
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
-        minHeight: "100%",
-        opacity: "0.9",
-        color: "#fff",
+        width: "100%",
+        height: "100%",
         padding: "15px",
-        border: "1px solid rgb(105, 105, 105)",
-        borderRadius: "8px",
-        maxWidth: "100%",
-        margin: "0 auto",
-        position: "relative",
-        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)"
+        color: "#fff"
       },
       children: [
         /* @__PURE__ */ O.jsx(Ole, { onClose: n }),
-        /* @__PURE__ */ O.jsx(
-          Ile,
-          {
-            numberOfTransactions: M,
-            totalUnits: T,
-            onResetAll: E
-          }
-        ),
-        /* @__PURE__ */ O.jsx(
+        /* @__PURE__ */ O.jsx("div", { style: {
+          height: "60%",
+          overflow: "auto",
+          padding: "10px",
+          marginBottom: "25px"
+        }, children: /* @__PURE__ */ O.jsx(
           Lle,
           {
             isLoading: w || g,
@@ -68477,6 +68515,14 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
             walletAddress: e,
             network: s,
             constants: c
+          }
+        ) }),
+        /* @__PURE__ */ O.jsx(
+          Ile,
+          {
+            numberOfTransactions: M,
+            totalUnits: T,
+            onResetAll: E
           }
         ),
         /* @__PURE__ */ O.jsx(
@@ -68509,8 +68555,8 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
         opacity: "0.9",
         color: "#fff",
         padding: "15px",
-        border: "1px solid rgb(105, 105, 105)",
-        borderRadius: "8px",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
+        borderRadius: "18px",
         maxWidth: "100%",
         margin: "0 auto",
         position: "relative",
@@ -68538,52 +68584,36 @@ const vle = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
 }), []), /* @__PURE__ */ O.jsx(
   "div",
   {
-    className: "flex items-center justify-center height-700px",
     style: {
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
       zIndex: 1e3,
-      position: "absolute",
-      top: "15%",
-      left: "25%",
-      right: "25%",
-      bottom: "15%"
+      position: "fixed",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      inset: "10px 0px 0px 0px"
     },
     children: /* @__PURE__ */ O.jsx(
       "div",
       {
         style: {
-          backgroundColor: "#18181b",
-          borderRadius: "12px",
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          maxWidth: "1000px",
-          width: "100%",
-          maxHeight: "700px",
-          height: "700px",
-          display: "flex",
-          flexDirection: "column",
+          width: "75%",
+          height: "90%",
           overflow: "hidden",
-          opacity: 0.85
+          borderRadius: "18px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          backgroundColor: "rgba(0, 0, 0, 0.85)",
+          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)"
         },
         children: /* @__PURE__ */ O.jsx(
-          "div",
+          Fle,
           {
-            style: {
-              flex: 1,
-              overflow: "auto",
-              padding: "0"
-            },
-            children: /* @__PURE__ */ O.jsx(
-              Fle,
-              {
-                walletConnected: r,
-                walletAddress: e,
-                publicClient: i,
-                onClose: n,
-                network: Zt.MAINNET,
-                wagmiConfig: a,
-                constants: s
-              }
-            )
+            walletConnected: r,
+            walletAddress: e,
+            publicClient: i,
+            onClose: n,
+            network: Zt.MAINNET,
+            wagmiConfig: a,
+            constants: s
           }
         )
       }
@@ -68609,7 +68639,7 @@ const zle = ({
 } : {
   ...Joe,
   UNIT_VALUE: p_
-}, [r == null ? void 0 : r.constants]), Vle = "https://mainnet.intuition.sh/v1/graphql";
+}, [r == null ? void 0 : r.constants]), Vle = "https://proxy.agent-bossfighters.com/graphql";
 function Gle() {
   Yoe({ apiUrl: Vle });
 }

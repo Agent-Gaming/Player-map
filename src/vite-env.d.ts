@@ -6,6 +6,7 @@
  * La bibliothèque nécessite une initialisation explicite via PlayerMapConfig.init()
  */
 interface ImportMetaEnv {
+  VITE_INTUITION_GRAPHQL_URL: string;
   // Ces variables NE sont PAS utilisées directement dans la bibliothèque,
   // elles peuvent servir à configurer l'application qui utilise la bibliothèque
   readonly VITE_API_URL?: string;

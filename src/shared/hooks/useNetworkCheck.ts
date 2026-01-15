@@ -27,7 +27,7 @@ const INTUITION_MAINNET_CONFIG = {
     symbol: 'TRUST',
     decimals: 18,
   },
-  rpcUrls: ['https://rpc.intuition.systems'],
+  rpcUrls: [import.meta.env.VITE_INTUITION_RPC_URL],
   blockExplorerUrls: ['https://explorer.intuition.systems'],
 };
 

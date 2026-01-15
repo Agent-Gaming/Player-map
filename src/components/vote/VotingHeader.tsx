@@ -11,13 +11,12 @@ export const VotingHeader: React.FC<VotingHeaderProps> = ({ onClose }) => {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        marginBottom: "25px",
-        borderBottom: "1px solid rgb(105, 105, 105)",
       }}
     >
-      <h2 style={{ fontSize: "1.3em", color: "#FFD32A", margin: 0, fontWeight: "bold" }}>
+      <h2 style={{ fontSize: "1.5em", color: "#FFD32A", margin: "10px", fontWeight: "bold" }}>
         VOTE ON CLAIMS
       </h2>
+
       {onClose && (
         <button
           onClick={onClose}
@@ -26,7 +25,8 @@ export const VotingHeader: React.FC<VotingHeaderProps> = ({ onClose }) => {
             border: "none",
             color: "#FFF",
             cursor: "pointer",
-            fontSize: "1.5em",
+            fontSize: "2.5em",
+            padding: "0px", 
           }}
         >
           ×

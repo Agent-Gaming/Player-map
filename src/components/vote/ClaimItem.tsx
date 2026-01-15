@@ -143,19 +143,16 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   return (
     <div
       style={{
-        padding: "20px",
-        marginBottom: "20px",
+        padding: "0px 20px",
+        marginBottom: "10px",
         borderRadius: "8px",
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
         position: "relative",
+        border: "1px solid rgba(255, 255, 255, 0.1)",
         borderBottom: hasUserPosition
           ? userPositionDirection === VoteDirection.For
             ? "12px solid #006FE8"
             : "12px solid #FF9500"
           : "1px solid rgb(105, 105, 105)",
-        borderTop: "1px solid rgb(105, 105, 105)",
-        borderLeft: "1px solid rgb(105, 105, 105)",
-        borderRight: "1px solid rgb(105, 105, 105)",
         boxShadow: "0 4px 10px rgba(0, 0, 0, 0.3)",
       }}
     >
@@ -164,17 +161,17 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
         <div
           style={{
             position: "absolute",
-            top: "5px",
+            bottom: "5px",
             left: "5px",
             backgroundColor: "#FFD32A",
             color: "#000000",
-            padding: "3px 6px",
-            fontSize: "10px",
+            padding: "3px 10px",
+            fontSize: "12px",
             fontWeight: "bold",
             borderRadius: "4px",
           }}
         >
-          {costInEth.toFixed(2)} TRUST
+          {costInEth.toFixed(2)} $TRUST
         </div>
       )}
 
@@ -183,25 +180,118 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          gap: "8px",
         }}
       >
-        {/* Left side - For */}
+
+        {/* Triple details */}
         <div
           style={{
+            width: "60%",
+            display: "flex",
+            padding: "10px",
+            gap: "5px",
+          }}
+        >
+          <span
+            title={subject}
+            style={{
+              display: "inline-block",
+              maxWidth: "300px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              backgroundColor: "#FFB300",
+              padding: "4px 8px",
+              height: "35px",
+              alignContent: "center",
+              borderRadius: "4px",
+              fontSize: "0.9em",
+              color: "#000000",
+              fontWeight: "bold",
+            }}
+          >
+            {subject}
+          </span>
+          -
+          <span
+            title={predicate}
+            style={{
+              display: "inline-block",
+              maxWidth: "100px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              backgroundColor: "#ccd3d3",
+              padding: "4px 8px",
+              height: "35px",
+              alignContent: "center",
+              borderRadius: "4px",
+              fontSize: "0.9em",
+              color: "#000000",
+              fontWeight: "bold",
+            }}
+          >
+            {predicate}
+          </span>
+          -
+          <span
+            title={object}
+            style={{
+              display: "inline-block",
+              maxWidth: "300px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              backgroundColor: "#43A047",
+              padding: "4px 8px",
+              height: "35px",
+              alignContent: "center",
+              borderRadius: "4px",
+              fontSize: "0.9em",
+              color: "#000000",
+              fontWeight: "bold",
+            }}
+          >
+            {object}
+          </span>
+        </div>
+
+        {/* Support */}
+        <div
+          style={{
+            width: "20%",
+            minWidth: "200px",
+            height: "35px",
             display: "flex",
             alignItems: "center",
             position: "relative",
+            backgroundColor: "#0073e6",
+            padding: "2px 10px",
+            borderRadius: "5px",
+            justifyContent: "center",
           }}
         >
           <div
-            style={{ fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px" }}
+            style={{ fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px", fontWeight: "bold" }}
           >
-            For ▲:
+            Support
           </div>
 
           {userPositionDirection === VoteDirection.For ||
           userPositionDirection === VoteDirection.None ? (
             <div style={{ display: "flex", alignItems: "center" }}>
+
+              <span
+                style={{
+                  margin: "0 10px",
+                  color: "#ffffff",
+                  fontWeight: "bold",
+                }}
+              >
+                {isForActive ? units : 0}
+              </span>
+
               <button
                 onClick={
                   canVoteFor && sliderValue > 0 ? handleDecreaseFor : undefined
@@ -215,7 +305,8 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                   border: "none",
                   borderRadius: "4px",
                   color: "#ffffff",
-                  fontSize: "16px",
+                  fontSize: "18px",
+                  fontWeight: "bold",
                   cursor:
                     canVoteFor && sliderValue > 0 ? "pointer" : "not-allowed",
                   display: "flex",
@@ -229,15 +320,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               >
                 -
               </button>
-              <span
-                style={{
-                  margin: "0 10px",
-                  color: "#ffffff",
-                  fontWeight: "bold",
-                }}
-              >
-                {isForActive ? units : 0}
-              </span>
+              
               <div
                 style={{ position: "relative" }}
                 onMouseEnter={() => forButtonTooltip && setShowForTooltip(true)}
@@ -251,14 +334,15 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                   style={{
                     width: "30px",
                     height: "30px",
-                    backgroundColor: canVoteFor ? "#1976d2" : "#606060",
+                    backgroundColor: "transparent",
+                    color: canVoteFor ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
                     border:
                       !canVoteFor && hasUserPosition
                         ? "2px solid #F44336"
                         : "none",
                     borderRadius: "4px",
-                    color: "#ffffff",
-                    fontSize: "16px",
+                    fontSize: "18px",
+                    fontWeight: "bold",
                     cursor: canVoteFor ? "pointer" : "not-allowed",
                     display: "flex",
                     alignItems: "center",
@@ -281,7 +365,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                       transform: "translateX(-50%)",
                       backgroundColor: "#F44336",
                       color: "white",
-                      padding: "5px 10px",
+                      padding: "2px 10px",
                       borderRadius: "4px",
                       fontSize: "12px",
                       whiteSpace: "nowrap",
@@ -300,76 +384,50 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                 backgroundColor: "#606060",
                 borderRadius: "4px",
                 color: "#ffffff",
-                padding: "5px 10px",
+                padding: "2px 10px",
                 fontSize: "12px",
                 marginLeft: "10px",
               }}
             >
-              You have voted AGAINST ▼
+              Oppose position
             </div>
           )}
         </div>
 
-        {/* Triple details */}
-        <div
-          style={{
+        {/* Against */}
+        <div 
+          style={{ 
+            width: "20%",
+            minWidth: "200px",
+            height: "35px",
             display: "flex",
-            marginBottom: "20px",
-            gap: "5px",
-            marginTop: "20px",
-          }}
-        >
-          <span
-            style={{
-              backgroundColor: "#FFB300",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "0.9em",
-              color: "#000000",
-              fontWeight: "bold",
-            }}
-          >
-            {subject}
-          </span>
-          -
-          <span
-            style={{
-              backgroundColor: "#ccd3d3",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "0.9em",
-              color: "#000000",
-              fontWeight: "bold",
-            }}
-          >
-            {predicate}
-          </span>
-          -
-          <span
-            style={{
-              backgroundColor: "#43A047",
-              padding: "4px 8px",
-              borderRadius: "4px",
-              fontSize: "0.9em",
-              color: "#000000",
-              fontWeight: "bold",
-            }}
-          >
-            {object}
-          </span>
-        </div>
-
-        {/* Right side - Against */}
-        <div style={{ display: "flex", alignItems: "center" }}>
+            alignItems: "center",
+            position: "relative",
+            backgroundColor: "#ff8000",
+            padding: "2px 10px",
+            borderRadius: "5px",
+            justifyContent: "center",
+        }}>
           <div
-            style={{ fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px" }}
+            style={{ fontSize: "0.9em", color: "#E1E1E1", marginRight: "10px", fontWeight: "bold" }}
           >
-            Against ▼:
+            Oppose
           </div>
 
           {userPositionDirection === VoteDirection.Against ||
           userPositionDirection === VoteDirection.None ? (
             <div style={{ display: "flex", alignItems: "center" }}>
+
+              <span
+                style={{
+                  margin: "0 10px",
+                  color: "#ffffff",
+                  fontWeight: "bold",
+                }}
+              >
+                {isAgainstActive ? units : 0}
+              </span>
+
               <button
                 onClick={
                   canVoteAgainst && sliderValue < 0
@@ -380,12 +438,13 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                 style={{
                   width: "30px",
                   height: "30px",
-                  backgroundColor:
-                    canVoteAgainst && sliderValue < 0 ? "#1e2030" : "#606060",
+                  backgroundColor: "transparent",
+                  color:
+                    canVoteAgainst && sliderValue < 0 ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
                   border: "none",
                   borderRadius: "4px",
-                  color: "#ffffff",
-                  fontSize: "16px",
+                  fontSize: "18px",
+                  fontWeight: "bold",
                   cursor:
                     canVoteAgainst && sliderValue < 0
                       ? "pointer"
@@ -401,15 +460,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               >
                 -
               </button>
-              <span
-                style={{
-                  margin: "0 10px",
-                  color: "#ffffff",
-                  fontWeight: "bold",
-                }}
-              >
-                {isAgainstActive ? units : 0}
-              </span>
+              
               <div
                 style={{ position: "relative" }}
                 onMouseEnter={() =>
@@ -425,14 +476,15 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                   style={{
                     width: "30px",
                     height: "30px",
-                    backgroundColor: canVoteAgainst ? "#dc3545" : "#606060",
+                    backgroundColor: "transparent",
+                    color: canVoteAgainst ? "rgba(255, 255, 255, 1.0)" : "rgba(255, 255, 255, 0.1)",
                     border:
                       !canVoteAgainst && hasUserPosition
                         ? "2px solid #4CAF50"
                         : "none",
                     borderRadius: "4px",
-                    color: "#ffffff",
-                    fontSize: "16px",
+                    fontSize: "18px",
+                    fontWeight: "bold",
                     cursor: canVoteAgainst ? "pointer" : "not-allowed",
                     display: "flex",
                     alignItems: "center",
@@ -455,7 +507,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                       transform: "translateX(-50%)",
                       backgroundColor: "#F44336",
                       color: "white",
-                      padding: "5px 10px",
+                      padding: "2px 10px",
                       borderRadius: "4px",
                       fontSize: "12px",
                       whiteSpace: "nowrap",
@@ -474,26 +526,38 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
                 backgroundColor: "#606060",
                 borderRadius: "4px",
                 color: "#ffffff",
-                padding: "5px 10px",
+                padding: "2px 10px",
                 fontSize: "12px",
                 marginLeft: "10px",
               }}
             >
-              You have voted FOR ▲
+              Support position
             </div>
           )}
         </div>
       </div>
-      <div className="flex flex-row justify-between">
+      
+      <div 
+        style={{
+            display: "flex",
+            gap: "8px",
+            width: "100%",
+            justifyContent: "flex-end",
+        }}>
         <div
           style={{
-            fontSize: "0.7em",
-            color: "#4CAF50",
-            marginBottom: "8px",
-            backgroundColor: "rgba(76, 175, 80, 0.1)",
-            padding: "2px 6px",
+            width: "20%",
+            minWidth: "200px",
+            height: "35px",
+            fontSize: "0.8em",
+            color: "#0073e6",
+            marginBottom: "5px",
+            backgroundColor: "transparent",
+            padding: "2px 10px",
             borderRadius: "4px",
             fontWeight: "bold",
+            textAlign: "center",
+            alignContent: "center",
           }}
         >
           {finalTermPositionCount} positions
@@ -501,13 +565,18 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
 
         <div
           style={{
-            fontSize: "0.7em",
-            color: "#F44336",
-            marginBottom: "8px",
-            backgroundColor: "rgba(244, 67, 54, 0.1)",
-            padding: "2px 6px",
+            width: "20%",
+            minWidth: "200px",
+            height: "35px",
+            fontSize: "0.8em",
+            color: "#ff8000",
+            marginBottom: "5px",
+            backgroundColor: "transparent",
+            padding: "2px 10px",
             borderRadius: "4px",
             fontWeight: "bold",
+            textAlign: "center",
+            alignContent: "center",
           }}
         >
           {finalCounterTermPositionCount} positions

@@ -13,7 +13,7 @@ const fetchAllWithPagination = async (
   let hasMore = true;
 
   while (hasMore) {
-    const response = await fetch(apiUrl, {
+    const response = await fetch(import.meta.env.VITE_INTUITION_GRAPHQL_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

@@ -160,8 +160,8 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
           opacity: "0.9",
           color: "#fff",
           padding: "15px",
-          border: "1px solid rgb(105, 105, 105)",
-          borderRadius: "8px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: "18px",
           maxWidth: "100%",
           margin: "0 auto",
           position: "relative",
@@ -185,8 +185,8 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
           minHeight: "100%",
           color: "#fff",
           padding: "15px",
-          border: "1px solid rgb(105, 105, 105)",
-          borderRadius: "8px",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+          borderRadius: "18px",
           maxWidth: "100%",
           margin: "0 auto",
           position: "relative",
@@ -217,34 +217,37 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   return (
     <div
       style={{
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
-        minHeight: "100%",
-        opacity: "0.9",
-        color: "#fff",
+        width: "100%",
+        height: "100%",
         padding: "15px",
-        border: "1px solid rgb(105, 105, 105)",
-        borderRadius: "8px",
-        maxWidth: "100%",
-        margin: "0 auto",
-        position: "relative",
-        boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
+        color: "#fff",
       }}
     >
       <VotingHeader onClose={onClose} />
+
+      <div style={{ 
+        height: "60%",
+        overflow: "auto",
+        padding: "10px",
+        marginBottom: "25px",
+        }}>
+        <ClaimList
+          isLoading={isLoading || tripleLoading}
+          voteItems={voteItems}
+          onChangeUnits={handleChangeUnits}
+          isVoteDirectionAllowed={isVoteDirectionAllowed}
+          walletAddress={walletAddress}
+          network={network}
+          constants={constants} // Passer les constantes personnalisées !
+        />
+      </div>
+      
       <TransactionInfo
         numberOfTransactions={numberOfTransactions}
         totalUnits={totalUnits}
         onResetAll={resetAllVotes}
       />
-      <ClaimList
-        isLoading={isLoading || tripleLoading}
-        voteItems={voteItems}
-        onChangeUnits={handleChangeUnits}
-        isVoteDirectionAllowed={isVoteDirectionAllowed}
-        walletAddress={walletAddress}
-        network={network}
-        constants={constants} // Passer les constantes personnalisées !
-      />
+    
       <SubmitButton
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
@@ -263,3 +266,4 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     </div>
   );
 }; 
+

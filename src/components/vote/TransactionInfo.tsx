@@ -15,28 +15,26 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
   return (
     <div
       style={{
-        backgroundColor: "rgba(0, 0, 0, 0.85)",
-        padding: "10px",
+        padding: "10px, 20px",
         borderRadius: "8px",
         marginBottom: "25px",
         display: "flex",
         flexDirection: "column",
-        border: "1px solid rgb(105, 105, 105)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
         <div>
-          <div style={{ fontSize: "0.9em", color: "#6b7280" }}>
-            Unit value:
+          <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
+            Unit value
           </div>
           <div style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
-            {calculateEthCost(totalUnits)} TRUST
+            {calculateEthCost(totalUnits)} $TRUST
           </div>
         </div>
         
         <div>
-          <div style={{ fontSize: "0.9em", color: "#6b7280" }}>
-            Number of transactions:
+          <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
+            Nb transactions
           </div>
           <div style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
             {numberOfTransactions}
@@ -44,23 +42,17 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
         </div>
         
         <div>
-          <div style={{ fontSize: "0.9em", color: "#6b7280" }}>
-            Estimated gas cost:
+          <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
+            Estimated gas cost
           </div>
           <div style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
-            ~{calculateGasCost(numberOfTransactions)} TRUST
+            ~{calculateGasCost(numberOfTransactions)} $TRUST
           </div>
         </div>
-      </div>
 
-      <div style={{ 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center"
-      }}>
-        <div style={{ fontSize: "1em", fontWeight: "bold" }}>
+        <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
           Total units selected:
-          <span style={{ fontSize: "1.6em", marginLeft: "10px", color: "#FFD32A" }}>
+          <span style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
             {totalUnits} {totalUnits === 1 ? "unit" : "units"}
           </span>
         </div>
@@ -69,9 +61,8 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
           <button
             onClick={onResetAll}
             style={{
-              backgroundColor: "transparent",
-              border: "1px solid #6b7280",
-              color: "#FFF",
+              backgroundColor: "#FFD32A",
+              color: "#000",
               padding: "6px 12px",
               borderRadius: "4px",
               cursor: "pointer",
@@ -81,7 +72,9 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
             Reset all
           </button>
         )}
+
       </div>
+
     </div>
   );
 }; 

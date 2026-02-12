@@ -1,4 +1,5 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
 
 // Fetch follows and followers
 export const fetchFollowsAndFollowers = async (
@@ -79,8 +80,10 @@ export const fetchFollowsAndFollowers = async (
       });
 
       const atomsData = await atomsResponse.json();
+      // Convertir les URLs IPFS en HTTP pour les images
+      const atoms = convertIpfsUrlsInObject(atomsData.data?.atoms || []);
       atomsMap = new Map(
-        (atomsData.data?.atoms || []).map((atom: any) => [atom.term_id, atom])
+        atoms.map((atom: any) => [atom.term_id, atom])
       );
     }
 

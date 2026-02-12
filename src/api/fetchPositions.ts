@@ -1,4 +1,8 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { apiCache } from '../utils/apiCache';
+
+// Helper pour ajouter un délai entre les requêtes (rate limiting)
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Fetch Active Positions by Account (only positions with shares > 0)
 // Récupère toutes les positions par batch de 100 pour éviter la limite
@@ -6,14 +10,30 @@ export const fetchPositions = async (
   accountId: string,
   network: Network = Network.MAINNET
 ) => {
-  try {
-    const apiUrl = API_URLS[network];
-    const allPositions: any[] = [];
-    const batchSize = 100;
-    let offset = 0;
-    let hasMore = true;
+  // Utiliser le cache (TTL de 2 minutes pour les positions)
+  const cacheKey = `positions_${accountId}_${network}`;
+  
+  return apiCache.withCache(
+    cacheKey,
+    { accountId, network },
+    async () => {
+      try {
+        const apiUrl = API_URLS[network];
+        const allPositions: any[] = [];
+        const batchSize = 50; // Réduit de 100 à 50 pour limiter la charge
+        let offset = 0;
+        let hasMore = true;
+        const maxBatches = 10; // Limite à 10 batches (500 positions max)
+        let batchCount = 0;
 
-    while (hasMore) {
+    while (hasMore && batchCount < maxBatches) {
+      batchCount++;
+      
+      // Ajouter un délai entre les batches pour éviter le rate limiting
+      if (batchCount > 1) {
+        await delay(200); // 200ms entre chaque batch
+      }
+      
       // Étape 1: Récupérer les positions avec seulement term_id (sans relation term)
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -62,6 +82,7 @@ export const fetchPositions = async (
         
         // Enrichir les positions avec les détails des terms
         if (termIds.length > 0) {
+          await delay(100); // Petit délai avant la requête des terms
           const termsResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -88,6 +109,9 @@ export const fetchPositions = async (
             const atomIds = [...new Set(terms.map((t: any) => t.atom_id).filter(Boolean))];
             const tripleIds = [...new Set(terms.map((t: any) => t.triple_id).filter(Boolean))];
 
+            // Petit délai avant les requêtes parallèles
+            await delay(100);
+            
             // Fetch atoms and triples separately
             const [atomsResponse, triplesResponse] = await Promise.all([
               atomIds.length > 0 ? fetch(apiUrl, {
@@ -143,6 +167,7 @@ export const fetchPositions = async (
 
             let tripleAtomsMap = new Map();
             if (allTripleAtomIds.length > 0) {
+              await delay(100); // Délai avant la requête des atoms de triples
               const tripleAtomsResponse = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -174,6 +199,7 @@ export const fetchPositions = async (
 
             let counterTermsMap = new Map();
             if (counterTermIds.length > 0) {
+              await delay(100); // Délai avant la requête des counter terms
               const counterTermsResponse = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -240,15 +266,19 @@ export const fetchPositions = async (
         }
       }
       
-      // Sécurité : éviter les boucles infinies (max 1000 pages = 100k positions)
-      if (offset > 100000) {
+      // Sécurité : éviter les boucles infinies
+      if (offset > 5000) { // Limite à 5000 positions
+        console.warn('Limite de positions atteinte (5000)');
         hasMore = false;
       }
     }
 
     return allPositions;
-  } catch (error) {
-    console.error('Error fetching active positions:', error);
-    return [];
-  }
+      } catch (error) {
+        console.error('Error fetching active positions:', error);
+        return [];
+      }
+    },
+    2 * 60 * 1000 // TTL de 2 minutes
+  );
 };

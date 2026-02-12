@@ -101,8 +101,14 @@ export const fetchAtomDetails = async (atomId: string, network: Network = Networ
 
     // Retourner l'atom avec la structure complète
     // Structure value pour compatibilité avec AtomDetailsSection
+    // Convertir l'image IPFS en URL HTTP si nécessaire
+    const imageUrl = atom.image && isIpfsUrl(atom.image) 
+      ? ipfsToHttpUrl(atom.image) 
+      : atom.image;
+
     return {
       ...atom,
+      image: imageUrl, // Utiliser l'URL HTTP convertie
       term: termDetails ? { total_market_cap: termDetails.total_market_cap } : undefined,
       value: description ? {
         person: { description },

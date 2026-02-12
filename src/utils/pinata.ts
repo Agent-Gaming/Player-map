@@ -42,21 +42,17 @@ export const isIpfsUrl = (url: string | undefined): boolean => {
   return url.startsWith('ipfs://')
 }
 
-export const ipfsToHttpUrl = async (ipfsUrl: string): Promise<string> => {
+export const ipfsToHttpUrl = (ipfsUrl: string): string => {
+  if (!ipfsUrl) return ipfsUrl
   if (!isIpfsUrl(ipfsUrl)) return ipfsUrl
 
-  try {
-    // Récupérer les constantes Pinata
-    const constants = getPinataConstants();
-    if (!constants?.PINATA_CONFIG?.IPFS_GATEWAY) {
-      throw new Error("Configuration Pinata manquante. Appelez setPinataConstants() avec PINATA_CONFIG");
-    }
+  const constants = getPinataConstants()
+  // Utiliser gateway.pinata.cloud (publique) par défaut au lieu de ipfs.io
+  const gwRaw = constants?.PINATA_CONFIG?.IPFS_GATEWAY || "gateway.pinata.cloud"
 
-    const PINATA_GATEWAY = constants.PINATA_CONFIG.IPFS_GATEWAY;
-    const hash = ipfsUrl.replace('ipfs://', '')
-    return `https://${PINATA_GATEWAY}/ipfs/${hash}`
-  } catch (error) {
-    console.error('Erreur lors de la conversion IPFS vers HTTP:', error)
-    throw error;
-  }
-} 
+  // normalise: enlève http(s):// et trailing slashes
+  const gateway = gwRaw.replace(/^https?:\/\//, "").replace(/\/+$/, "")
+
+  const hash = ipfsUrl.replace("ipfs://", "")
+  return `https://${gateway}/ipfs/${hash}`
+}

@@ -1,4 +1,8 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { apiCache } from '../utils/apiCache';
+
+// Helper pour ajouter un délai entre les requêtes
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper function to fetch all data from a query with pagination
 const fetchAllWithPagination = async (
@@ -6,14 +10,23 @@ const fetchAllWithPagination = async (
   query: string,
   variables: any,
   dataPath: string,
-  batchSize: number = 100
+  batchSize: number = 50 // Réduit à 50
 ): Promise<any[]> => {
   const allResults: any[] = [];
   let offset = 0;
   let hasMore = true;
+  const maxBatches = 5; // Limite à 5 batches (250 résultats max)
+  let batchCount = 0;
 
-  while (hasMore) {
-    const response = await fetch(import.meta.env.VITE_INTUITION_GRAPHQL_URL, {
+  while (hasMore && batchCount < maxBatches) {
+    batchCount++;
+    
+    // Délai entre les batches
+    if (batchCount > 1) {
+      await delay(200);
+    }
+    
+    const response = await fetch(apiUrl, { // Utiliser apiUrl au lieu de import.meta.env
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -49,14 +62,20 @@ const fetchAllWithPagination = async (
 };
 
 // Fetch Activity History by Account (all deposits and redemptions)
-// Récupère toutes les activités par batch de 100 pour éviter la limite
+// Récupère toutes les activités par batch de 50 pour éviter la limite
 export const fetchActivityHistory = async (
   accountId: string,
   network: Network = Network.MAINNET
 ) => {
-  try {
-    const apiUrl = API_URLS[network];
-    const batchSize = 100;
+  const cacheKey = `activity_${accountId}_${network}`;
+  
+  return apiCache.withCache(
+    cacheKey,
+    { accountId, network },
+    async () => {
+      try {
+        const apiUrl = API_URLS[network];
+        const batchSize = 50; // Réduit à 50
 
     // Query pour deposits
     const depositsQuery = `
@@ -111,6 +130,9 @@ export const fetchActivityHistory = async (
     let atomsMap = new Map();
     
     if (allTermIds.length > 0) {
+      // Délai avant la requête des terms
+      await delay(100);
+      
       // Fetch terms
       const termsResponse = await fetch(apiUrl, {
         method: 'POST',
@@ -140,6 +162,7 @@ export const fetchActivityHistory = async (
         // Fetch triples
         const tripleIds = [...new Set((termsData.data?.terms || []).map((t: any) => t.triple_id).filter(Boolean))];
         if (tripleIds.length > 0) {
+          await delay(100); // Délai avant la requête des triples
           const triplesResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -171,6 +194,7 @@ export const fetchActivityHistory = async (
             )];
             
             if (atomIds.length > 0) {
+              await delay(100); // Délai avant la requête des atoms
               const atomsResponse = await fetch(apiUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -200,6 +224,7 @@ export const fetchActivityHistory = async (
         // Fetch atoms for terms
         const atomIds = [...new Set((termsData.data?.terms || []).map((t: any) => t.atom_id).filter(Boolean))];
         if (atomIds.length > 0) {
+          await delay(100); // Délai avant la requête des atoms
           const atomsResponse = await fetch(apiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -273,8 +298,11 @@ export const fetchActivityHistory = async (
 
     // Sort by created_at (most recent first)
     return activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  } catch (error) {
-    console.error('Error fetching activity history:', error);
-    return [];
-  }
+      } catch (error) {
+        console.error('Error fetching activity history:', error);
+        return [];
+      }
+    },
+    2 * 60 * 1000 // TTL de 2 minutes
+  );
 };

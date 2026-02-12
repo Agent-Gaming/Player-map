@@ -1,6 +1,6 @@
 import { ATOM_CONTRACT_ADDRESS, VALUE_PER_ATOM, atomABI } from '../abi';
 import { toHex, parseEventLogs } from 'viem';
-import { hashDataToIPFS } from '../utils/ipfs-utils';
+import { hashDataToIPFS } from '../utils/ipfsUtils'; // Importer depuis ipfsUtils
 import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
 
 export type IpfsAtom = {

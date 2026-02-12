@@ -1,4 +1,5 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
 
 // Fetch Claims by Subject (atom as subject)
 // Récupère toutes les claims par batch de 100 pour éviter la limite
@@ -83,11 +84,15 @@ export const fetchClaimsBySubject = async (
           const atomsData = await atomsResponse.json();
 
           if (!atomsData.errors && atomsData.data) {
+            // Convertir les URLs IPFS en HTTP pour les images
+            const predicates = convertIpfsUrlsInObject(atomsData.data.predicates || []);
+            const objects = convertIpfsUrlsInObject(atomsData.data.objects || []);
+            
             const predicatesMap = new Map(
-              (atomsData.data.predicates || []).map((a: any) => [a.term_id, a])
+              predicates.map((a: any) => [a.term_id, a])
             );
             const objectsMap = new Map(
-              (atomsData.data.objects || []).map((a: any) => [a.term_id, a])
+              objects.map((a: any) => [a.term_id, a])
             );
 
             // Étape 3: Récupérer les détails des terms (term_id et counter_term_id)

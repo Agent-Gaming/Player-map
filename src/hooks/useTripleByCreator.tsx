@@ -1,6 +1,11 @@
 import { useState, useEffect } from "react";
 import { Network, API_URLS } from "./useAtomData";
 import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
+import { apiCache } from "../utils/apiCache";
+import { convertIpfsUrlsInObject } from "../utils/ipfsUtils";
+
+// Helper pour ajouter un délai entre les requêtes
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export interface Triple {
   term_id: string; // ← Changé de 'id' à 'term_id'
@@ -56,71 +61,81 @@ export const fetchTriplesByCreator = async (
   objectId: string,
   network: Network = Network.MAINNET
 ): Promise<TriplesByCreatorResponse> => {
-  const url = API_URLS[network];
+  const cacheKey = `triples_by_creator_${creatorId}_${predicateId}_${objectId}_${network}`;
+  
+  return apiCache.withCache(
+    cacheKey,
+    { creatorId, predicateId, objectId, network },
+    async () => {
+      const url = API_URLS[network];
 
-  try {
-    // Étape 1: Récupérer les atoms créés par cette adresse avec tous leurs détails
-    const atomsQuery = `
-      query GetAtoms($creatorId: String!) {
-        atoms(where: { creator_id: { _eq: $creatorId } }) {
-          term_id
-          label
-          type
-          creator_id
-          image
-        }
-      }
-    `;
+      try {
+        // Étape 1: Récupérer les atoms créés par cette adresse avec tous leurs détails
+        const atomsQuery = `
+          query GetAtoms($creatorId: String!) {
+            atoms(where: { creator_id: { _eq: $creatorId } }) {
+              term_id
+              label
+              type
+              creator_id
+              image
+            }
+          }
+        `;
 
-    const atomsResponse = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        query: atomsQuery,
-        variables: { creatorId },
-      }),
-    });
+        const atomsResponse = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            query: atomsQuery,
+            variables: { creatorId },
+          }),
+        });
 
     const atomsResult = await atomsResponse.json();
 
-    if (atomsResult.errors) {
-      console.error(
-        `[fetchTriplesByCreator] Erreurs lors de la récupération des atoms:`,
-        atomsResult.errors
-      );
-      throw new Error(
-        atomsResult.errors[0]?.message ||
-          "Erreur GraphQL lors de la récupération des atoms"
-      );
-    }
-
-    // Extraire les term_ids des atoms et créer un map pour les détails
-    const atoms = atomsResult.data?.atoms || [];
-    const subjectIds = atoms.map((atom: { term_id: string }) => atom.term_id);
-    const atomsMap = new Map(atoms.map((atom: any) => [atom.term_id, atom]));
-
-    // Si aucun atom trouvé, retourner un tableau vide
-    if (subjectIds.length === 0) {
-      return { triples: [] };
-    }
-
-    // Étape 2: Utiliser les subject_ids pour filtrer les triples (sans demander subject dans la requête)
-    const triplesQuery = `
-      query GetTriples($where: triples_bool_exp) {
-        triples(where: $where) {
-          term_id
-          subject_id
-          predicate_id
-          object_id
-          block_number
-          created_at
-          transaction_hash
+        if (atomsResult.errors) {
+          console.error(
+            `[fetchTriplesByCreator] Erreurs lors de la récupération des atoms:`,
+            atomsResult.errors
+          );
+          throw new Error(
+            atomsResult.errors[0]?.message ||
+              "Erreur GraphQL lors de la récupération des atoms"
+          );
         }
-      }
-    `;
+
+        // Extraire les term_ids des atoms et créer un map pour les détails
+        // Convertir les URLs IPFS en HTTP pour les images
+        const atoms = convertIpfsUrlsInObject(atomsResult.data?.atoms || []);
+        const subjectIds = atoms.map((atom: { term_id: string }) => atom.term_id);
+        const atomsMap = new Map(atoms.map((atom: any) => [atom.term_id, atom]));
+
+        // Si aucun atom trouvé, retourner un tableau vide
+        if (subjectIds.length === 0) {
+          return { triples: [] };
+        }
+
+        // Petit délai avant la requête suivante
+        await delay(100);
+
+        // Étape 2: Utiliser les subject_ids pour filtrer les triples (sans demander subject dans la requête)
+        const triplesQuery = `
+          query GetTriples($where: triples_bool_exp) {
+            triples(where: $where) {
+              term_id
+              subject_id
+              predicate_id
+              object_id
+              block_number
+              created_at
+              transaction_hash
+            }
+          }
+        `;
 
     const triplesVariables = {
       where: {
@@ -150,38 +165,41 @@ export const fetchTriplesByCreator = async (
 
     const triplesResult = await triplesResponse.json();
 
-    if (triplesResult.errors) {
-      console.error(
-        `[fetchTriplesByCreator] Erreurs GraphQL:`,
-        triplesResult.errors
-      );
-      throw new Error(
-        triplesResult.errors[0]?.message || "Erreur GraphQL inconnue"
-      );
-    }
-
-    // Étape 3: Récupérer les détails des predicates et objects
-    const triples = triplesResult.data?.triples || [];
-
-    // Récupérer les IDs uniques de predicates et objects
-    const predicateIds = [...new Set(triples.map((t: any) => t.predicate_id))];
-    const objectIds = [...new Set(triples.map((t: any) => t.object_id))];
-
-    // Récupérer les détails des predicates et objects
-    const termsQuery = `
-      query GetTerms($predicateIds: [String!]!, $objectIds: [String!]!) {
-        predicates: atoms(where: { term_id: { _in: $predicateIds } }) {
-          term_id
-          label
-          type
+        if (triplesResult.errors) {
+          console.error(
+            `[fetchTriplesByCreator] Erreurs GraphQL:`,
+            triplesResult.errors
+          );
+          throw new Error(
+            triplesResult.errors[0]?.message || "Erreur GraphQL inconnue"
+          );
         }
-        objects: atoms(where: { term_id: { _in: $objectIds } }) {
-          term_id
-          label
-          type
-        }
-      }
-    `;
+
+        // Étape 3: Récupérer les détails des predicates et objects
+        const triples = triplesResult.data?.triples || [];
+
+        // Récupérer les IDs uniques de predicates et objects
+        const predicateIds = [...new Set(triples.map((t: any) => t.predicate_id))];
+        const objectIds = [...new Set(triples.map((t: any) => t.object_id))];
+
+        // Petit délai avant la requête suivante
+        await delay(100);
+
+        // Récupérer les détails des predicates et objects
+        const termsQuery = `
+          query GetTerms($predicateIds: [String!]!, $objectIds: [String!]!) {
+            predicates: atoms(where: { term_id: { _in: $predicateIds } }) {
+              term_id
+              label
+              type
+            }
+            objects: atoms(where: { term_id: { _in: $objectIds } }) {
+              term_id
+              label
+              type
+            }
+          }
+        `;
 
     const termsResponse = await fetch(url, {
       method: "POST",
@@ -200,50 +218,53 @@ export const fetchTriplesByCreator = async (
 
     const termsResult = await termsResponse.json();
 
-    if (termsResult.errors) {
-      console.error(
-        `[fetchTriplesByCreator] Erreurs lors de la récupération des terms:`,
-        termsResult.errors
-      );
-      // Continuer même si on ne peut pas récupérer les détails des terms
-    }
+        if (termsResult.errors) {
+          console.error(
+            `[fetchTriplesByCreator] Erreurs lors de la récupération des terms:`,
+            termsResult.errors
+          );
+          // Continuer même si on ne peut pas récupérer les détails des terms
+        }
 
-    const predicatesMap = new Map(
-      (termsResult.data?.predicates || []).map((p: any) => [p.term_id, p])
-    );
-    const objectsMap = new Map(
-      (termsResult.data?.objects || []).map((o: any) => [o.term_id, o])
-    );
+        const predicatesMap = new Map(
+          (termsResult.data?.predicates || []).map((p: any) => [p.term_id, p])
+        );
+        const objectsMap = new Map(
+          (termsResult.data?.objects || []).map((o: any) => [o.term_id, o])
+        );
 
-    // Combiner les données : ajouter subject, predicate et object aux triples
-    const enrichedTriples: Triple[] = triples.map((triple: any) => ({
-      ...triple,
-      subject: atomsMap.get(triple.subject_id) || {
-        term_id: triple.subject_id,
-        label: "",
-        type: "",
-        creator_id: creatorId,
-      },
-      predicate: predicatesMap.get(triple.predicate_id) || {
-        term_id: triple.predicate_id,
-        label: "",
-        type: "",
-      },
-      object: objectsMap.get(triple.object_id) || {
-        term_id: triple.object_id,
-        label: "",
-        type: "",
-      },
-    }));
+        // Combiner les données : ajouter subject, predicate et object aux triples
+        const enrichedTriples: Triple[] = triples.map((triple: any) => ({
+          ...triple,
+          subject: atomsMap.get(triple.subject_id) || {
+            term_id: triple.subject_id,
+            label: "",
+            type: "",
+            creator_id: creatorId,
+          },
+          predicate: predicatesMap.get(triple.predicate_id) || {
+            term_id: triple.predicate_id,
+            label: "",
+            type: "",
+          },
+          object: objectsMap.get(triple.object_id) || {
+            term_id: triple.object_id,
+            label: "",
+            type: "",
+          },
+        }));
 
-    return { triples: enrichedTriples };
-  } catch (error) {
-    console.error(
-      `[fetchTriplesByCreator] Erreur lors de la requête vers ${url}:`,
-      error
-    );
-    throw error;
-  }
+        return { triples: enrichedTriples };
+      } catch (error) {
+        console.error(
+          `[fetchTriplesByCreator] Erreur lors de la requête vers ${url}:`,
+          error
+        );
+        throw error;
+      }
+    },
+    3 * 60 * 1000 // TTL de 3 minutes
+  );
 };
 
 // Hook pour récupérer les triples avec des conditions spécifiques

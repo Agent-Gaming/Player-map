@@ -1,6 +1,7 @@
 // THIS QUERY IS NOT USED ACTUALLY
 
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
 
 // Fetch Claims by Account
 export const fetchClaimsByAccount = async (
@@ -62,8 +63,10 @@ export const fetchClaimsByAccount = async (
 
       const atomsData = await atomsResponse.json();
       if (!atomsData.errors) {
+        // Convertir les URLs IPFS en HTTP pour les images
+        const atoms = convertIpfsUrlsInObject(atomsData.data?.atoms || []);
         atomsMap = new Map(
-          (atomsData.data?.atoms || []).map((atom: any) => [atom.term_id, atom])
+          atoms.map((atom: any) => [atom.term_id, atom])
         );
       }
     }

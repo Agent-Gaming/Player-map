@@ -1,4 +1,5 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
 
 // Fetch Triples filtered for Agent view
 export const fetchTriplesForAgent = async (
@@ -85,14 +86,19 @@ export const fetchTriplesForAgent = async (
       // Continuer même si on ne peut pas récupérer les détails
     }
 
+    // Convertir les URLs IPFS en HTTP pour les images
+    const subjects = convertIpfsUrlsInObject(atomsData.data?.subjects || []);
+    const predicates = convertIpfsUrlsInObject(atomsData.data?.predicates || []);
+    const objects = convertIpfsUrlsInObject(atomsData.data?.objects || []);
+
     const subjectsMap = new Map(
-      (atomsData.data?.subjects || []).map((a: any) => [a.term_id, a])
+      subjects.map((a: any) => [a.term_id, a])
     );
     const predicatesMap = new Map(
-      (atomsData.data?.predicates || []).map((a: any) => [a.term_id, a])
+      predicates.map((a: any) => [a.term_id, a])
     );
     const objectsMap = new Map(
-      (atomsData.data?.objects || []).map((a: any) => [a.term_id, a])
+      objects.map((a: any) => [a.term_id, a])
     );
 
     // Étape 3: Enrichir les triples avec les détails

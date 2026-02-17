@@ -1,7 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
 
-// Fetch Triples filtered for Agent view
 export const fetchTriplesForAgent = async (
   objectId: string,
   network: Network = Network.MAINNET,
@@ -10,7 +9,6 @@ export const fetchTriplesForAgent = async (
   try {
     const apiUrl = API_URLS[network];
     
-    // Étape 1: Récupérer les triples avec seulement les IDs (sans relations subject/predicate/object)
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -22,6 +20,24 @@ export const fetchTriplesForAgent = async (
               subject_id
               predicate_id
               object_id
+              subject {
+                term_id
+                label
+                type
+                image
+              }
+              predicate {
+                term_id
+                label
+                type
+                image
+              }
+              object {
+                term_id
+                label
+                type
+                image
+              }
             }
           }
         `,
@@ -38,88 +54,8 @@ export const fetchTriplesForAgent = async (
 
     const triples = data.data?.triples || [];
     
-    if (triples.length === 0) {
-      return [];
-    }
-
-    // Étape 2: Récupérer les détails des subjects, predicates et objects
-    const subjectIds = [...new Set(triples.map((t: any) => t.subject_id).filter(Boolean))];
-    const predicateIds = [...new Set(triples.map((t: any) => t.predicate_id).filter(Boolean))];
-    const objectIds = [...new Set(triples.map((t: any) => t.object_id).filter(Boolean))];
-
-    const atomsQuery = `
-      query GetAtoms($subjectIds: [String!]!, $predicateIds: [String!]!, $objectIds: [String!]!) {
-        subjects: atoms(where: { term_id: { _in: $subjectIds } }) {
-          term_id
-          label
-          type
-          image
-        }
-        predicates: atoms(where: { term_id: { _in: $predicateIds } }) {
-          term_id
-          label
-          type
-          image
-        }
-        objects: atoms(where: { term_id: { _in: $objectIds } }) {
-          term_id
-          label
-          type
-          image
-        }
-      }
-    `;
-
-    const atomsResponse = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: atomsQuery,
-        variables: { subjectIds, predicateIds, objectIds }
-      })
-    });
-
-    const atomsData = await atomsResponse.json();
-
-    if (atomsData.errors) {
-      console.error('Error fetching atoms details:', atomsData.errors);
-      // Continuer même si on ne peut pas récupérer les détails
-    }
-
     // Convertir les URLs IPFS en HTTP pour les images
-    const subjects = convertIpfsUrlsInObject(atomsData.data?.subjects || []);
-    const predicates = convertIpfsUrlsInObject(atomsData.data?.predicates || []);
-    const objects = convertIpfsUrlsInObject(atomsData.data?.objects || []);
-
-    const subjectsMap = new Map(
-      subjects.map((a: any) => [a.term_id, a])
-    );
-    const predicatesMap = new Map(
-      predicates.map((a: any) => [a.term_id, a])
-    );
-    const objectsMap = new Map(
-      objects.map((a: any) => [a.term_id, a])
-    );
-
-    // Étape 3: Enrichir les triples avec les détails
-    const enrichedTriples = triples.map((triple: any) => ({
-      ...triple,
-      subject: subjectsMap.get(triple.subject_id) || {
-        term_id: triple.subject_id,
-        label: '',
-        type: '',
-      },
-      predicate: predicatesMap.get(triple.predicate_id) || {
-        term_id: triple.predicate_id,
-        label: '',
-        type: '',
-      },
-      object: objectsMap.get(triple.object_id) || {
-        term_id: triple.object_id,
-        label: '',
-        type: '',
-      },
-    }));
+    const enrichedTriples = convertIpfsUrlsInObject(triples);
 
     return enrichedTriples;
   } catch (error) {

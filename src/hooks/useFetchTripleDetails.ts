@@ -1,17 +1,21 @@
-import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Network, API_URLS } from "./useAtomData";
-import { GetTripleDocument, fetcher } from '@0xintuition/graphql';
+import { convertIpfsUrlsInObject } from "../utils/ipfsUtils";
 
 // Interface for triple details returned from GraphQL v2
 export interface TripleDetails {
   id: string;
   subject?: {
+    term_id: string;
     label: string;
+    image?: string;
   };
   predicate?: {
+    term_id: string;
     label: string;
   };
   object?: {
+    term_id: string;
     label: string;
   };
   term_id?: string;
@@ -25,24 +29,19 @@ interface UseFetchTripleDetailsProps {
   onError?: (message: string) => void;
 }
 
-export const useFetchTripleDetails = ({
-  network = Network.MAINNET,
-  onError
-}: UseFetchTripleDetailsProps = {}) => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Function to fetch triple details via GraphQL v2
-  const fetchTripleDetails = async (tripleId: string): Promise<TripleDetails | null> => {
-    setIsLoading(true);
-
-    try {
-      // Utiliser le package @0xintuition/graphql pour v2
-      const apiUrl = API_URLS[network];
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
+const fetchTripleDetailsUnified = async (
+  tripleId: string,
+  network: Network
+): Promise<TripleDetails | null> => {
+  try {
+    const apiUrl = API_URLS[network];
+    
+    // ✅ 1 SEULE REQUÊTE avec toutes les relations Hasura
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
           query Triple($tripleId: String!) {
             triple(term_id: $tripleId) {
               term_id
@@ -50,150 +49,122 @@ export const useFetchTripleDetails = ({
               predicate_id
               object_id
               counter_term_id
-            }
-          }
-        `,
-
-          variables: { tripleId: tripleId.toString() },
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`GraphQL request failed with status ${response.status}`);
-      }
-
-      const result = await response.json();
-
-      if (result.errors) {
-        throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
-      }
-
-      if (!result.data?.triple) {
-        if (onError) {
-          onError(`Triple with ID ${tripleId} not found`);
-        }
-        setIsLoading(false);
-        return null;
-      }
-
-      const triple = result.data.triple;
-      const { subject_id, predicate_id, object_id, term_id, counter_term_id } = triple;
-
-      // Fetch subject, predicate, object details
-      const atomsResponse = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            query GetAtoms($termIds: [String!]!) {
-              atoms(where: { term_id: { _in: $termIds } }) {
+              subject {
+                term_id
+                label
+                image
+              }
+              predicate {
                 term_id
                 label
               }
+              object {
+                term_id
+                label
+              }
+              term {
+                id
+                total_market_cap
+                total_assets
+                positions_aggregate(where: { shares: { _gt: 0 } }) {
+                  aggregate {
+                    count
+                  }
+                }
+              }
+              counter_term {
+                id
+                total_market_cap
+                total_assets
+                positions_aggregate(where: { shares: { _gt: 0 } }) {
+                  aggregate {
+                    count
+                  }
+                }
+              }
             }
-          `,
-          variables: { termIds: [subject_id, predicate_id, object_id].filter(Boolean) }
-        }),
-      });
+          }
+        `,
+        variables: { tripleId: tripleId.toString() },
+      }),
+    });
 
-      const atomsData = await atomsResponse.json();
-      const atomsMap = new Map(
-        (atomsData.data?.atoms || []).map((atom: any) => [atom.term_id, atom])
-      );
+    if (!response.ok) {
+      throw new Error(`GraphQL request failed with status ${response.status}`);
+    }
 
-      // Fetch term and counter_term details
-      const termIds = [term_id, counter_term_id].filter(Boolean);
-      let termDetailsMap = new Map();
-      
-      if (termIds.length > 0) {
-        const termsResponse = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query GetTerms($termIds: [String!]!) {
-                terms(where: { id: { _in: $termIds } }) {
-                  id
-                  total_market_cap
-                  total_assets
-                }
-              }
-            `,
-            variables: { termIds }
-          }),
-        });
+    const result = await response.json();
 
-        const termsData = await termsResponse.json();
-        termDetailsMap = new Map(
-          (termsData.data?.terms || []).map((term: any) => [term.id, term])
-        );
-      }
+    if (result.errors) {
+      throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
+    }
 
-      const termDetails = termDetailsMap.get(term_id);
-      const counterTermDetails = termDetailsMap.get(counter_term_id);
+    if (!result.data?.triple) {
+      return null;
+    }
 
-      // Fetch positions count separately
-      const [termPositionsResponse, counterTermPositionsResponse] = await Promise.all([
-        term_id ? fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query GetPositionsCount($termId: String!) {
-                positions_aggregate(where: { term_id: { _eq: $termId }, shares: { _gt: 0 } }) {
-                  aggregate {
-                    count
-                  }
-                }
-              }
-            `,
-            variables: { termId: term_id }
-          })
-        }) : Promise.resolve(null),
-        counter_term_id ? fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query GetCounterPositionsCount($termId: String!) {
-                positions_aggregate(where: { term_id: { _eq: $termId }, shares: { _gt: 0 } }) {
-                  aggregate {
-                    count
-                  }
-                }
-              }
-            `,
-            variables: { termId: counter_term_id }
-          })
-        }) : Promise.resolve(null),
-      ]);
+    const triple = result.data.triple;
+    
+    // Convertir les URLs IPFS en HTTP pour les images
+    const enrichedTriple = convertIpfsUrlsInObject(triple);
 
-      const termPositionsData = termPositionsResponse ? await termPositionsResponse.json() : { data: { positions_aggregate: { aggregate: { count: 0 } } } };
-      const counterTermPositionsData = counterTermPositionsResponse ? await counterTermPositionsResponse.json() : { data: { positions_aggregate: { aggregate: { count: 0 } } } };
+    return {
+      id: String(tripleId),
+      subject: enrichedTriple.subject || { term_id: enrichedTriple.subject_id, label: '' },
+      predicate: enrichedTriple.predicate || { term_id: enrichedTriple.predicate_id, label: '' },
+      object: enrichedTriple.object || { term_id: enrichedTriple.object_id, label: '' },
+      term_id: enrichedTriple.term_id,
+      counter_term_id: enrichedTriple.counter_term_id,
+      term_position_count: enrichedTriple.term?.positions_aggregate?.aggregate?.count || 0,
+      counter_term_position_count: enrichedTriple.counter_term?.positions_aggregate?.aggregate?.count || 0
+    };
+  } catch (error) {
+    console.error(`Error fetching details for triple ${tripleId}:`, error);
+    throw error;
+  }
+};
 
-      setIsLoading(false);
-      return {
-        id: String(tripleId),
-        subject: atomsMap.get(subject_id) || { term_id: subject_id, label: '' },
-        predicate: atomsMap.get(predicate_id) || { term_id: predicate_id, label: '' },
-        object: atomsMap.get(object_id) || { term_id: object_id, label: '' },
-        term_id: term_id,
-        counter_term_id: counter_term_id,
-        term_position_count: termPositionsData.data?.positions_aggregate?.aggregate?.count || 0,
-        counter_term_position_count: counterTermPositionsData.data?.positions_aggregate?.aggregate?.count || 0
-      };
+// ✅ Hook React Query pour cache et déduplication
+export const useFetchTripleDetails = ({
+  network = Network.MAINNET,
+  onError
+}: UseFetchTripleDetailsProps = {}) => {
+  
+  // Fonction wrappée pour utiliser avec React Query
+  const fetchTripleDetails = async (tripleId: string): Promise<TripleDetails | null> => {
+    try {
+      return await fetchTripleDetailsUnified(tripleId, network);
     } catch (error) {
-
       if (onError) {
-        onError(`Error fetching details for triple ${tripleId}: ${error instanceof Error ? error.message : String(error)}`);
+        onError(`Error: ${error instanceof Error ? error.message : String(error)}`);
       }
-      setIsLoading(false);
       return null;
     }
   };
 
   return {
     fetchTripleDetails,
-    isLoading
+    isLoading: false // Compatibilité avec l'ancienne API
+  };
+};
+
+// ✅ Hook React Query direct (optionnel, pour usage avec cache automatique)
+export const useTripleDetails = (
+  tripleId: string | undefined,
+  network: Network = Network.MAINNET
+) => {
+  const { data, isLoading, error, isError } = useQuery({
+    queryKey: ['tripleDetails', tripleId, network],
+    queryFn: () => fetchTripleDetailsUnified(tripleId!, network),
+    enabled: Boolean(tripleId),
+    staleTime: 2 * 60 * 1000, // Cache 2 minutes
+    gcTime: 5 * 60 * 1000,    // Garde en mémoire 5 minutes
+    retry: 1,
+  });
+
+  return {
+    tripleDetails: data || null,
+    loading: isLoading,
+    error: isError ? (error as Error) : null,
   };
 };

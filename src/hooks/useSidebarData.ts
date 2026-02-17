@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Network } from './useAtomData';
-import { fetchTriplesForAgent, fetchPositions, fetchFollowsAndFollowers, fetchClaimsBySubject } from '../api/sidebarQueries';
+import { fetchTriplesForAgent, fetchFollowsAndFollowers } from '../api/sidebarQueries';
 import { useTripleByCreator } from './useTripleByCreator';
+import { usePositions } from './usePositions';
+import { useClaimsBySubject } from './useClaimsBySubject';
 import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 
 interface SidebarData {
@@ -23,13 +26,10 @@ export const useSidebarData = (
   constants: DefaultPlayerMapConstants
 ): SidebarData => {
   const [triples, setTriples] = useState<any[]>([]);
-  const [positions, setPositions] = useState<any[]>([]);
-  const [activities, setActivities] = useState<any[]>([]);
   const [connections, setConnections] = useState<{ follows: any[]; followers: any[] }>({
     follows: [],
     followers: []
   });
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Utiliser les constantes passées en paramètre
@@ -46,59 +46,47 @@ export const useSidebarData = (
   // L'atom du joueur est le sujet du premier triple trouvé
   const atomDetails = playerTriples.length > 0 ? playerTriples[0].subject : null;
 
+  const { positions, loading: positionsLoading, error: positionsError } = usePositions(
+    walletAddress,
+    network
+  );
+
+  const { claims: activities, loading: claimsLoading, error: claimsError } = useClaimsBySubject(
+    atomDetails?.term_id,
+    network
+  );
+
+  const { data: triplesData } = useQuery({
+    queryKey: ['triplesForAgent', walletAddress, network],
+    queryFn: () => fetchTriplesForAgent(walletAddress!, network),
+    enabled: Boolean(walletAddress),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+
+  const { data: connectionsData } = useQuery({
+    queryKey: ['followsAndFollowers', COMMON_IDS.FOLLOWS, walletAddress, network],
+    queryFn: () => fetchFollowsAndFollowers(COMMON_IDS.FOLLOWS, walletAddress!, network),
+    enabled: Boolean(walletAddress),
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+
   useEffect(() => {
-    if (!walletAddress) {
-      setTriples([]);
-      setPositions([]);
-      setActivities([]);
-      return;
+    if (triplesData) {
+      setTriples(triplesData);
     }
+  }, [triplesData]);
 
-    const loadSidebarData = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Charger les données en parallèle
-        const [triplesData, positionsData, connectionsData] = await Promise.all([
-          fetchTriplesForAgent(walletAddress, network),
-          fetchPositions(walletAddress, network),
-          fetchFollowsAndFollowers(COMMON_IDS.FOLLOWS, walletAddress, network) // Ajouter les connections
-        ]);
-
-        setTriples(triplesData);
-        setPositions(positionsData);
-        setConnections(connectionsData); // Utiliser les connections
-      } catch (err) {
-        console.error('Error loading sidebar data:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSidebarData();
-  }, [walletAddress, network]);
-
-  // Charger les claims séparément quand atomDetails est disponible
   useEffect(() => {
-    if (!atomDetails) {
-      setActivities([]);
-      return;
+    if (connectionsData) {
+      setConnections(connectionsData);
     }
+  }, [connectionsData]);
 
-    const loadClaims = async () => {
-      try {
-        const claimsData = await fetchClaimsBySubject(atomDetails.term_id, network);
-        setActivities(claimsData);
-      } catch (err) {
-        console.error('Error loading claims:', err);
-        setActivities([]);
-      }
-    };
-
-    loadClaims();
-  }, [atomDetails, network]);
+  // Agréger les erreurs
+  const combinedError = triplesError || positionsError || claimsError || error;
+  const combinedLoading = triplesLoading || positionsLoading || claimsLoading;
 
   return {
     atomDetails,
@@ -106,7 +94,7 @@ export const useSidebarData = (
     positions,
     activities,
     connections,
-    loading: loading || triplesLoading,
-    error: error || (triplesError ? triplesError.message : null)
+    loading: combinedLoading,
+    error: combinedError ? (typeof combinedError === 'string' ? combinedError : combinedError.message) : null
   };
 };

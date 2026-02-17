@@ -3,11 +3,10 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
-  useRef,
 } from "react";
 import { Network, API_URLS } from "./hooks/useAtomData";
 import { useTripleByCreator } from "./hooks/useTripleByCreator";
-import { fetchPositions } from "./api/fetchPositions";
+import { usePositions } from "./hooks/usePositions";
 import PlayerMapHome from "./PlayerMapHome";
 import PlayerMapGraph from "./PlayerMapGraph";
 import RegistrationForm from "./RegistrationForm";
@@ -34,7 +33,7 @@ interface GraphComponentProps {
   config?: PlayerMapConfig; // Configuration avec constantes personnalisées
 }
 
-const GraphComponent: React.FC<GraphComponentProps> = ({
+const GraphComponentInner: React.FC<GraphComponentProps> = ({
   walletConnected = false,
   walletAddress = "",
   wagmiConfig,
@@ -64,14 +63,6 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
   // État pour la détection du wallet (plus fiable)
   const [isWalletReady, setIsWalletReady] = useState(false);
 
-  // État pour les positions actives
-  const [activePositions, setActivePositions] = useState<any[]>([]);
-  const [positionsLoading, setPositionsLoading] = useState(false);
-  const [positionsError, setPositionsError] = useState<Error | null>(null);
-  const lastFetchAttemptRef = useRef<number>(0);
-  const last429ErrorRef = useRef<number>(0);
-  const isFetchingRef = useRef<boolean>(false);
-
   const lowerCaseAddress = walletAddress ? walletAddress : "";
 
   // Vérifier si le wallet est réellement connecté
@@ -92,6 +83,15 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
     network
   );
 
+  const {
+    positions: activePositions,
+    loading: positionsLoading,
+    error: positionsError,
+  } = usePositions(
+    isWalletReady ? walletAddress : undefined, // Ne charge que si wallet connecté
+    network
+  );
+
   // Mémoriser playerTriples avec une clé stable basée sur term_id pour éviter les re-renders inutiles
   const playerTriples = useMemo(() => {
     if (!playerTriplesRaw || playerTriplesRaw.length === 0) {
@@ -100,290 +100,6 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
     // Créer une clé stable basée sur les term_id triés
     return [...playerTriplesRaw];
   }, [playerTriplesRaw]);
-
-  // Créer une clé stable pour les playerTriples players (pour la dépendance useEffect)
-  const playerTriplesKey = useMemo(() => {
-    if (!playerTriples || playerTriples.length === 0) {
-      return "";
-    }
-    const playerGameTriples = playerTriples.filter(
-      (triple) =>
-        triple.predicate_id ===
-          constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
-        triple.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
-    );
-    return playerGameTriples
-      .map((t) => t.term_id)
-      .sort()
-      .join(",");
-  }, [
-    playerTriples,
-    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId,
-    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId,
-  ]);
-
-  // Récupérer les positions actives quand le wallet est connecté
-  useEffect(() => {
-    const fetchActivePositions = async () => {
-      // Guard 1: Vérifier les conditions de base
-      if (!isWalletReady || !walletAddress) {
-        setActivePositions([]);
-        setPositionsError(null);
-        return;
-      }
-
-      // Guard 2: Ne pas fetch si on est déjà en train de charger
-      if (isFetchingRef.current) {
-        return;
-      }
-
-      // Guard 3: Ne pas fetch si on a eu une erreur 429 il y a moins de 30 secondes
-      const now = Date.now();
-      const timeSinceLast429 = now - last429ErrorRef.current;
-      if (timeSinceLast429 < 30000) {
-        console.warn(
-          "[GraphComponent] Skip fetch: Too many requests recently (429 error)"
-        );
-        return;
-      }
-
-      // Guard 4: Ne pas fetch si les triples ne sont pas encore chargés ou en erreur
-      if (tripleLoading || tripleError) {
-        return;
-      }
-
-      // Guard 5: Ne pas fetch si pas de triples (évite une requête inutile)
-      if (!playerTriples || playerTriples.length === 0) {
-        setActivePositions([]);
-        return;
-      }
-
-      // Guard 6: Éviter les fetches trop fréquents (débounce)
-      const timeSinceLastFetch = now - lastFetchAttemptRef.current;
-      if (timeSinceLastFetch < 1000) {
-        console.warn("[GraphComponent] Skip fetch: Too frequent requests");
-        return;
-      }
-
-      lastFetchAttemptRef.current = now;
-      isFetchingRef.current = true;
-      setPositionsLoading(true);
-      setPositionsError(null);
-
-      try {
-        // Filtrer les triples pour ne garder que ceux avec "is player of" + "Boss Fighters"
-        const playerGameTriples = playerTriples.filter(
-          (triple) =>
-            triple.predicate_id ===
-              constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
-            triple.object_id ===
-              constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
-        );
-        const playerTripleTermIds = playerGameTriples.map(
-          (triple) => triple.term_id
-        );
-
-        // Si pas de triples joueur, pas besoin de chercher les positions
-        if (playerTripleTermIds.length === 0) {
-          setActivePositions([]);
-          return;
-        }
-
-        // Faire une requête GraphQL filtrée directement sur les term_id des triples joueur
-        const apiUrl = API_URLS[network];
-
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            query: `
-              query GetPlayerPositions($accountId: String!, $termIds: [String!]!) {
-                positions(where: { 
-                  account_id: { _eq: $accountId },
-                  term_id: { _in: $termIds },
-                  shares: { _gt: 0 }
-                }) {
-                  id
-                  shares
-                  curve_id
-                  account_id
-                  term_id
-                }
-              }
-            `,
-            variables: {
-              accountId: walletAddress,
-              termIds: playerTripleTermIds,
-            },
-          }),
-        });
-
-        const result = await response.json();
-
-        if (result.errors) {
-          console.error("[GraphComponent] GraphQL errors:", result.errors);
-          throw new Error(result.errors[0]?.message || "GraphQL error");
-        }
-
-        const gamePositions = result.data?.positions || [];
-
-        // Enrich positions with term details
-        if (gamePositions.length > 0) {
-          const termIds = [
-            ...new Set(
-              gamePositions.map((p: any) => p.term_id).filter(Boolean)
-            ),
-          ];
-
-          if (termIds.length > 0) {
-            const termsResponse = await fetch(apiUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                query: `
-                  query GetTerms($termIds: [String!]!) {
-                    terms(where: { id: { _in: $termIds } }) {
-                      id
-                      total_market_cap
-                      total_assets
-                      atom_id
-                      triple_id
-                    }
-                  }
-                `,
-                variables: { termIds },
-              }),
-            });
-
-            const termsResult = await termsResponse.json();
-
-            if (!termsResult.errors && termsResult.data?.terms) {
-              const terms = termsResult.data.terms;
-              const atomIds = [
-                ...new Set(terms.map((t: any) => t.atom_id).filter(Boolean)),
-              ];
-              const tripleIds = [
-                ...new Set(terms.map((t: any) => t.triple_id).filter(Boolean)),
-              ];
-
-              // Fetch atoms and triples separately
-              const [atomsResponse, triplesResponse] = await Promise.all([
-                atomIds.length > 0
-                  ? fetch(apiUrl, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        query: `
-                      query GetAtoms($atomIds: [String!]!) {
-                        atoms(where: { term_id: { _in: $atomIds } }) {
-                          term_id
-                          label
-                        }
-                      }
-                    `,
-                        variables: { atomIds },
-                      }),
-                    })
-                  : Promise.resolve(null),
-                tripleIds.length > 0
-                  ? fetch(apiUrl, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        query: `
-                      query GetTriples($tripleIds: [String!]!) {
-                        triples(where: { term_id: { _in: $tripleIds } }) {
-                          term_id
-                          subject_id
-                          predicate_id
-                          object_id
-                        }
-                      }
-                    `,
-                        variables: { tripleIds },
-                      }),
-                    })
-                  : Promise.resolve(null),
-              ]);
-
-              const atomsData = atomsResponse
-                ? await atomsResponse.json()
-                : { data: { atoms: [] } };
-              const triplesData = triplesResponse
-                ? await triplesResponse.json()
-                : { data: { triples: [] } };
-
-              const atomsMap = new Map(
-                (atomsData.data?.atoms || []).map((atom: any) => [
-                  atom.term_id,
-                  atom,
-                ])
-              );
-              const triplesMap = new Map(
-                (triplesData.data?.triples || []).map((triple: any) => [
-                  triple.term_id,
-                  triple,
-                ])
-              );
-
-              const termsMap = new Map(
-                terms.map((term: any) => [
-                  term.id,
-                  {
-                    ...term,
-                    atom: atomsMap.get(term.atom_id) || null,
-                    triple: triplesMap.get(term.triple_id) || null,
-                  },
-                ])
-              );
-
-              const enrichedPositions = gamePositions.map((pos: any) => ({
-                ...pos,
-                term: termsMap.get(pos.term_id) || null,
-              }));
-
-              setActivePositions(enrichedPositions);
-            } else {
-              setActivePositions(gamePositions);
-            }
-          } else {
-            setActivePositions(gamePositions);
-          }
-        } else {
-          setActivePositions(gamePositions);
-        }
-      } catch (error: any) {
-        console.error("Error fetching positions:", error);
-
-        // Si c'est une erreur 429, enregistrer le timestamp et ne pas re-fetch pendant 30 secondes
-        if (
-          error?.message?.includes("429") ||
-          error?.status === 429 ||
-          error?.response?.status === 429
-        ) {
-          last429ErrorRef.current = Date.now();
-          console.warn(
-            "[GraphComponent] Rate limit hit (429), will retry after 30 seconds"
-          );
-        }
-
-        setPositionsError(error);
-        // Ne pas vider activePositions en cas d'erreur pour garder les données précédentes
-      } finally {
-        isFetchingRef.current = false;
-        setPositionsLoading(false);
-      }
-    };
-
-    fetchActivePositions();
-  }, [
-    isWalletReady,
-    walletAddress,
-    network,
-    playerTriplesKey,
-    tripleLoading,
-    tripleError,
-  ]);
 
   // Vérifie si l'utilisateur a un player atom ET des positions actives
   const hasPlayerAtom = playerTriples.length > 0;
@@ -486,7 +202,7 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
 
   // Logique principale d'affichage
   return (
-    <PlayerMapQueryClientProvider>
+    <>
       <div style={{ position: "relative", width: "100%", height: "100%" }}>
         {/* Utiliser notre nouvelle modal de connexion wallet */}
         <ConnectWalletModal
@@ -550,6 +266,15 @@ const GraphComponent: React.FC<GraphComponentProps> = ({
           />
         )}
       </div>
+    </>
+  );
+};
+
+// ✅ OPTIMISATION Sprint 2: Wrapper avec QueryClientProvider
+const GraphComponent: React.FC<GraphComponentProps> = (props) => {
+  return (
+    <PlayerMapQueryClientProvider>
+      <GraphComponentInner {...props} />
     </PlayerMapQueryClientProvider>
   );
 };

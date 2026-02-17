@@ -8,6 +8,8 @@ import VotingModal from "./components/vote/VotingModal";
 import { useDepositTriple } from "./hooks/useDepositTriple";
 import { useCheckSpecificTriplePosition } from "./hooks/useCheckSpecificTriplePosition";
 import { useDisplayTriplesWithPosition } from "./hooks/useDisplayTriplesWithPosition";
+import { usePositions } from "./hooks/usePositions";
+import { useClaimsBySubject } from "./hooks/useClaimsBySubject";
 import { checkTriplePosition } from "./utils/debugPosition";
 // Auth supprimé - plus nécessaire
 import { initConfig, getConfig } from "./utils/config";
@@ -28,6 +30,8 @@ export {
   useDepositTriple,
   useCheckSpecificTriplePosition,
   useDisplayTriplesWithPosition,
+  usePositions,
+  useClaimsBySubject,
   checkTriplePosition,
 };
 

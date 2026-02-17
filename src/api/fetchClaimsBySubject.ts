@@ -1,8 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
 
-// Fetch Claims by Subject (atom as subject)
-// Récupère toutes les claims par batch de 100 pour éviter la limite
 export const fetchClaimsBySubject = async (
   subjectId: string,
   network = Network.MAINNET
@@ -15,7 +13,6 @@ export const fetchClaimsBySubject = async (
     let hasMore = true;
 
     while (hasMore) {
-      // Étape 1: Récupérer les triples avec seulement les IDs (sans relations)
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,6 +29,42 @@ export const fetchClaimsBySubject = async (
                 predicate_id
                 object_id
                 counter_term_id
+                subject {
+                  term_id
+                  label
+                  type
+                }
+                predicate {
+                  term_id
+                  label
+                  type
+                }
+                object {
+                  term_id
+                  label
+                  type
+                  image
+                }
+                term {
+                  id
+                  total_market_cap
+                  total_assets
+                  positions_aggregate(where: { shares: { _gt: 0 } }) {
+                    aggregate {
+                      count
+                    }
+                  }
+                }
+                counter_term {
+                  id
+                  total_market_cap
+                  total_assets
+                  positions_aggregate(where: { shares: { _gt: 0 } }) {
+                    aggregate {
+                      count
+                    }
+                  }
+                }
               }
             }
           `,
@@ -51,164 +84,9 @@ export const fetchClaimsBySubject = async (
       if (triples.length === 0) {
         hasMore = false;
       } else {
-        // Étape 2: Récupérer les détails des predicates et objects pour ce batch
-        const predicateIds = [...new Set(triples.map((t: any) => t.predicate_id).filter(Boolean))];
-        const objectIds = [...new Set(triples.map((t: any) => t.object_id).filter(Boolean))];
-
-        if (predicateIds.length > 0 || objectIds.length > 0) {
-          const atomsQuery = `
-            query GetAtoms($predicateIds: [String!]!, $objectIds: [String!]!) {
-              predicates: atoms(where: { term_id: { _in: $predicateIds } }) {
-                term_id
-                label
-                type
-              }
-              objects: atoms(where: { term_id: { _in: $objectIds } }) {
-                term_id
-                label
-                type
-                image
-              }
-            }
-          `;
-
-          const atomsResponse = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              query: atomsQuery,
-              variables: { predicateIds, objectIds }
-            })
-          });
-
-          const atomsData = await atomsResponse.json();
-
-          if (!atomsData.errors && atomsData.data) {
-            // Convertir les URLs IPFS en HTTP pour les images
-            const predicates = convertIpfsUrlsInObject(atomsData.data.predicates || []);
-            const objects = convertIpfsUrlsInObject(atomsData.data.objects || []);
-            
-            const predicatesMap = new Map(
-              predicates.map((a: any) => [a.term_id, a])
-            );
-            const objectsMap = new Map(
-              objects.map((a: any) => [a.term_id, a])
-            );
-
-            // Étape 3: Récupérer les détails des terms (term_id et counter_term_id)
-            const allTermIds = [...new Set(
-              triples.flatMap((t: any) => [t.term_id, t.counter_term_id]).filter(Boolean)
-            )];
-
-            let termsMap = new Map();
-            let positionsCountMap = new Map<string, number>();
-
-            if (allTermIds.length > 0) {
-              // Fetch terms details
-              const termsResponse = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  query: `
-                    query GetTerms($termIds: [String!]!) {
-                      terms(where: { id: { _in: $termIds } }) {
-                        id
-                        total_market_cap
-                        total_assets
-                      }
-                    }
-                  `,
-                  variables: { termIds: allTermIds }
-                })
-              });
-
-              const termsData = await termsResponse.json();
-              if (!termsData.errors) {
-                termsMap = new Map(
-                  (termsData.data?.terms || []).map((term: any) => [term.id, term])
-                );
-
-                // Fetch positions count for each term
-                const positionPromises = allTermIds.map(async (termId: string): Promise<{ termId: string; count: number }> => {
-                  const posResponse = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      query: `
-                        query GetPositionsCount($termId: String!) {
-                          positions_aggregate(where: { term_id: { _eq: $termId }, shares: { _gt: 0 } }) {
-                            aggregate {
-                              count
-                            }
-                          }
-                        }
-                      `,
-                      variables: { termId }
-                    })
-                  });
-                  const posData = await posResponse.json();
-                  return {
-                    termId,
-                    count: posData.data?.positions_aggregate?.aggregate?.count || 0
-                  };
-                });
-
-                const positionResults = await Promise.all(positionPromises);
-                positionResults.forEach((result) => {
-                  positionsCountMap.set(result.termId, result.count);
-                });
-              }
-            }
-
-            // Enrichir les triples avec les détails
-            const enrichedTriples = triples.map((triple: any) => {
-              const term = termsMap.get(triple.term_id);
-              const counterTerm = termsMap.get(triple.counter_term_id);
-
-              return {
-                ...triple,
-                subject: {
-                  term_id: triple.subject_id,
-                  label: '',
-                  type: '',
-                },
-                predicate: predicatesMap.get(triple.predicate_id) || {
-                  term_id: triple.predicate_id,
-                  label: '',
-                  type: '',
-                },
-                object: objectsMap.get(triple.object_id) || {
-                  term_id: triple.object_id,
-                  label: '',
-                  type: '',
-                },
-                term: term ? {
-                  ...term,
-                  positions_aggregate: {
-                    aggregate: {
-                      count: positionsCountMap.get(triple.term_id) || 0
-                    }
-                  }
-                } : null,
-                counter_term: counterTerm ? {
-                  ...counterTerm,
-                  positions_aggregate: {
-                    aggregate: {
-                      count: positionsCountMap.get(triple.counter_term_id) || 0
-                    }
-                  }
-                } : null,
-              };
-            });
-
-            allTriples.push(...enrichedTriples);
-          } else {
-            // Si erreur, ajouter les triples sans détails
-            allTriples.push(...triples);
-          }
-        } else {
-          allTriples.push(...triples);
-        }
+        // Convertir les URLs IPFS en HTTP pour les images
+        const enrichedTriples = convertIpfsUrlsInObject(triples);
+        allTriples.push(...enrichedTriples);
         
         // Si on a reçu moins de batchSize résultats, c'est la dernière page
         if (triples.length < batchSize) {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Network } from './useAtomData';
 import { fetchAtomDetails, AtomDetails } from '../api/fetchAtomDetails';
 
@@ -12,39 +12,18 @@ export const useSelectedAtomData = (
   selectedNode: any,
   network: Network = Network.MAINNET
 ): SelectedAtomData => {
-  const [atomDetails, setAtomDetails] = useState<AtomDetails | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!selectedNode?.id) {
-      setAtomDetails(null);
-      setError(null);
-      return;
-    }
-
-    const loadAtomDetails = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const details = await fetchAtomDetails(selectedNode.id, network);
-        setAtomDetails(details);
-      } catch (err) {
-        console.error('Error loading selected atom details:', err);
-        setError(err instanceof Error ? err.message : 'Unknown error');
-        setAtomDetails(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAtomDetails();
-  }, [selectedNode?.id, network]);
+  const { data, isLoading, error, isError } = useQuery({
+    queryKey: ['atomDetails', selectedNode?.id, network],
+    queryFn: () => fetchAtomDetails(selectedNode!.id, network),
+    enabled: Boolean(selectedNode?.id), // Ne fetch que si selectedNode existe
+    staleTime: 5 * 60 * 1000, // Cache 5 minutes (données moins volatiles)
+    gcTime: 10 * 60 * 1000,   // Garde en mémoire 10 minutes
+    retry: 1,
+  });
 
   return {
-    atomDetails,
-    loading,
-    error
+    atomDetails: data || null,
+    loading: isLoading,
+    error: isError ? (error as Error).message : null
   };
 };

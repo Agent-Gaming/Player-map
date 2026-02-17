@@ -2,20 +2,15 @@ import { useQuery } from '@tanstack/react-query';
 import { Network } from './useAtomData';
 import { fetchClaimsBySubject } from '../api/fetchClaimsBySubject';
 
-interface SelectedAtomClaims {
-  claims: any[];
-  loading: boolean;
-  error: string | null;
-}
 
-export const useSelectedAtomClaims = (
-  selectedNode: any,
+export const useClaimsBySubject = (
+  subjectId: string | undefined,
   network: Network = Network.MAINNET
-): SelectedAtomClaims => {
+) => {
   const { data, isLoading, error, isError } = useQuery({
-    queryKey: ['claimsBySubject', selectedNode?.id, network],
-    queryFn: () => fetchClaimsBySubject(selectedNode!.id, network),
-    enabled: Boolean(selectedNode?.id), // Ne fetch que si selectedNode existe
+    queryKey: ['claimsBySubject', subjectId, network],
+    queryFn: () => fetchClaimsBySubject(subjectId!, network),
+    enabled: Boolean(subjectId), // Ne fetch que si subjectId existe
     staleTime: 2 * 60 * 1000, // Cache 2 minutes
     gcTime: 5 * 60 * 1000,    // Garde en mémoire 5 minutes
     retry: 1,
@@ -24,8 +19,6 @@ export const useSelectedAtomClaims = (
   return {
     claims: data || [],
     loading: isLoading,
-    error: isError ? (error as Error).message : null
+    error: isError ? (error as Error) : null,
   };
 };
-
-

@@ -47,8 +47,8 @@ export const ipfsToHttpUrl = (ipfsUrl: string): string => {
   if (!isIpfsUrl(ipfsUrl)) return ipfsUrl
 
   const constants = getPinataConstants()
-  // Utiliser gateway.pinata.cloud (publique) par défaut au lieu de ipfs.io
-  const gwRaw = constants?.PINATA_CONFIG?.IPFS_GATEWAY || "gateway.pinata.cloud"
+  // Utiliser la gateway Intuition officielle par défaut
+  const gwRaw = constants?.PINATA_CONFIG?.IPFS_GATEWAY || "intuition-portal.mypinata.cloud"
 
   // normalise: enlève http(s):// et trailing slashes
   const gateway = gwRaw.replace(/^https?:\/\//, "").replace(/\/+$/, "")

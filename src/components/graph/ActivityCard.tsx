@@ -1,5 +1,6 @@
 import React from "react";
 import { TripleBubble, AtomBubble, PositionBubble } from './index';
+import SafeImage from '../SafeImage';
 
 interface InfoRowProps {
   label: string;
@@ -20,21 +21,22 @@ interface AtomImageProps {
   alt?: string;
 }
 
-const AtomImage: React.FC<AtomImageProps> = ({ src, alt }) =>
-  src ? (
-    <img
-      src={src}
-      alt={alt}
-      style={{
-        width: 48,
-        height: 48,
-        borderRadius: "50%",
-        objectFit: "cover",
-        boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-        marginRight: 10,
-      }}
-    />
-  ) : null;
+const AtomImage: React.FC<AtomImageProps> = ({ src, alt }) => (
+  <SafeImage
+    src={src}
+    alt={alt}
+    style={{
+      width: 48,
+      height: 48,
+      borderRadius: "50%",
+      objectFit: "cover",
+      boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+      marginRight: 10,
+    }}
+    placeholderText="?"
+    showPlaceholder={true}
+  />
+);
 
 interface ValueBlockProps {
   value?: any;

@@ -1,5 +1,7 @@
 import React from "react";
 import { DefaultPlayerMapConstants } from './types/PlayerMapConfig';
+import SafeImage from './components/SafeImage';
+import { isIpfsUrl, ipfsToHttpUrl } from './utils/pinata';
 
 interface PlayerCreationProgressProps {
   step: number;
@@ -27,7 +29,7 @@ interface PlayerCreationProgressProps {
 }
 
 const PreviewImage = ({ src }: { src: string }) => {
-  const [imgSrc, setImgSrc] = React.useState<string>(src);
+  const [httpUrl, setHttpUrl] = React.useState<string>(src);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -35,10 +37,10 @@ const PreviewImage = ({ src }: { src: string }) => {
       setIsLoading(true);
       try {
         // Si c'est une URL IPFS, la convertir en URL HTTP
-        const httpUrl = isIpfsUrl(src) ? ipfsToHttpUrl(src) : src;
-        setImgSrc(httpUrl);
+        const url = isIpfsUrl(src) ? ipfsToHttpUrl(src) : src;
+        setHttpUrl(url);
       } catch (error) {
-        console.error("Error loading image:", error);
+        console.error("Error converting IPFS URL:", error);
       } finally {
         setIsLoading(false);
       }
@@ -52,26 +54,18 @@ const PreviewImage = ({ src }: { src: string }) => {
   }
 
   return (
-    <img
-      src={imgSrc}
+    <SafeImage
+      src={httpUrl}
       alt="Preview"
       style={{
         maxWidth: "100%",
         maxHeight: "150px",
         borderRadius: "5px",
       }}
+      placeholderText="?"
+      showPlaceholder={true}
     />
   );
-};
-
-// Fonctions utilitaires pour la manipulation des URL IPFS
-const isIpfsUrl = (url: string): boolean => {
-  return url.startsWith("ipfs://");
-};
-
-const ipfsToHttpUrl = (ipfsUrl: string): string => {
-  // Remplacer ipfs:// par la gateway HTTP
-  return ipfsUrl.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
 };
 
 const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({

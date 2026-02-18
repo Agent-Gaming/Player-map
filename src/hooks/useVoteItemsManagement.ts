@@ -378,7 +378,9 @@ export const useVoteItemsManagement = ({
         }
       }
 
-      // Fetch positions count for all terms in one batch query
+      // ✅ OPTIMISATION Sprint 3: Batch fetch positions count
+      // Avant: 1 requête par term_id (N requêtes)
+      // Après: 1 seule requête + comptage local
       let positionsCountMap = new Map<string, number>();
       if (allTermIds.length > 0) {
         const positionsResponse = await fetch(apiUrl, {
@@ -386,11 +388,9 @@ export const useVoteItemsManagement = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query: `
-              query GetPositionsCount($termIds: [String!]!) {
-                positions_aggregate(where: { term_id: { _in: $termIds }, shares: { _gt: 0 } }) {
-                  aggregate {
-                    count
-                  }
+              query GetAllPositionsCounts($termIds: [String!]!) {
+                positions(where: { term_id: { _in: $termIds }, shares: { _gt: 0 } }) {
+                  term_id
                 }
               }
             `,
@@ -399,38 +399,17 @@ export const useVoteItemsManagement = ({
         });
 
         const positionsData = await positionsResponse.json();
-        if (!positionsData.errors && positionsData.data?.positions_aggregate) {
-          // Note: positions_aggregate retourne un seul résultat pour tous les termIds
-          // Il faudrait faire une requête par term_id pour avoir le détail
-          // Pour l'instant, on fait une requête séparée par term_id
-          const positionPromises = allTermIds.map(async (termId: string): Promise<{ termId: string; count: number }> => {
-            const posResponse = await fetch(apiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                query: `
-                  query GetPositionsCountForTerm($termId: String!) {
-                    positions_aggregate(where: { term_id: { _eq: $termId }, shares: { _gt: 0 } }) {
-                      aggregate {
-                        count
-                      }
-                    }
-                  }
-                `,
-                variables: { termId }
-              })
-            });
-            const posData = await posResponse.json();
-            return {
-              termId,
-              count: posData.data?.positions_aggregate?.aggregate?.count || 0
-            };
+        if (!positionsData.errors && positionsData.data?.positions) {
+          // Compter les positions par term_id localement
+          const positions = positionsData.data.positions;
+          const counts = new Map<string, number>();
+          
+          positions.forEach((p: any) => {
+            const count = counts.get(p.term_id) || 0;
+            counts.set(p.term_id, count + 1);
           });
-
-          const positionResults = await Promise.all(positionPromises);
-          positionResults.forEach((result) => {
-            positionsCountMap.set(result.termId, result.count);
-          });
+          
+          positionsCountMap = counts;
         }
       }
 

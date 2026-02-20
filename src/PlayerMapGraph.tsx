@@ -48,7 +48,7 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
   wagmiConfig,
 }) => {
   const [selectedNode, setSelectedNode] = useState<any>(null);
-  const [isMyNode, setIsMyNode] = useState(false); // Nouvel état pour différencier mon atom vs autre
+  const [isMyNode, setIsMyNode] = useState(false);
 
   // Wrapper pour setSelectedNode
   const handleSetSelectedNode = (node: any) => {
@@ -205,7 +205,7 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
         <button
           style={getBtnStyle("profile")}
           onClick={() => {
-            setIsMyNode(true); // Forcer mode "my view"
+            setIsMyNode(true);
             setSidebarOpen(true);
           }}
           aria-label="Profile"

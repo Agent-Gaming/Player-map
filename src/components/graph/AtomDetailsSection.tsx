@@ -26,17 +26,18 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
     const loadFullDetails = async () => {
       if (!atomDetails) return;
       
-      // Si atomDetails a déjà toutes les infos, l'utiliser directement
+      // Si atomDetails a déjà value parsé ET image, l'utiliser directement
       if (atomDetails.value && atomDetails.image) {
         setFullAtomDetails(atomDetails);
         return;
       }
 
-      // Sinon, charger les détails complets via l'API
-      if (atomDetails.id || atomDetails.vault_id) {
+      // Charger les détails complets via l'API en utilisant l'ID
+      if (atomDetails.id || atomDetails.vault_id || atomDetails.term_id) {
         setLoading(true);
         try {
-          const details = await fetchAtomDetails(atomDetails.id || atomDetails.vault_id);
+          const atomId = atomDetails.term_id || atomDetails.id || atomDetails.vault_id;
+          const details = await fetchAtomDetails(atomId);
           setFullAtomDetails(details);
         } catch (error) {
           console.error("Error loading atom details:", error);

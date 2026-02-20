@@ -46,6 +46,20 @@ export const fetchAtomDetails = async (atomId: string, network: Network = Networ
               type
               creator_id
               data
+              value {
+                person {
+                  description
+                }
+                organization {
+                  description
+                }
+                thing {
+                  description
+                }
+                book {
+                  description
+                }
+              } 
             }
           }
         `,
@@ -84,23 +98,6 @@ export const fetchAtomDetails = async (atomId: string, network: Network = Networ
       }
     }
 
-    // Fetch description from IPFS if data field exists
-    let description = undefined;
-    if (atom.data) {
-      try {
-        const dataUrl = isIpfsUrl(atom.data) ? await ipfsToHttpUrl(atom.data) : atom.data;
-        const dataResponse = await fetch(dataUrl);
-        if (dataResponse.ok) {
-          const ipfsData = await dataResponse.json();
-          description = ipfsData.description || undefined;
-        }
-      } catch (error) {
-        console.warn('Error fetching atom description from IPFS:', error);
-      }
-    }
-
-    // Retourner l'atom avec la structure complète
-    // Structure value pour compatibilité avec AtomDetailsSection
     // Convertir l'image IPFS en URL HTTP si nécessaire
     const imageUrl = atom.image && isIpfsUrl(atom.image) 
       ? ipfsToHttpUrl(atom.image) 
@@ -108,14 +105,9 @@ export const fetchAtomDetails = async (atomId: string, network: Network = Networ
 
     return {
       ...atom,
-      image: imageUrl, // Utiliser l'URL HTTP convertie
+      image: imageUrl,
       term: termDetails ? { total_market_cap: termDetails.total_market_cap } : undefined,
-      value: description ? {
-        person: { description },
-        organization: { description },
-        thing: { description },
-        book: { description }
-      } : undefined
+      value: atom.value || undefined
     } as AtomDetails;
   } catch (error) {
     console.error('Error fetching atom details:', error);

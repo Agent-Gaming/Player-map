@@ -230,17 +230,41 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
           </div>
         )}
 
-        {/* Si wallet connecté et player confirmé (atom + positions actives), afficher le PlayerMapGraph */}
+        {/* Si wallet connecté et player confirmé : graphe + panneau vote côte à côte */}
         {isWalletReady && hasConfirmedPlayer && (
-          <PlayerMapGraph
-            walletAddress={walletAddress}
-            walletConnected={walletConnected}
-            walletHooks={walletHooks}
-            onOpenVoting={() => setIsVotingOpen(true)}
-            constants={constants} // Passer les constantes directement
-            gamesId={constants.COMMON_IDS.GAMES_ID} // Passer GAMES_ID à playermap-graph
-            wagmiConfig={wagmiConfig} // Passer wagmiConfig
-          />
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              width: "100%",
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            {/* Graphe — prend tout l'espace restant */}
+            <div style={{ flex: 1, minWidth: 0, height: "100%", overflow: "hidden" }}>
+              <PlayerMapGraph
+                walletAddress={walletAddress}
+                walletConnected={walletConnected}
+                walletHooks={walletHooks}
+                onOpenVoting={() => setIsVotingOpen(true)}
+                constants={constants}
+                gamesId={constants.COMMON_IDS.GAMES_ID}
+                wagmiConfig={wagmiConfig}
+              />
+            </div>
+
+            {/* Panneau vote — glisse depuis la droite, prend sa propre largeur */}
+            <VotingModal
+              isOpen={isVotingOpen}
+              walletConnected={walletConnected}
+              walletAddress={walletAddress}
+              publicClient={wagmiConfig?.publicClient}
+              wagmiConfig={wagmiConfig}
+              onClose={() => setIsVotingOpen(false)}
+              constants={constants}
+            />
+          </div>
         )}
 
         {/* Formulaire d'inscription - géré directement par GraphComponent avec le QueryClient local */}
@@ -253,18 +277,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
           walletHooks={walletHooks}
           constants={constants} // Passer les constantes personnalisées !
         />
-
-        {/* Modal de vote - seulement si wallet connecté et player confirmé */}
-        {isVotingOpen && isWalletReady && hasConfirmedPlayer && (
-          <VotingModal
-            walletConnected={walletConnected}
-            walletAddress={walletAddress}
-            publicClient={wagmiConfig?.publicClient}
-            wagmiConfig={wagmiConfig}
-            onClose={() => setIsVotingOpen(false)}
-            constants={constants} // Passer les constantes directement
-          />
-        )}
       </div>
     </>
   );

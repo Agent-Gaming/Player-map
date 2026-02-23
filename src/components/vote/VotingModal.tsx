@@ -1,9 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ClaimVoting } from "./ClaimVoting";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
 
 interface VotingModalProps {
+  isOpen: boolean;
   walletConnected: any;
   walletAddress?: string;
   publicClient?: any;
@@ -13,9 +14,10 @@ interface VotingModalProps {
 }
 
 /**
- * Modal component for the voting system using ClaimVoting
+ * Panneau latéral droit pour le système de vote — s'affiche à côté du graphe
  */
 const VotingModal: React.FC<VotingModalProps> = ({
+  isOpen,
   walletConnected,
   walletAddress,
   publicClient,
@@ -23,47 +25,33 @@ const VotingModal: React.FC<VotingModalProps> = ({
   constants,
   wagmiConfig,
 }) => {
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
-
   return (
     <div
       style={{
-        zIndex: 1000,
-        position: "fixed",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        inset: "10px 0px 0px 0px",
+        flexShrink: 0,
+        width: isOpen ? "520px" : 0,
+        height: "100%",
+        overflow: "hidden",
+        backgroundColor: "rgba(0, 0, 0, 0.92)",
+        borderLeft: isOpen ? "1px solid rgba(255, 255, 255, 0.1)" : "none",
+        boxShadow: isOpen ? "-4px 0 24px rgba(0, 0, 0, 0.4)" : "none",
+        transition: "width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1)",
+        zIndex: 10,
       }}
     >
-      <div
-        style={{
-          width: "75%",
-          height: "90%",
-          overflow: "hidden",
-          borderRadius: "18px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          backgroundColor: "rgba(0, 0, 0, 0.85)",
-          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
-        }}
-      >
-        <ClaimVoting
-          walletConnected={walletConnected}
-          walletAddress={walletAddress}
-          publicClient={publicClient}
-          onClose={onClose}
-          network={Network.MAINNET}
-          wagmiConfig={wagmiConfig}
-          constants={constants}
-        />
-      </div>
+      {isOpen && (
+        <div style={{ width: "520px", height: "100%", overflow: "auto" }}>
+          <ClaimVoting
+            walletConnected={walletConnected}
+            walletAddress={walletAddress}
+            publicClient={publicClient}
+            onClose={onClose}
+            network={Network.MAINNET}
+            wagmiConfig={wagmiConfig}
+            constants={constants}
+          />
+        </div>
+      )}
     </div>
   );
 };

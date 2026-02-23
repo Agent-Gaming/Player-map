@@ -1,7 +1,9 @@
 import React from "react";
 import { ClaimVoting } from "./ClaimVoting";
+import { SpeakUpHeader } from "./SpeakUpHeader";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
+import { useGameStats } from "../../hooks/useGameStats";
 
 interface VotingModalProps {
   isOpen: boolean;
@@ -9,9 +11,11 @@ interface VotingModalProps {
   walletAddress?: string;
   publicClient?: any;
   onClose: () => void;
-  constants: DefaultPlayerMapConstants; // Constantes injectées directement
+  constants: DefaultPlayerMapConstants;
   wagmiConfig?: any;
 }
+
+const PANEL_WIDTH = "640px";
 
 /**
  * Panneau latéral droit pour le système de vote — s'affiche à côté du graphe
@@ -25,31 +29,51 @@ const VotingModal: React.FC<VotingModalProps> = ({
   constants,
   wagmiConfig,
 }) => {
+  const stats = useGameStats(constants, Network.MAINNET);
+
   return (
     <div
       style={{
-        flexShrink: 0,
-        width: isOpen ? "520px" : 0,
+        position: "absolute",
+        top: 0,
+        right: 0,
         height: "100%",
+        width: isOpen ? PANEL_WIDTH : 0,
         overflow: "hidden",
         backgroundColor: "rgba(0, 0, 0, 0.92)",
         borderLeft: isOpen ? "1px solid rgba(255, 255, 255, 0.1)" : "none",
         boxShadow: isOpen ? "-4px 0 24px rgba(0, 0, 0, 0.4)" : "none",
         transition: "width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1)",
-        zIndex: 10,
+        zIndex: 1300,
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {isOpen && (
-        <div style={{ width: "520px", height: "100%", overflow: "auto" }}>
-          <ClaimVoting
-            walletConnected={walletConnected}
-            walletAddress={walletAddress}
-            publicClient={publicClient}
-            onClose={onClose}
-            network={Network.MAINNET}
-            wagmiConfig={wagmiConfig}
-            constants={constants}
-          />
+        <div
+          style={{
+            width: PANEL_WIDTH,
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
+          {/* Header avec stats globales du jeu */}
+          <SpeakUpHeader stats={stats} />
+
+          {/* Contenu de vote — scrollable */}
+          <div style={{ flex: 1, overflowY: "auto" }}>
+            <ClaimVoting
+              walletConnected={walletConnected}
+              walletAddress={walletAddress}
+              publicClient={publicClient}
+              onClose={onClose}
+              network={Network.MAINNET}
+              wagmiConfig={wagmiConfig}
+              constants={constants}
+            />
+          </div>
         </div>
       )}
     </div>

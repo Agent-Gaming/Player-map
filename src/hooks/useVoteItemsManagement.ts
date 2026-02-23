@@ -331,6 +331,7 @@ export const useVoteItemsManagement = ({
                 atoms(where: { term_id: { _in: $termIds } }) {
                   term_id
                   label
+                  image
                 }
               }
             `,
@@ -505,6 +506,8 @@ export const useVoteItemsManagement = ({
           subject: details.subject?.label || `Subject ${id}`,
           predicate: details.predicate?.label || "is",
           object: details.object?.label || `Object ${id}`,
+          subject_image: (details.subject as any)?.image || null,
+          object_image: (details.object as any)?.image || null,
           units: 0,
           direction: VoteDirection.None,
           term_id: details.term_id,

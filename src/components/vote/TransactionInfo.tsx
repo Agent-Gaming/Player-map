@@ -5,76 +5,108 @@ interface TransactionInfoProps {
   numberOfTransactions: number;
   totalUnits: number;
   onResetAll: () => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
+  isDepositLoading: boolean;
 }
 
 export const TransactionInfo: React.FC<TransactionInfoProps> = ({
   numberOfTransactions,
   totalUnits,
   onResetAll,
+  onSubmit,
+  isSubmitting,
+  isDepositLoading,
 }) => {
+  const isProcessing = isSubmitting || isDepositLoading;
+  const canSubmit = totalUnits > 0 && !isProcessing;
+
   return (
     <div
       style={{
-        padding: "10px, 20px",
-        borderRadius: "8px",
-        marginBottom: "25px",
         display: "flex",
-        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "#111",
+        borderTop: "1px solid rgba(255,255,255,0.1)",
+        padding: "12px 20px",
+        gap: "16px",
+        flexShrink: 0,
       }}
     >
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
+      {/* Stats */}
+      <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
-            Unit value
+          <div style={{ fontSize: "0.75em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Position(s) selected
           </div>
-          <div style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
-            {calculateEthCost(totalUnits)} $TRUST
-          </div>
-        </div>
-        
-        <div>
-          <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
-            Nb transactions
-          </div>
-          <div style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
+          <div style={{ fontSize: "1.2em", fontWeight: "bold", color: "#FFFFFF" }}>
             {numberOfTransactions}
           </div>
         </div>
-        
+
         <div>
-          <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
-            Estimated gas cost
+          <div style={{ fontSize: "0.75em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Total $TRUST
           </div>
-          <div style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
-            ~{calculateGasCost(numberOfTransactions)} $TRUST
+          <div style={{ fontSize: "1.2em", fontWeight: "bold", color: "#FFFFFF" }}>
+            {calculateEthCost(totalUnits)}
           </div>
         </div>
 
-        <div style={{ fontSize: "0.9em", color: "#FFFFFF" }}>
-          Total units selected:
-          <span style={{ fontSize: "1.1em", fontWeight: "bold", color: "#FFD32A" }}>
-            {totalUnits} {totalUnits === 1 ? "unit" : "units"}
-          </span>
+        <div>
+          <div style={{ fontSize: "0.75em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            Total cost
+          </div>
+          <div style={{ fontSize: "1.2em", fontWeight: "bold", color: "#FFFFFF" }}>
+            ${calculateGasCost(numberOfTransactions)}
+          </div>
         </div>
-        
-        {totalUnits > 0 && (
-          <button
-            onClick={onResetAll}
-            style={{
-              backgroundColor: "#FFD32A",
-              color: "#000",
-              padding: "6px 12px",
-              borderRadius: "4px",
-              cursor: "pointer",
-              fontSize: "0.9em",
-            }}
-          >
-            Reset all
-          </button>
-        )}
-
       </div>
 
+      {/* Buttons */}
+      <div style={{ display: "flex", gap: "10px", flexShrink: 0 }}>
+        <button
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            backgroundColor: canSubmit ? "#FFD32A" : "#444",
+            color: canSubmit ? "#000" : "#888",
+            padding: "10px 20px",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "0.9em",
+            fontWeight: "bold",
+            cursor: canSubmit ? "pointer" : "not-allowed",
+            transition: "background-color 0.2s ease",
+          }}
+        >
+          ✔ {isProcessing ? "Processing..." : "SUBMIT"}
+        </button>
+
+        <button
+          onClick={onResetAll}
+          disabled={totalUnits === 0}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            backgroundColor: totalUnits > 0 ? "#FFD32A" : "#444",
+            color: totalUnits > 0 ? "#000" : "#888",
+            padding: "10px 20px",
+            border: "none",
+            borderRadius: "6px",
+            fontSize: "0.9em",
+            fontWeight: "bold",
+            cursor: totalUnits > 0 ? "pointer" : "not-allowed",
+          }}
+        >
+          ↺ RESET
+        </button>
+      </div>
     </div>
   );
 }; 

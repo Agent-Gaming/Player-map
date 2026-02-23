@@ -5,7 +5,6 @@ import { useVoteItemsManagement } from "../../hooks/useVoteItemsManagement";
 import { TransactionInfo } from "./TransactionInfo";
 import { VotingHeader } from "./VotingHeader";
 import { ClaimList } from "./ClaimList";
-import { SubmitButton } from "./SubmitButton";
 import { TransactionStatusDisplay } from "./TransactionStatus";
 import { ConnectWalletModal, CreatePlayerModal } from "../modals";
 import { useTripleByCreator } from "../../hooks/useTripleByCreator";
@@ -246,14 +245,9 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
         numberOfTransactions={numberOfTransactions}
         totalUnits={totalUnits}
         onResetAll={resetAllVotes}
-      />
-    
-      <SubmitButton
         onSubmit={handleSubmit}
         isSubmitting={isSubmitting}
         isDepositLoading={isDepositLoading}
-        totalUnits={totalUnits}
-        numberOfTransactions={numberOfTransactions}
       />
       <TransactionStatusDisplay transactionStatus={transactionStatus} />
       

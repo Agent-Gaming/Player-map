@@ -68991,7 +68991,7 @@ const Pue = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     }
   );
 }, ice = ({ stats: r }) => {
-  const { gameName: e, gameImage: i, totalGuilds: n, totalPlayers: s, totalTriples: a, totalAttestations: o, loading: l } = r, u = i ? Ra(i) ? Ro(i) : i : null;
+  const { gameName: e, gameImage: i, totalGuilds: n, totalPlayers: s, totalVotes: a, totalAttestations: o, loading: l } = r, u = i ? Ra(i) ? Ro(i) : i : null;
   return /* @__PURE__ */ P.jsxs(
     "div",
     {
@@ -69058,9 +69058,9 @@ const Pue = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
               /* @__PURE__ */ P.jsx("div", { style: { width: 1, background: "rgba(255,255,255,0.08)" } }),
               /* @__PURE__ */ P.jsx(vm, { label: "Total Players", value: s, loading: l, variant: "player" }),
               /* @__PURE__ */ P.jsx("div", { style: { width: 1, background: "rgba(255,255,255,0.08)" } }),
-              /* @__PURE__ */ P.jsx(vm, { label: "Total Triple", value: a, loading: l, variant: "triple" }),
+              /* @__PURE__ */ P.jsx(vm, { label: "Total Attestation", value: o, loading: l, variant: "attestation" }),
               /* @__PURE__ */ P.jsx("div", { style: { width: 1, background: "rgba(255,255,255,0.08)" } }),
-              /* @__PURE__ */ P.jsx(vm, { label: "Total Attestation", value: o, loading: l, variant: "attestation" })
+              /* @__PURE__ */ P.jsx(vm, { label: "Total Votes", value: a, loading: l, variant: "triple" })
             ]
           }
         )
@@ -69068,19 +69068,19 @@ const Pue = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
     }
   );
 }, rce = (r, e = qt.MAINNET) => {
-  const [i, n] = ge(""), [s, a] = ge(null), [o, l] = ge(0), [u, c] = ge(0), [h, d] = ge(0), [p, f] = ge(!0), [m, v] = ge(null), y = r.COMMON_IDS.GAMES_ID, g = r.COMMON_IDS.IS_PLAYER_OF, _ = r.OFFICIAL_GUILDS.length;
+  const [i, n] = ge(""), [s, a] = ge(null), [o, l] = ge(0), [u, c] = ge(0), [h, d] = ge(0), p = r.PREDEFINED_CLAIM_IDS ?? [], [f, m] = ge(!0), [v, y] = ge(null), g = r.COMMON_IDS.GAMES_ID, _ = r.COMMON_IDS.IS_PLAYER_OF, x = r.OFFICIAL_GUILDS.length;
   return zt(() => {
-    if (!y || !g) return;
+    if (!g || !_ || p.length === 0) return;
     (async () => {
-      var b, w, T;
-      f(!0), v(null);
+      var w, T, M;
+      m(!0), y(null);
       try {
-        const M = dr[e], E = await (await fetch(M, {
+        const A = dr[e], S = await (await fetch(A, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query: `
-              query GameStats($gamesId: String!, $isPlayerOfId: String!) {
+              query GameStats($gamesId: String!, $isPlayerOfId: String!, $claimIds: [String!]!) {
                 gameAtom: atoms(where: { term_id: { _eq: $gamesId } }) {
                   term_id
                   label
@@ -69092,8 +69092,11 @@ const Pue = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                 }) {
                   aggregate { count }
                 }
-                triples: triples_aggregate(where: {
-                  object_id: { _eq: $gamesId }
+                votes: positions_aggregate(where: {
+                  term: {
+                    triple: { term_id: { _in: $claimIds } }
+                  }
+                  shares: { _gt: 0 }
                 }) {
                   aggregate { count }
                 }
@@ -69109,30 +69112,30 @@ const Pue = "data:image/svg+xml,%3csvg%20width='300'%20height='50'%20viewBox='0%
                 }
               }
             `,
-            variables: { gamesId: y, isPlayerOfId: g }
+            variables: { gamesId: g, isPlayerOfId: _, claimIds: p }
           })
         })).json();
-        if (E.errors) {
-          console.error("GameStats GraphQL errors:", E.errors), v("Failed to fetch game stats");
+        if (S.errors) {
+          console.error("GameStats GraphQL errors:", S.errors), y("Failed to fetch game stats");
           return;
         }
-        const { gameAtom: S, players: R, triples: I, attestations: O } = E.data ?? {};
-        S != null && S[0] && (n(S[0].label ?? ""), a(S[0].image ?? null)), l(((b = R == null ? void 0 : R.aggregate) == null ? void 0 : b.count) ?? 0), c(((w = I == null ? void 0 : I.aggregate) == null ? void 0 : w.count) ?? 0), d(((T = O == null ? void 0 : O.aggregate) == null ? void 0 : T.count) ?? 0);
-      } catch (M) {
-        console.error("useGameStats error:", M), v("Network error");
+        const { gameAtom: R, players: I, votes: O, attestations: C } = S.data ?? {};
+        R != null && R[0] && (n(R[0].label ?? ""), a(R[0].image ?? null)), l(((w = I == null ? void 0 : I.aggregate) == null ? void 0 : w.count) ?? 0), c(((T = O == null ? void 0 : O.aggregate) == null ? void 0 : T.count) ?? 0), d(((M = C == null ? void 0 : C.aggregate) == null ? void 0 : M.count) ?? 0);
+      } catch (A) {
+        console.error("useGameStats error:", A), y("Network error");
       } finally {
-        f(!1);
+        m(!1);
       }
     })();
-  }, [y, g, e]), {
+  }, [g, _, e, p.join(",")]), {
     gameName: i,
     gameImage: s,
-    totalGuilds: _,
+    totalGuilds: x,
     totalPlayers: o,
-    totalTriples: u,
+    totalVotes: u,
     totalAttestations: h,
-    loading: p,
-    error: m
+    loading: f,
+    error: v
   };
 }, xC = "640px", nce = ({
   isOpen: r,

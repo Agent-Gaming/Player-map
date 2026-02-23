@@ -93,7 +93,7 @@ const StatCard: React.FC<{
 };
 
 export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
-  const { gameName, gameImage, totalGuilds, totalPlayers, totalTriples, totalAttestations, loading } = stats;
+  const { gameName, gameImage, totalGuilds, totalPlayers, totalVotes, totalAttestations, loading } = stats;
 
   const imageUrl = gameImage ? (isIpfsUrl(gameImage) ? ipfsToHttpUrl(gameImage) : gameImage) : null;
 
@@ -154,9 +154,9 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
         <StatCard label="Total Players"      value={totalPlayers}      loading={loading} variant="player" />
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
-        <StatCard label="Total Triple"       value={totalTriples}      loading={loading} variant="triple" />
-        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
         <StatCard label="Total Attestation"  value={totalAttestations} loading={loading} variant="attestation" />
+        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <StatCard label="Total Votes"        value={totalVotes}        loading={loading} variant="triple" />
       </div>
     </div>
   );

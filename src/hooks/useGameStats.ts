@@ -7,8 +7,8 @@ export interface GameStats {
   gameImage: string | null;
   totalGuilds: number;
   totalPlayers: number;
-  totalTriples: number;
-  totalAttestations: number;
+  totalVotes: number;        // total votes (positions) sur les claims prédéfinis
+  totalAttestations: number; // total positions sur les triples du jeu
   loading: boolean;
   error: string | null;
 }
@@ -20,8 +20,10 @@ export const useGameStats = (
   const [gameName, setGameName] = useState("");
   const [gameImage, setGameImage] = useState<string | null>(null);
   const [totalPlayers, setTotalPlayers] = useState(0);
-  const [totalTriples, setTotalTriples] = useState(0);
+  const [totalVotes, setTotalVotes] = useState(0);
   const [totalAttestations, setTotalAttestations] = useState(0);
+
+  const predefinedClaimIds = constants.PREDEFINED_CLAIM_IDS ?? [];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,6 +33,7 @@ export const useGameStats = (
 
   useEffect(() => {
     if (!gamesId || !isPlayerOfId) return;
+    if (predefinedClaimIds.length === 0) return;
 
     const fetchStats = async () => {
       setLoading(true);
@@ -44,7 +47,7 @@ export const useGameStats = (
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query: `
-              query GameStats($gamesId: String!, $isPlayerOfId: String!) {
+              query GameStats($gamesId: String!, $isPlayerOfId: String!, $claimIds: [String!]!) {
                 gameAtom: atoms(where: { term_id: { _eq: $gamesId } }) {
                   term_id
                   label
@@ -56,8 +59,11 @@ export const useGameStats = (
                 }) {
                   aggregate { count }
                 }
-                triples: triples_aggregate(where: {
-                  object_id: { _eq: $gamesId }
+                votes: positions_aggregate(where: {
+                  term: {
+                    triple: { term_id: { _in: $claimIds } }
+                  }
+                  shares: { _gt: 0 }
                 }) {
                   aggregate { count }
                 }
@@ -73,7 +79,7 @@ export const useGameStats = (
                 }
               }
             `,
-            variables: { gamesId, isPlayerOfId },
+            variables: { gamesId, isPlayerOfId, claimIds: predefinedClaimIds },
           }),
         });
 
@@ -85,7 +91,7 @@ export const useGameStats = (
           return;
         }
 
-        const { gameAtom, players, triples, attestations } = result.data ?? {};
+        const { gameAtom, players, votes, attestations } = result.data ?? {};
 
         if (gameAtom?.[0]) {
           setGameName(gameAtom[0].label ?? "");
@@ -93,7 +99,7 @@ export const useGameStats = (
         }
 
         setTotalPlayers(players?.aggregate?.count ?? 0);
-        setTotalTriples(triples?.aggregate?.count ?? 0);
+        setTotalVotes(votes?.aggregate?.count ?? 0);
         setTotalAttestations(attestations?.aggregate?.count ?? 0);
       } catch (err) {
         console.error("useGameStats error:", err);
@@ -104,14 +110,14 @@ export const useGameStats = (
     };
 
     fetchStats();
-  }, [gamesId, isPlayerOfId, network]);
+  }, [gamesId, isPlayerOfId, network, predefinedClaimIds.join(',')]);
 
   return {
     gameName,
     gameImage,
     totalGuilds,
     totalPlayers,
-    totalTriples,
+    totalVotes,
     totalAttestations,
     loading,
     error,

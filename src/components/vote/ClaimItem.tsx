@@ -86,12 +86,12 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     ? "1px solid rgba(0, 111, 232, 0.6)"
     : isSelectedAgainst
     ? "1px solid rgba(255, 149, 0, 0.6)"
-    : "1px solid rgba(255, 255, 255, 0.08)";
+    : "1px solid rgba(255, 255, 255, 0)";
 
   return (
     <div
       style={{
-        padding: "10px 20px",
+        padding: "13px 20px",
         marginBottom: "10px",
         borderRadius: "8px",
         position: "relative",
@@ -136,7 +136,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
             />
           )}
-          <span style={{ fontSize: "0.85em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "0.93em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {subject}
           </span>
         </div>
@@ -149,7 +149,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             overflow: "hidden",
             textOverflow: "ellipsis",
             padding: "4px 8px",
-            fontSize: "0.85em",
+            fontSize: "0.93em",
             color: "#D9D9D9",
             fontWeight: "bold",
           }}
@@ -176,7 +176,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
             />
           )}
-          <span style={{ fontSize: "0.85em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "0.93em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {object}
           </span>
         </div>
@@ -201,7 +201,6 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               border: "none",
               padding: 0,
               cursor: upDisabled ? "not-allowed" : "pointer",
-              opacity: upDisabled ? 0.35 : 1,
               display: "flex",
               alignItems: "center",
             }}
@@ -235,7 +234,6 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               border: "none",
               padding: 0,
               cursor: downDisabled ? "not-allowed" : "pointer",
-              opacity: downDisabled ? 0.35 : 1,
               display: "flex",
               alignItems: "center",
             }}

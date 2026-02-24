@@ -218,18 +218,28 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
       style={{
         width: "100%",
         height: "100%",
-        padding: "15px",
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
         color: "#fff",
+        minHeight: 0,
       }}
     >
-      <VotingHeader onClose={onClose} />
+      {/* En-tête fix — hauteur automatique */}
+      <div style={{ flexShrink: 0, padding: "15px 15px 0" }}>
+        <VotingHeader onClose={onClose} />
+      </div>
 
-      <div style={{ 
-        height: "60%",
-        overflow: "auto",
-        padding: "10px",
-        marginBottom: "25px",
-        }}>
+      {/* Liste scrollable — prend tout l'espace disponible */}
+      <div
+        style={{
+          flex: 1,
+          overflowY: "scroll",
+          padding: "10px 15px",
+          minHeight: 0,
+        }}
+      >
         <ClaimList
           isLoading={isLoading || tripleLoading}
           voteItems={voteItems}
@@ -237,26 +247,29 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
           isVoteDirectionAllowed={isVoteDirectionAllowed}
           walletAddress={walletAddress}
           network={network}
-          constants={constants} // Passer les constantes personnalisées !
+          constants={constants}
         />
       </div>
-      
-      <TransactionInfo
-        numberOfTransactions={numberOfTransactions}
-        totalUnits={totalUnits}
-        onResetAll={resetAllVotes}
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        isDepositLoading={isDepositLoading}
-      />
-      <TransactionStatusDisplay transactionStatus={transactionStatus} />
-      
-      {!isCorrectNetwork && (
-        <NetworkSwitchMessage allowedChainIds={allowedChainIds}
-          currentChainId={currentChainId}
-          targetChainId={targetChainId}
+
+      {/* Footer fix — toujours visible en bas */}
+      <div style={{ flexShrink: 0 }}>
+        <TransactionInfo
+          numberOfTransactions={numberOfTransactions}
+          totalUnits={totalUnits}
+          onResetAll={resetAllVotes}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          isDepositLoading={isDepositLoading}
         />
-      )}
+        <TransactionStatusDisplay transactionStatus={transactionStatus} />
+        {!isCorrectNetwork && (
+          <NetworkSwitchMessage
+            allowedChainIds={allowedChainIds}
+            currentChainId={currentChainId}
+            targetChainId={targetChainId}
+          />
+        )}
+      </div>
     </div>
   );
 }; 

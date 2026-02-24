@@ -49,7 +49,7 @@ const StatCard: React.FC<{
       {/* Label */}
       <span
         style={{
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: "bold",
           color: "#ffd32a",
           letterSpacing: "0.08em",
@@ -126,7 +126,7 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
         )}
         <span
           style={{
-            fontSize: 22,
+            fontSize: 28,
             fontWeight: "bold",
             color: "#fff",
             letterSpacing: "0.08em",

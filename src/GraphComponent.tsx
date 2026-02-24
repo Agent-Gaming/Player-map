@@ -203,7 +203,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // Logique principale d'affichage
   return (
     <>
-      <div style={{ position: "relative", width: "100%", height: "100%" }}>
+      <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}>
         {/* Utiliser notre nouvelle modal de connexion wallet */}
         <ConnectWalletModal
           isOpen={!isWalletReady}
@@ -230,20 +230,19 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
           </div>
         )}
 
-        {/* Layout principal : graphe + panneau speak-up côte à côte */}
-        <div
-          style={{
+        {/* Layout principal : graphe + panneau speak-up côte à côte — uniquement quand player confirmé */}
+        {isWalletReady && hasConfirmedPlayer && (
+          <div
+            style={{
             display: "flex",
             flexDirection: "row",
             width: "100%",
-            height: "100%",
+            maxHeight: "100vh",
             overflow: "hidden",
-          }}
-        >
-          {/* Zone graphe — flex:1 pour occuper l'espace restant */}
-          <div style={{ flex: 1, overflow: "hidden", height: "100%", position: "relative" }}>
-            {/* Si wallet connecté et player confirmé, afficher le PlayerMapGraph */}
-            {isWalletReady && hasConfirmedPlayer && (
+            }}
+          >
+            {/* Zone graphe — flex:1 pour occuper l'espace restant */}
+            <div style={{ flex: 1, overflow: "hidden", height: "100%", position: "relative" }}>
               <PlayerMapGraph
                 walletAddress={walletAddress}
                 walletConnected={walletConnected}
@@ -253,11 +252,9 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
                 gamesId={constants.COMMON_IDS.GAMES_ID}
                 wagmiConfig={wagmiConfig}
               />
-            )}
-          </div>
+Z            </div>
 
-          {/* Panneau speak-up — in-flow, s'anime en largeur */}
-          {isWalletReady && hasConfirmedPlayer && (
+            {/* Panneau speak-up — in-flow, s'anime en largeur */}
             <VotingModal
               isOpen={isVotingOpen}
               walletConnected={walletConnected}
@@ -267,8 +264,8 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
               onClose={() => setIsVotingOpen(false)}
               constants={constants}
             />
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Formulaire d'inscription - géré directement par GraphComponent avec le QueryClient local */}
         <RegistrationForm

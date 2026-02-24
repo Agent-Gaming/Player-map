@@ -15,7 +15,7 @@ interface VotingModalProps {
   wagmiConfig?: any;
 }
 
-const PANEL_WIDTH = "640px";
+const PANEL_WIDTH = "720px";
 
 /**
  * Panneau latéral droit pour le système de vote — s'affiche à côté du graphe (in-flow)
@@ -51,17 +51,18 @@ const VotingModal: React.FC<VotingModalProps> = ({
         <div
           style={{
             width: PANEL_WIDTH,
-            height: "100%",
+            height: "100vh",
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
+            minHeight: 0,
           }}
         >
           {/* Header avec stats globales du jeu */}
           <SpeakUpHeader stats={stats} />
 
-          {/* Contenu de vote — scrollable */}
-          <div style={{ flex: 1, overflowY: "auto" }}>
+          {/* Contenu de vote — flex:1, overflow hidden pour que la liste interne gère son propre scroll */}
+          <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
             <ClaimVoting
               walletConnected={walletConnected}
               walletAddress={walletAddress}

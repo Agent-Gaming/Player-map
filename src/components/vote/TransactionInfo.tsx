@@ -37,7 +37,7 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
       {/* Stats */}
       <div style={{ display: "flex", gap: "32px", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: "0.75em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "0.85em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Position(s) selected
           </div>
           <div style={{ fontSize: "1.2em", fontWeight: "bold", color: "#FFFFFF" }}>
@@ -46,7 +46,7 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
         </div>
 
         <div>
-          <div style={{ fontSize: "0.75em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "0.85em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Total $TRUST
           </div>
           <div style={{ fontSize: "1.2em", fontWeight: "bold", color: "#FFFFFF" }}>
@@ -55,7 +55,7 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
         </div>
 
         <div>
-          <div style={{ fontSize: "0.75em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: "0.85em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             Total cost
           </div>
           <div style={{ fontSize: "1.2em", fontWeight: "bold", color: "#FFFFFF" }}>

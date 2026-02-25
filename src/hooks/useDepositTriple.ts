@@ -2,7 +2,9 @@ import { VoteDirection, DepositResponse } from "../types/vote";
 import { UNIT_VALUE } from "../utils/constants";
 import { ATOM_CONTRACT_ADDRESS, atomABI } from "../abi";
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Network, API_URLS } from "./useAtomData";
+import { apiCache } from "../utils/apiCache";
 
 interface UseDepositTripleProps {
   walletConnected?: any;
@@ -18,6 +20,7 @@ export const useDepositTriple = ({
   network = Network.MAINNET,
 }: UseDepositTripleProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   // Helper function to fetch triple details via GraphQL
   const fetchTripleDetails = async (tripleId: string) => {
@@ -183,6 +186,13 @@ export const useDepositTriple = ({
       }
 
       setIsLoading(false);
+
+      // Invalider les caches pour forcer le rechargement des positions et de l'activité
+      apiCache.clear();
+      await queryClient.invalidateQueries({ queryKey: ['positions'] });
+      await queryClient.invalidateQueries({ queryKey: ['claimsBySubject'] });
+      await queryClient.invalidateQueries({ queryKey: ['activityHistory'] });
+
       return {
         success: true,
         hash: typeof txHash === "string" ? txHash : txHash.hash,

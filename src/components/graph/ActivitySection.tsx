@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ActivityCard, Pagination, PaginationInfo } from './index';
 import Modal from './Modal';
 import { fetchActivityHistory } from '../../api/fetchActivityHistory';
@@ -8,30 +9,17 @@ interface ActivitySectionProps {
 }
 
 const ActivitySection: React.FC<ActivitySectionProps> = ({ accountId }) => {
-  const [activities, setActivities] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  useEffect(() => {
-    const loadActivityHistory = async () => {
-      if (!accountId) return;
-      
-      setLoading(true);
-      try {
-        const activityData = await fetchActivityHistory(accountId);
-        setActivities(activityData);
-      } catch (error) {
-        console.error('Error loading activity history:', error);
-        setActivities([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadActivityHistory();
-  }, [accountId]);
+  const { data: activities = [], isLoading: loading } = useQuery({
+    queryKey: ['activityHistory', accountId],
+    queryFn: () => fetchActivityHistory(accountId),
+    enabled: Boolean(accountId),
+    staleTime: 30 * 1000,   // 30 secondes (court pour voir les nouvelles transactions)
+    gcTime: 2 * 60 * 1000,
+  });
 
   if (loading) {
     return (

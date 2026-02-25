@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { atomABI, ATOM_CONTRACT_ADDRESS } from '../abi';
+import { apiCache } from '../utils/apiCache';
 
 interface RedeemBatchParams {
   receiver: `0x${string}`;
@@ -19,6 +21,7 @@ export const useRedeemBatch = ({
   walletAddress,
 }: UseRedeemBatchProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
   const redeemBatch = async (params: RedeemBatchParams) => {
     if (!walletConnected || !walletAddress) {
@@ -53,6 +56,12 @@ export const useRedeemBatch = ({
       }
 
       setIsLoading(false);
+
+      apiCache.clear();
+      await queryClient.invalidateQueries({ queryKey: ['positions'] });
+      await queryClient.invalidateQueries({ queryKey: ['claimsBySubject'] });
+      await queryClient.invalidateQueries({ queryKey: ['activityHistory'] });
+
       return {
         success: true,
         hash: typeof txHash === "string" ? txHash : txHash.hash,

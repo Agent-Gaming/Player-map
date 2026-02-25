@@ -24,7 +24,14 @@ export const useVoteItemsManagement = ({
   const { PREDEFINED_CLAIM_IDS } = constants;
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
-  const [hasLoadedTripleDetails, setHasLoadedTripleDetails] = useState(false); // Flag pour éviter les re-loads multiples
+  const [hasLoadedTripleDetails, setHasLoadedTripleDetails] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const refreshPositions = () => {
+    setHasLoadedTripleDetails(false);
+    setUserPositionsData(null);
+    setRefreshKey(k => k + 1);
+  };
 
   // Use our hook for fetching triple details
   const { fetchTripleDetails, isLoading: isFetchingTriple } = useFetchTripleDetails({
@@ -156,7 +163,7 @@ export const useVoteItemsManagement = ({
     };
 
     fetchUserPositionsBatch();
-  }, [walletAddress, PREDEFINED_CLAIM_IDS.join(','), network]);
+  }, [walletAddress, PREDEFINED_CLAIM_IDS.join(','), network, refreshKey]);
 
   // Process user positions data when it arrives
   useEffect(() => {
@@ -608,6 +615,7 @@ export const useVoteItemsManagement = ({
     numberOfTransactions,
     handleChangeUnits,
     resetAllVotes,
+    refreshPositions,
     loadTripleDetails,
     isVoteDirectionAllowed,
     userPositions

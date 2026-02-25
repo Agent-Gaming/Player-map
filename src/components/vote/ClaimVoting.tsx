@@ -87,6 +87,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     numberOfTransactions,
     handleChangeUnits,
     resetAllVotes,
+    refreshPositions,
     isVoteDirectionAllowed
   } = useVoteItemsManagement({
     network,
@@ -112,7 +113,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     walletAddress,
     publicClient,
     network,
-    onSuccess: resetAllVotes
+    onSuccess: () => { resetAllVotes(); refreshPositions(); }
   });
 
   // Function to submit votes

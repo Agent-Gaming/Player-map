@@ -73,8 +73,8 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     }
   };
 
-  const upDisabled = !isSelectedFor && (isSelectedAgainst || !canVoteFor);
-  const downDisabled = !isSelectedAgainst && (isSelectedFor || !canVoteAgainst);
+  const upDisabled = !isSelectedFor && (hasForPosition || isSelectedAgainst || hasAgainstPosition || !canVoteFor);
+  const downDisabled = !isSelectedAgainst && (hasAgainstPosition || isSelectedFor || hasForPosition || !canVoteAgainst);
 
   const rowBg = isSelectedFor
     ? "rgba(0, 111, 232, 0.15)"
@@ -122,9 +122,9 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             display: "inline-flex",
             alignItems: "center",
             gap: "5px",
-            maxWidth: "160px",
+            maxWidth: "180px",
             backgroundColor: "#2e2e2edc",
-            padding: "4px 8px",
+            padding: "8px 12px",
             borderRadius: "4px",
             overflow: "hidden",
           }}
@@ -136,7 +136,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
             />
           )}
-          <span style={{ fontSize: "0.93em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "1em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {subject}
           </span>
         </div>
@@ -148,8 +148,8 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             whiteSpace: "nowrap",
             overflow: "hidden",
             textOverflow: "ellipsis",
-            padding: "4px 8px",
-            fontSize: "0.93em",
+            padding: "8px 12px",
+            fontSize: "1em",
             color: "#D9D9D9",
             fontWeight: "bold",
           }}
@@ -162,9 +162,9 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             display: "inline-flex",
             alignItems: "center",
             gap: "5px",
-            maxWidth: "160px",
+            maxWidth: "180px",
             backgroundColor: "#2e2e2edc",
-            padding: "4px 8px",
+            padding: "8px 12px",
             borderRadius: "4px",
             overflow: "hidden",
           }}
@@ -176,7 +176,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
             />
           )}
-          <span style={{ fontSize: "0.93em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "1em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {object}
           </span>
         </div>
@@ -199,6 +199,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             style={{
               background: "none",
               border: "none",
+              outline: "none",
               padding: 0,
               cursor: upDisabled ? "not-allowed" : "pointer",
               display: "flex",
@@ -208,14 +209,14 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             <img
               src={isSelectedFor || hasForPosition ? upSvg : upNotSelectedSvg}
               alt="vote up"
-              style={{ width: 28, height: 28 }}
+              style={{ width: 32, height: 32 }}
             />
           </button>
           <span
             style={{
               color: isSelectedFor || hasForPosition ? "#006FE8" : "rgba(255,255,255,0.7)",
               fontWeight: "bold",
-              fontSize: "0.9em",
+              fontSize: "1.3em",
               minWidth: "24px",
               textAlign: "left",
             }}
@@ -232,6 +233,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             style={{
               background: "none",
               border: "none",
+              outline: "none",
               padding: 0,
               cursor: downDisabled ? "not-allowed" : "pointer",
               display: "flex",
@@ -241,14 +243,14 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             <img
               src={isSelectedAgainst || hasAgainstPosition ? downSvg : downNotSelectedSvg}
               alt="vote down"
-              style={{ width: 28, height: 28 }}
+              style={{ width: 32, height: 32 }}
             />
           </button>
           <span
             style={{
               color: isSelectedAgainst || hasAgainstPosition ? "#FF9500" : "rgba(255,255,255,0.7)",
               fontWeight: "bold",
-              fontSize: "0.9em",
+              fontSize: "1.3em",
               minWidth: "24px",
               textAlign: "left",
             }}

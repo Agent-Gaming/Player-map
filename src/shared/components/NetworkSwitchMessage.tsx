@@ -27,7 +27,7 @@ export const NetworkSwitchMessage = ({
       textAlign: 'center',
     }}>
       <p style={{ color: '#ff4444' }}>
-        You are not on the correct network : Current network: {currentChainId ? getNetworkName(currentChainId) : 'Not connected'} - Required network: {getNetworkName(13579)} <br />
+        You are not on the correct network : Current network: {currentChainId ? getNetworkName(currentChainId) : 'Not connected'} - Required network: {getNetworkName(targetChainId)} <br />
         Please switch to Intuition MainNet (1155) in your wallet to continue
       </p>
     </div>

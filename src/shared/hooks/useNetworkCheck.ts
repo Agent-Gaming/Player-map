@@ -38,7 +38,7 @@ export const useNetworkCheck = ({ walletConnected, publicClient }: UseNetworkChe
 
   useEffect(() => {
     const checkNetwork = async () => {
-      if (!walletConnected || !publicClient) return;
+      if (!publicClient) return;
 
       try {
         const chainId = await publicClient.getChainId();
@@ -50,7 +50,7 @@ export const useNetworkCheck = ({ walletConnected, publicClient }: UseNetworkChe
     };
 
     checkNetwork();
-  }, [walletConnected, publicClient]);
+  }, [publicClient]);
 
   const switchNetwork = async () => {
     if (!walletConnected) return;

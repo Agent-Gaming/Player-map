@@ -27,9 +27,8 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: "#111",
-        borderTop: "1px solid rgba(255,255,255,0.1)",
         padding: "12px 20px",
+        marginBottom: "15px",
         gap: "16px",
         flexShrink: 0,
       }}

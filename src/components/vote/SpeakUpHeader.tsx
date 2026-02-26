@@ -101,7 +101,6 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
     <div
       style={{
         width: "100%",
-        borderBottom: "1px solid rgba(255,255,255,0.08)",
         paddingBottom: 12,
         marginBottom: 4,
       }}
@@ -120,13 +119,13 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
           <img
             src={imageUrl}
             alt={gameName}
-            style={{ width: 34, height: 34, borderRadius: 6, objectFit: "cover" }}
+            style={{ width: 38, height: 38, borderRadius: 6, objectFit: "cover" }}
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         )}
         <span
           style={{
-            fontSize: 28,
+            fontSize: 32,
             fontWeight: "bold",
             color: "#fff",
             letterSpacing: "0.08em",

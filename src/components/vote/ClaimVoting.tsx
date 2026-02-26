@@ -231,7 +231,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
       <div style={{ flexShrink: 0, padding: "15px 15px 0" }}>
         <VotingHeader onClose={onClose} />
       </div>
-
+      <br />
       {/* Liste scrollable — prend tout l'espace disponible */}
       <div
         style={{

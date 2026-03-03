@@ -3,7 +3,6 @@ import {
   convertSharesToTTRUST,
   formatLargeNumber,
 } from "../../utils/conversionUtils";
-import RedeemConfig from "./RedeemConfig";
 import RedeemSelector from "./RedeemSelector";
 import { TripleBubble, AtomBubble, PositionBubble } from "./index";
 import { ATOM_CONTRACT_ADDRESS, atomABI } from "../../abi";
@@ -466,17 +465,6 @@ const PositionCard: React.FC<PositionCardProps> = ({
           onSelect={onSelect || (() => {})}
           positionId={position.id}
         />
-        {isSelected && onAmountChange && (
-          <RedeemConfig
-            positionId={position.id}
-            shares={Number(sharesBigInt)}
-            redeemAmount={redeemAmount}
-            onAmountChange={onAmountChange}
-            publicClient={publicClient}
-            termId={calculationTerm?.id}
-            curveId={position.curve_id || 1}
-          />
-        )}
       </div>
     </div>
   );

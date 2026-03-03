@@ -46,13 +46,7 @@ export const ipfsToHttpUrl = (ipfsUrl: string): string => {
   if (!ipfsUrl) return ipfsUrl
   if (!isIpfsUrl(ipfsUrl)) return ipfsUrl
 
-  const constants = getPinataConstants()
-  // Utiliser gateway.pinata.cloud (publique) par défaut au lieu de ipfs.io
-  const gwRaw = constants?.PINATA_CONFIG?.IPFS_GATEWAY || "gateway.pinata.cloud"
-
-  // normalise: enlève http(s):// et trailing slashes
-  const gateway = gwRaw.replace(/^https?:\/\//, "").replace(/\/+$/, "")
-
+  // Utiliser ipfs.io (gateway publique officielle) directement pour éviter les 403
   const hash = ipfsUrl.replace("ipfs://", "")
-  return `https://${gateway}/ipfs/${hash}`
+  return `https://ipfs.io/ipfs/${hash}`
 }

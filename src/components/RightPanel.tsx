@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { RightPanelMode } from "./TopNavBar";
 import { ClaimVoting } from "./vote/ClaimVoting";
 import { SpeakUpHeader } from "./vote/SpeakUpHeader";
@@ -141,12 +141,77 @@ const SectionDivider: React.FC<{ title: string }> = ({ title }) => (
   </div>
 );
 
+// ─── Onglets Positions / Activity ────────────────────────────────────────────
+
+const ProfileTabs: React.FC<{
+  walletAddress?: string;
+  walletConnected?: any;
+  publicClient?: any;
+}> = ({ walletAddress, walletConnected, publicClient }) => {
+  const [activeTab, setActiveTab] = useState<"positions" | "activity">("positions");
+
+  const tabStyle = (active: boolean): React.CSSProperties => ({
+    flex: 1,
+    padding: "9px 0",
+    background: "none",
+    border: "none",
+    borderBottom: active ? "2px solid #ffd32a" : "2px solid transparent",
+    color: active ? "#ffd32a" : "#888",
+    fontWeight: 700,
+    fontSize: 11,
+    letterSpacing: "0.09em",
+    textTransform: "uppercase",
+    cursor: "pointer",
+    transition: "color 0.15s, border-color 0.15s",
+  });
+
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", marginTop: 18 }}>
+      {/* ── En-têtes onglets ─── */}
+      <div style={{ flexShrink: 0, display: "flex", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+        <button style={tabStyle(activeTab === "positions")} onClick={() => setActiveTab("positions")}>
+          My Positions
+        </button>
+        <button style={tabStyle(activeTab === "activity")} onClick={() => setActiveTab("activity")}>
+          Activity History
+        </button>
+      </div>
+
+      {/* ── Contenu avec scrollbar ─── */}
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        scrollbarWidth: "thin",
+        scrollbarColor: "rgba(255,211,42,0.3) transparent",
+        paddingTop: 4,
+        paddingBottom: 16,
+      }}>
+        {activeTab === "positions" && (
+          <PositionsSection
+            accountId={walletAddress || ""}
+            walletConnected={walletConnected}
+            walletAddress={walletAddress}
+            publicClient={publicClient}
+          />
+        )}
+        {activeTab === "activity" && (
+          <ActivitySection accountId={walletAddress || ""} />
+        )}
+      </div>
+    </div>
+  );
+};
+
 // ─── Contenu "Mode Profil" ──────────────────────────────────────────────────────
 
 const ProfileContent: React.FC<{
   atomDetails: any;
   connections: { follows: any[]; followers: any[] };
   activities: any[];
+  positions?: any[];
+  triples?: any[];
   walletAddress?: string;
   walletConnected?: any;
   publicClient?: any;
@@ -157,6 +222,8 @@ const ProfileContent: React.FC<{
   atomDetails,
   connections,
   activities,
+  positions = [],
+  triples = [],
   walletAddress,
   walletConnected,
   publicClient,
@@ -174,26 +241,28 @@ const ProfileContent: React.FC<{
     );
 
   // ── Stats calculées depuis les claims ──────────────────────────────────────────
-  const totalClaims = activities.length;
+  const totalClaims = triples.length; // Nombre de triples créés
   const totalAttestations = activities.reduce(
     (sum, a) => sum + (a.term?.positions_aggregate?.aggregate?.count || 0) + (a.counter_term?.positions_aggregate?.aggregate?.count || 0),
     0
   );
-  const totalVotes = activities.reduce(
-    (sum, a) => sum + (a.term?.positions_aggregate?.aggregate?.count || 0),
-    0
-  );
+  const totalVotes = positions.length; // Nombre de positions dans "my positions"
+
+  console.log("ProfileContent Stats:", { totalClaims, totalAttestations, totalVotes, triples: triples.length, positions: positions.length });
 
   return (
-    <div style={{ padding: "0 16px 24px" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "0px 16px 30px 16px" }}>
       {/* ── Header joueur ───────────────────────────────────────────────────── */}
+      <div style={{ flexShrink: 0 }}>
       <AtomDetailsSection
         atomDetails={atomDetails}
         connections={connections}
         walletAddress={walletAddress}
       />
+      </div>
 
-      {/* ── Bloc de stats ───────────────────────────────────────────────────── */}
+      {/* ── Bloc de stats ──────────────────────────────────────────────────── */}
+      <div style={{ flexShrink: 0 }}>
       <div style={{
         display: "flex",
         flexDirection: "row",
@@ -222,8 +291,10 @@ const ProfileContent: React.FC<{
           gradient="linear-gradient(to right, #3b82f6, #f97316)"
         />
       </div>
+      </div>
 
       {/* ── Mes Claims ──────────────────────────────────────────────────────── */}
+      <div style={{ flexShrink: 0 }}>
       <SectionDivider title="My Claims" />
       <ClaimsSection
         activities={activities}
@@ -233,19 +304,14 @@ const ProfileContent: React.FC<{
         publicClient={publicClient}
         constants={constants}
       />
+      </div>
 
-      {/* ── Mes Positions ───────────────────────────────────────────────────── */}
-      <SectionDivider title="My Positions" />
-      <PositionsSection
-        accountId={walletAddress || ""}
-        walletConnected={walletConnected}
+      {/* ── Onglets Positions / Activity ──────────────────────────────────── */}
+      <ProfileTabs
         walletAddress={walletAddress}
+        walletConnected={walletConnected}
         publicClient={publicClient}
       />
-
-      {/* ── Activity History ────────────────────────────────────────────────── */}
-      <SectionDivider title="Activity History" />
-      <ActivitySection accountId={walletAddress || ""} />
     </div>
   );
 };
@@ -306,6 +372,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
   constants,
   myAtomDetails,
   myActivities = [],
+  myPositions = [],
+  myTriples = [],
   myConnections = { follows: [], followers: [] },
   sidebarLoading,
   sidebarError,
@@ -329,28 +397,21 @@ const RightPanel: React.FC<RightPanelProps> = ({
     >
 
 
-      {/* Contenu scrollable */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          minHeight: 0,
-          // Scrollbar discrète
-          scrollbarWidth: "thin",
-          scrollbarColor: "rgba(255,211,42,0.3) transparent",
-        }}
-      >
-        {mode === "speakup" && (
+      {/* SpeakUp */}
+      {mode === "speakup" && (
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <SpeakUpContent
             walletAddress={walletAddress}
             walletConnected={walletConnected}
             wagmiConfig={wagmiConfig}
             constants={constants}
           />
-        )}
+        </div>
+      )}
 
-        {mode === "atom" && (
+      {/* Atom – scroll externe car l'intérieur est partiellement fixe */}
+      {mode === "atom" && (
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, scrollbarWidth: "thin", scrollbarColor: "rgba(255,211,42,0.3) transparent" }}>
           <AtomContent
             atomDetails={selectedAtomDetails}
             claims={selectedClaims}
@@ -362,13 +423,18 @@ const RightPanel: React.FC<RightPanelProps> = ({
             error={selectedError}
             title="Claims"
           />
-        )}
+        </div>
+      )}
 
-        {mode === "profile" && (
+      {/* Profile – pas de scroll externe, seulement les listes internes */}
+      {mode === "profile" && (
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
           <ProfileContent
             atomDetails={myAtomDetails}
             connections={myConnections}
             activities={myActivities}
+            positions={myPositions}
+            triples={myTriples}
             walletAddress={walletAddress}
             walletConnected={walletConnected}
             publicClient={wagmiConfig?.publicClient}
@@ -376,8 +442,8 @@ const RightPanel: React.FC<RightPanelProps> = ({
             error={sidebarError}
             constants={constants}
           />
-        )}
-      </div>
+        </div>
+      )}
     </aside>
   );
 };

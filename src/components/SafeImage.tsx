@@ -1,10 +1,11 @@
-import React, { useState, CSSProperties } from 'react';
+import React, { useState, useEffect, CSSProperties } from 'react';
 
 interface SafeImageProps {
   src?: string;
   alt?: string;
   style?: CSSProperties;
   fallbackSrc?: string;
+  fallbackSources?: string[]; // Nouveau: liste de fallbacks à essayer
   showPlaceholder?: boolean;
   placeholderText?: string;
 }
@@ -20,11 +21,20 @@ const SafeImage: React.FC<SafeImageProps> = ({
   alt = 'Image',
   style,
   fallbackSrc,
+  fallbackSources = [],
   showPlaceholder = true,
   placeholderText = '?'
 }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(src);
   const [hasError, setHasError] = useState(false);
+  const [fallbackIndex, setFallbackIndex] = useState(-1);
+
+  // Réinitialiser quand src change (changement d'atom)
+  useEffect(() => {
+    setImgSrc(src);
+    setHasError(false);
+    setFallbackIndex(-1);
+  }, [src]);
 
   // Gérer les erreurs de chargement (CORS, 404, etc.)
   const handleError = () => {
@@ -34,8 +44,21 @@ const SafeImage: React.FC<SafeImageProps> = ({
       // Essayer l'image de fallback si fournie
       if (fallbackSrc && imgSrc !== fallbackSrc) {
         setImgSrc(fallbackSrc);
-      } else if (showPlaceholder) {
-        // Sinon, afficher le placeholder
+        return;
+      }
+      
+      // Essayer les fallbacks dans fallbackSources
+      const nextIndex = fallbackIndex + 1;
+      if (fallbackSources && nextIndex < fallbackSources.length) {
+        console.log(`Trying fallback ${nextIndex + 1}/${fallbackSources.length}:`, fallbackSources[nextIndex]);
+        setFallbackIndex(nextIndex);
+        setImgSrc(fallbackSources[nextIndex]);
+        setHasError(false); // Réinitialiser pour réessayer
+        return;
+      }
+      
+      // Si tous les fallbacks ont échoué, afficher le placeholder
+      if (showPlaceholder) {
         setImgSrc(undefined);
       }
     }

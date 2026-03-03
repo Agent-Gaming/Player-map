@@ -13,12 +13,6 @@ const RedeemSelector: React.FC<RedeemSelectorProps> = ({
 }) => {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      {/* Label "Amount to Redeem" à gauche */}
-      {isSelected && (
-        <span style={{ color: "#ffd32a", fontSize: "12px", fontWeight: "bold" }}>
-          Amount to Redeem
-        </span>
-      )}
       
       <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
         <input

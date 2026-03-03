@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   PositionCard,
-  Pagination,
-  PaginationInfo,
   RedeemAllButton,
 } from "./index";
 import { fetchPositions } from "../../api/fetchPositions";
@@ -24,8 +22,6 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
 }) => {
   const [positions, setPositions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
 
   const {
     selectedPositions,
@@ -66,10 +62,6 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
     if (result?.success) clearSelection();
   };
 
-  const totalPages = Math.ceil(positions.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentPositions = positions.slice(startIndex, startIndex + itemsPerPage);
-
   return (
     <div>
       {loading ? (
@@ -78,7 +70,7 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
         <p style={{ color: "#aaa", fontSize: 13, padding: "8px 0" }}>No positions found.</p>
       ) : (
         <>
-          {currentPositions.map((position, index) => (
+          {positions.map((position, index) => (
             <PositionCard
               key={position.id || index}
               position={position}
@@ -92,33 +84,17 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
 
           <div style={{
             display: "flex",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             marginTop: 10,
-            flexWrap: "wrap",
-            gap: 8,
             borderTop: "1px solid rgba(255,255,255,0.08)",
             paddingTop: 10,
           }}>
-            <PaginationInfo
-              currentPage={currentPage}
-              itemsPerPage={itemsPerPage}
-              totalItems={positions.length}
-            />
             <RedeemAllButton
               selectedCount={selectedPositions.size}
               onRedeemAll={onRedeemAllSelected}
               isLoading={isLoading}
             />
-            {totalPages > 1 && (
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                itemsPerPage={itemsPerPage}
-                totalItems={positions.length}
-              />
-            )}
           </div>
         </>
       )}

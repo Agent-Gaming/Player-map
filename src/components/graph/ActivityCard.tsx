@@ -1,133 +1,23 @@
 import React from "react";
-import { TripleBubble, AtomBubble, PositionBubble } from './index';
-import SafeImage from '../SafeImage';
-
-interface InfoRowProps {
-  label: string;
-  value: string | number | undefined;
-}
-
-const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
-  <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
-    <span style={{ color: "#ffd32a", fontWeight: 700, minWidth: 110 }}>
-      {label}:
-    </span>
-    <span style={{ color: "#fff" }}>{value || "N/A"}</span>
-  </div>
-);
-
-interface AtomImageProps {
-  src?: string;
-  alt?: string;
-}
-
-const AtomImage: React.FC<AtomImageProps> = ({ src, alt }) => (
-  <SafeImage
-    src={src}
-    alt={alt}
-    style={{
-      width: 48,
-      height: 48,
-      borderRadius: "50%",
-      objectFit: "cover",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
-      marginRight: 10,
-    }}
-    placeholderText="?"
-    showPlaceholder={true}
-  />
-);
-
-interface ValueBlockProps {
-  value?: any;
-}
-
-const ValueBlock: React.FC<ValueBlockProps> = ({ value }) => {
-  if (!value) return null;
-  const { person, thing, organization } = value;
-  return (
-    <div style={{ marginTop: 6, marginBottom: 6 }}>
-      {person && (
-        <div style={{ color: "#ffd32a" }}>
-          <b>Person:</b> {person.name} <br />
-          <span style={{ color: "#fff" }}>{person.description}</span>
-          {person.url && (
-            <>
-              <br />
-              <a
-                href={person.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#ffd32a" }}
-              >
-                {person.url}
-              </a>
-            </>
-          )}
-        </div>
-      )}
-      {thing && (
-        <div style={{ color: "#ffd32a" }}>
-          <b>Thing:</b> {thing.name} <br />
-          <span style={{ color: "#fff" }}>{thing.description}</span>
-          {thing.url && (
-            <>
-              <br />
-              <a
-                href={thing.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#ffd32a" }}
-              >
-                {thing.url}
-              </a>
-            </>
-          )}
-        </div>
-      )}
-      {organization && (
-        <div style={{ color: "#ffd32a" }}>
-          <b>Organization:</b> {organization.name} <br />
-          <span style={{ color: "#fff" }}>{organization.description}</span>
-          {organization.url && (
-            <>
-              <br />
-              <a
-                href={organization.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "#ffd32a" }}
-              >
-                {organization.url}
-              </a>
-            </>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
+import upSvg from "../../assets/img/up.svg";
+import downSvg from "../../assets/img/down.svg";
+import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
+import downNotSelectedSvg from "../../assets/img/downNotSelected.svg";
 
 interface ActivityCardProps {
   activity: any;
 }
 
 const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
-  const shares = Number(activity.shares || 0);
   const term = activity.term;
   const vaultType = activity.vault_type;
-  const activityType = activity.activity_type; // 'deposit' or 'redemption'
   
   // Determine if this is For or Against based on vault type
   const isFor = vaultType === "Triple" || vaultType === "Atom";
   const isAgainst = vaultType === "CounterTriple" || vaultType === "CounterAtom";
   
-  // Get the active term based on the activity
-  // For atoms, there's no counter_term, so we always use term
-  // For triples, we use term for "For" and counter_term for "Against"
-  const isAtomActivity = !term?.triple; // If no triple, it's an atom activity
+  const isAtomActivity = !term?.triple;
   const activeTerm = isAtomActivity ? term : (isFor ? term : term?.triple?.counter_term);
-  const positionType = isFor ? "For" : "Against";
   
   // Get activity description components for visual display
   const getActivityComponents = () => {
@@ -150,80 +40,82 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
   };
   
   
-  // Determine the action type (deposit or redeem)
-  const getActionType = () => {
-    return activityType === 'deposit' ? 'Deposit' : 'Redeem';
-  };
+  // Vote counts
+  const forCount = isFor ? (term?.positions_aggregate?.aggregate?.count ?? 0) : 0;
+  const againstCount = isAgainst
+    ? (term?.positions_aggregate?.aggregate?.count ?? 0)
+    : (term?.triple?.counter_term?.positions_aggregate?.aggregate?.count ?? 0);
 
-  // Determine if this is a redeem action
-  const isRedeem = activityType === 'redemption';
-  
-  // Get the vault type
-  const getVaultType = () => {
-    return vaultType || "Unknown";
-  };
+  // Labels + images
+  const activityComponents = getActivityComponents();
+  const subjectLabel = activityComponents.type === 'triple' ? activityComponents.subject : null;
+  const predicateLabel = activityComponents.type === 'triple' ? activityComponents.predicate : null;
+  const objectLabel = activityComponents.type === 'triple'
+    ? activityComponents.object
+    : activityComponents.type === 'atom'
+    ? activityComponents.label
+    : 'Unknown';
+  const subjectImage = activeTerm?.triple?.subject?.image;
+  const objectImage = activeTerm?.triple?.object?.image;
+
+  // Date courte
+  const isRedeem = activity.activity_type === 'redemption';
+  const dateStr = activity.created_at
+    ? new Date(activity.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' })
+    : null;
 
   return (
     <div
       style={{
-        background: "#232326",
-        borderRadius: 14,
-        padding: "18px 24px",
-        marginBottom: 18,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.13)",
-        borderLeft: `6px solid ${isRedeem ? "#F44336" : isFor ? "#006FE8" : "#FF9500"}`,
-        position: "relative",
+        padding: "10px 0",
+        marginBottom: "2px",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
-        flexDirection: "column",
-        gap: 2,
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "12px",
       }}
-      className="activity-card"
     >
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div>
-          {/* Position avec bulles discrètes - sur une ligne */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ color: "#ffd32a", fontWeight: 700, minWidth: 110 }}>
-              Position:
-            </span>
-            {(() => {
-              const activityComponents = getActivityComponents();
-              if (activityComponents.type === 'triple') {
-                return (
-                  <TripleBubble
-                    subject={activityComponents.subject}
-                    predicate={activityComponents.predicate}
-                    object={activityComponents.object}
-                    fontSize="13px"
-                  />
-                );
-              } else if (activityComponents.type === 'atom') {
-                return (
-                  <AtomBubble
-                    label={activityComponents.label}
-                    fontSize="13px"
-                  />
-                );
-              } else {
-                return <span style={{ color: '#fff', fontSize: '13px' }}>Unknown Position</span>;
-              }
-            })()}
-          </div>
-
-          {/* Action fusionnée avec Position - sur une ligne */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <span style={{ color: "#ffd32a", fontWeight: 700, minWidth: 110 }}>
-              Action:
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ color: '#fff', fontSize: '13px' }}>
-                {getActionType()} {getVaultType()}
-              </span>
-              <span style={{ color: 'rgba(255, 255, 255, 0.6)' }}>-</span>
-              <PositionBubble isFor={isFor} fontSize="12px" />
+      {/* Triple / Atom display */}
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "5px", flex: 1, minWidth: 0 }}>
+        {/* Badge Deposit / Redeem */}
+        <span style={{
+          fontSize: "0.72em",
+          fontWeight: 700,
+          letterSpacing: "0.05em",
+          color: isRedeem ? "#f87171" : "#4ade80",
+          flexShrink: 0,
+        }}>{isRedeem ? "Redeem" : "Deposit"}</span>
+        {activityComponents.type === 'triple' && subjectLabel ? (
+          <>
+            <div title={subjectLabel} style={{ display: "inline-flex", alignItems: "center", gap: "5px", maxWidth: "130px", backgroundColor: "#1a1a1adc", padding: "5px 9px", borderRadius: "4px", overflow: "hidden" }}>
+              {subjectImage && <img src={subjectImage} alt="" style={{ width: 14, height: 14, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />}
+              <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subjectLabel}</span>
             </div>
+            <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{predicateLabel}</span>
+            <div title={objectLabel} style={{ display: "inline-flex", alignItems: "center", gap: "5px", maxWidth: "130px", backgroundColor: "#1a1a1adc", padding: "5px 9px", borderRadius: "4px", overflow: "hidden" }}>
+              {objectImage && <img src={objectImage} alt="" style={{ width: 14, height: 14, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />}
+              <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{objectLabel}</span>
+            </div>
+          </>
+        ) : (
+          <div style={{ display: "inline-flex", alignItems: "center", gap: "5px", backgroundColor: "#1a1a1adc", padding: "5px 9px", borderRadius: "4px", overflow: "hidden", maxWidth: "100%" }}>
+            <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{objectLabel}</span>
           </div>
+        )}
+      </div>
+
+      {/* Vote icons + date */}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <img src={isFor ? upSvg : upNotSelectedSvg} alt="up" style={{ width: 24, height: 24 }} />
+          <span style={{ color: isFor ? "#006FE8" : "rgba(255,255,255,0.45)", fontWeight: "bold", fontSize: "0.95em", minWidth: 16 }}>{forCount}</span>
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          <img src={isAgainst ? downSvg : downNotSelectedSvg} alt="down" style={{ width: 24, height: 24 }} />
+          <span style={{ color: isAgainst ? "#FF9500" : "rgba(255,255,255,0.45)", fontWeight: "bold", fontSize: "0.95em", minWidth: 16 }}>{againstCount}</span>
+        </div>
+        {dateStr && <span style={{ fontSize: "0.72em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{dateStr}</span>}
       </div>
     </div>
   );

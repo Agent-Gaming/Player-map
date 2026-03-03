@@ -4,6 +4,7 @@ import { ClaimVoting } from "./vote/ClaimVoting";
 import { SpeakUpHeader } from "./vote/SpeakUpHeader";
 import AtomDetailsSection from "./graph/AtomDetailsSection";
 import ClaimsSection from "./graph/ClaimsSection";
+import AtomClaimsSection from "./graph/AtomClaimsSection";
 import PositionsSection from "./graph/PositionsSection";
 import ActivitySection from "./graph/ActivitySection";
 import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
@@ -80,17 +81,65 @@ const AtomContent: React.FC<{
         walletAddress={walletAddress}
       />
       <div style={{ marginTop: 16 }}>
-        <ClaimsSection
-          activities={claims}
+        <AtomClaimsSection
+          claims={claims}
           title={title}
-          walletAddress={walletAddress}
-          walletConnected={walletConnected}
-          publicClient={publicClient}
         />
       </div>
     </div>
   );
 };
+
+// ─── Bloc de stats joueur ────────────────────────────────────────────────────────
+
+const PlayerStatBlock: React.FC<{
+  label: string;
+  value: string | number;
+  gradient?: string;
+}> = ({ label, value, gradient }) => (
+  <div
+    style={{
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "space-between",
+      padding: "10px 6px",
+      gap: 6,
+    }}
+  >
+    <span style={{ fontSize: 11, fontWeight: 700, color: "#ffd32a", letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center", whiteSpace: "nowrap" }}>
+      {label}
+    </span>
+    <span style={{ fontSize: 28, fontWeight: 800, color: "#fff", lineHeight: 1 }}>
+      {value}
+    </span>
+    {gradient && (
+      <div style={{ width: 60, height: 5, borderRadius: 4, background: gradient }} />
+    )}
+  </div>
+);
+
+// ─── Séparateur de section ────────────────────────────────────────────────────────
+
+const SectionDivider: React.FC<{ title: string }> = ({ title }) => (
+  <div style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    margin: "18px 0 10px",
+  }}>
+    <span style={{
+      fontSize: 12,
+      fontWeight: 700,
+      color: "#ffd32a",
+      letterSpacing: "0.1em",
+      textTransform: "uppercase",
+      whiteSpace: "nowrap",
+    }}>{title}</span>
+    <div style={{ flex: 1, height: 1, background: "rgba(255,211,42,0.2)" }} />
+  </div>
+);
 
 // ─── Contenu "Mode Profil" ──────────────────────────────────────────────────────
 
@@ -103,6 +152,7 @@ const ProfileContent: React.FC<{
   publicClient?: any;
   loading?: boolean;
   error?: string | null;
+  constants?: DefaultPlayerMapConstants;
 }> = ({
   atomDetails,
   connections,
@@ -112,6 +162,7 @@ const ProfileContent: React.FC<{
   publicClient,
   loading,
   error,
+  constants,
 }) => {
   if (loading) return <p style={{ padding: 20, color: "#aaa" }}>Loading…</p>;
   if (error) return <p style={{ padding: 20, color: "#f87171" }}>{error}</p>;
@@ -122,47 +173,79 @@ const ProfileContent: React.FC<{
       </p>
     );
 
+  // ── Stats calculées depuis les claims ──────────────────────────────────────────
+  const totalClaims = activities.length;
+  const totalAttestations = activities.reduce(
+    (sum, a) => sum + (a.term?.positions_aggregate?.aggregate?.count || 0) + (a.counter_term?.positions_aggregate?.aggregate?.count || 0),
+    0
+  );
+  const totalVotes = activities.reduce(
+    (sum, a) => sum + (a.term?.positions_aggregate?.aggregate?.count || 0),
+    0
+  );
+
   return (
-    <div style={{ padding: "0 16px 16px" }}>
-      {/* Entête Atom */}
+    <div style={{ padding: "0 16px 24px" }}>
+      {/* ── Header joueur ───────────────────────────────────────────────────── */}
       <AtomDetailsSection
         atomDetails={atomDetails}
         connections={connections}
         walletAddress={walletAddress}
       />
 
-      {/* Mes Claims */}
-      <div style={{ marginTop: 16 }}>
-        <ClaimsSection
-          activities={activities}
-          title="My Claims"
-          walletAddress={walletAddress}
-          walletConnected={walletConnected}
-          publicClient={publicClient}
+      {/* ── Bloc de stats ───────────────────────────────────────────────────── */}
+      <div style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "stretch",
+        background: "rgba(255,255,255,0.03)",
+        borderRadius: 12,
+        border: "1px solid rgba(255,255,255,0.07)",
+        margin: "16px 0 0",
+        overflow: "hidden",
+      }}>
+        <PlayerStatBlock
+          label="Total Claims"
+          value={totalClaims}
+          gradient="linear-gradient(to right, #ffd32a, #f97316)"
+        />
+        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <PlayerStatBlock
+          label="Total Attestation"
+          value={totalAttestations}
+          gradient="linear-gradient(to right, #22c55e, #888, #ffd32a)"
+        />
+        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <PlayerStatBlock
+          label="Total Votes"
+          value={totalVotes}
+          gradient="linear-gradient(to right, #3b82f6, #f97316)"
         />
       </div>
 
-      {/* Positions & Activité côte à côte */}
-      <div
-        style={{
-          marginTop: 16,
-          display: "flex",
-          gap: 12,
-          alignItems: "flex-start",
-        }}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <PositionsSection
-            accountId={walletAddress || ""}
-            walletConnected={walletConnected}
-            walletAddress={walletAddress}
-            publicClient={publicClient}
-          />
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <ActivitySection accountId={walletAddress || ""} />
-        </div>
-      </div>
+      {/* ── Mes Claims ──────────────────────────────────────────────────────── */}
+      <SectionDivider title="My Claims" />
+      <ClaimsSection
+        activities={activities}
+        title=""
+        walletAddress={walletAddress}
+        walletConnected={walletConnected}
+        publicClient={publicClient}
+        constants={constants}
+      />
+
+      {/* ── Mes Positions ───────────────────────────────────────────────────── */}
+      <SectionDivider title="My Positions" />
+      <PositionsSection
+        accountId={walletAddress || ""}
+        walletConnected={walletConnected}
+        walletAddress={walletAddress}
+        publicClient={publicClient}
+      />
+
+      {/* ── Activity History ────────────────────────────────────────────────── */}
+      <SectionDivider title="Activity History" />
+      <ActivitySection accountId={walletAddress || ""} />
     </div>
   );
 };
@@ -291,6 +374,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             publicClient={wagmiConfig?.publicClient}
             loading={sidebarLoading}
             error={sidebarError}
+            constants={constants}
           />
         )}
       </div>

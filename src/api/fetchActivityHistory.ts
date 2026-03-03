@@ -146,6 +146,9 @@ export const fetchActivityHistory = async (
                 total_assets
                 atom_id
                 triple_id
+                positions_aggregate(where: { shares: { _gt: 0 } }) {
+                  aggregate { count }
+                }
               }
             }
           `,
@@ -174,8 +177,15 @@ export const fetchActivityHistory = async (
                     subject_id
                     predicate_id
                     object_id
-                    counter_term_id
-                  }
+                    counter_term_id                    subject { term_id label image }
+                    predicate { term_id label }
+                    object { term_id label image }
+                    counter_term {
+                      id
+                      positions_aggregate(where: { shares: { _gt: 0 } }) {
+                        aggregate { count }
+                      }
+                    }                  }
                 }
               `,
               variables: { tripleIds }
@@ -187,37 +197,12 @@ export const fetchActivityHistory = async (
             triplesMap = new Map(
               (triplesData.data?.triples || []).map((triple: any) => [triple.term_id, triple])
             );
-
-            // Fetch atoms for triples
-            const atomIds = [...new Set(
-              (triplesData.data?.triples || []).flatMap((t: any) => [t.subject_id, t.predicate_id, t.object_id]).filter(Boolean)
-            )];
-            
-            if (atomIds.length > 0) {
-              await delay(100); // Délai avant la requête des atoms
-              const atomsResponse = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  query: `
-                    query GetAtoms($termIds: [String!]!) {
-                      atoms(where: { term_id: { _in: $termIds } }) {
-                        term_id
-                        label
-                      }
-                    }
-                  `,
-                  variables: { termIds: atomIds }
-                })
-              });
-
-              const atomsData = await atomsResponse.json();
-              if (!atomsData.errors) {
-                atomsMap = new Map(
-                  (atomsData.data?.atoms || []).map((atom: any) => [atom.term_id, atom])
-                );
-              }
-            }
+            // atoms already embedded in triples (subject/predicate/object)
+            (triplesData.data?.triples || []).forEach((triple: any) => {
+              if (triple.subject) atomsMap.set(triple.subject_id, triple.subject);
+              if (triple.predicate) atomsMap.set(triple.predicate_id, triple.predicate);
+              if (triple.object) atomsMap.set(triple.object_id, triple.object);
+            });
           }
         }
 
@@ -270,21 +255,17 @@ export const fetchActivityHistory = async (
       };
 
       if (triple) {
-        const counterTerm = termsMap.get(triple.counter_term_id);
-        const counterAtom = counterTerm ? atomsMap.get(counterTerm.atom_id) : null;
-        
-          enrichedTerm.triple = {
-          subject: atomsMap.get(triple.subject_id) || { label: '' },
-          predicate: atomsMap.get(triple.predicate_id) || { label: '' },
-          object: atomsMap.get(triple.object_id) || { label: '' },
+        const counterTerm = triple.counter_term || null;
+        enrichedTerm.triple = {
+          subject: triple.subject || atomsMap.get(triple.subject_id) || { label: '' },
+          predicate: triple.predicate || atomsMap.get(triple.predicate_id) || { label: '' },
+          object: triple.object || atomsMap.get(triple.object_id) || { label: '' },
           counter_term: counterTerm ? {
             id: counterTerm.id,
-            total_market_cap: counterTerm.total_market_cap,
-            total_assets: counterTerm.total_assets,
-            atom: counterAtom ? { label: counterAtom.label } : null,
-            triple: null
+            positions_aggregate: counterTerm.positions_aggregate || null,
           } : null
         };
+        enrichedTerm.positions_aggregate = term.positions_aggregate || null;
       }
 
       return { ...activity, term: enrichedTerm };

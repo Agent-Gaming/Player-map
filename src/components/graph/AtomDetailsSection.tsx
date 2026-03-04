@@ -135,6 +135,21 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
     }
   }
 
+  // Extraire la description selon le type d'atom
+  const getDescription = () => {
+    if (!displayDetails.value) return "No description available";
+    
+    const value = displayDetails.value;
+    return (
+      value.person?.description ||
+      value.organization?.description ||
+      value.thing?.description ||
+      value.book?.description ||
+      value.name || // Fallback sur le nom
+      "No description available"
+    );
+  };
+
   return (
     <>
       {/* Atom header */}

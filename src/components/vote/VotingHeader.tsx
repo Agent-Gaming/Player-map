@@ -20,7 +20,18 @@ export const VotingHeader: React.FC<VotingHeaderProps> = ({ onClose }) => {
 
       {onClose && (
         <button
-          onClick={onClose}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "scale(1.1)";
+            e.currentTarget.style.color = "#FFD32A";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.color = "#FFF";
+          }}
           style={{
             position: "absolute",
             right: 0,
@@ -31,6 +42,7 @@ export const VotingHeader: React.FC<VotingHeaderProps> = ({ onClose }) => {
             fontSize: "2.5em",
             padding: "0px",
           }}
+          aria-label="Close voting modal"
         >
           ×
         </button>

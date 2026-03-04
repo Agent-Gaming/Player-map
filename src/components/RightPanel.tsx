@@ -53,16 +53,18 @@ const AtomContent: React.FC<{
   loading?: boolean;
   error?: string | null;
   title?: string;
+  myPositions?: any[];
 }> = ({
   atomDetails,
   claims,
+  myPositions = [],
   connections,
   walletAddress,
   walletConnected,
   publicClient,
   loading,
   error,
-  title = "Claims",
+  title = "Attestation",
 }) => {
   if (loading) return <p style={{ padding: 20, color: "#aaa" }}>Loading…</p>;
   if (error) return <p style={{ padding: 20, color: "#f87171" }}>{error}</p>;
@@ -80,9 +82,10 @@ const AtomContent: React.FC<{
         connections={connections}
         walletAddress={walletAddress}
       />
-      <div style={{ marginTop: 16 }}>
+      <div>
         <AtomClaimsSection
           claims={claims}
+          myPositions={myPositions}
           title={title}
         />
       </div>
@@ -163,6 +166,7 @@ const ProfileTabs: React.FC<{
     textTransform: "uppercase",
     cursor: "pointer",
     transition: "color 0.15s, border-color 0.15s",
+    outline: "none",
   });
 
   return (
@@ -241,14 +245,44 @@ const ProfileContent: React.FC<{
     );
 
   // ── Stats calculées depuis les claims ──────────────────────────────────────────
-  const totalClaims = triples.length; // Nombre de triples créés
+  const totalVotes = positions.length; // Nombre de positions dans "my positions"
   const totalAttestations = activities.reduce(
     (sum, a) => sum + (a.term?.positions_aggregate?.aggregate?.count || 0) + (a.counter_term?.positions_aggregate?.aggregate?.count || 0),
     0
   );
-  const totalVotes = positions.length; // Nombre de positions dans "my positions"
+  
+  // Calculer la valeur totale et le nombre de dépôts
+  const totalValueRaw = positions.reduce((sum, p) => sum + (p.shares ? Number(p.shares) : 0), 0);
+  
+  // Formater la valeur totale (convertir de wei à ETH et formater)
+  const formatValue = (value: number): string => {
+    // Convertir de wei à ETH (diviser par 10^18)
+    const eth = value / 1e18;
+    
+    if (eth >= 1e9) return `${(eth / 1e9).toFixed(2)}B`;
+    if (eth >= 1e6) return `${(eth / 1e6).toFixed(2)}M`;
+    if (eth >= 1e3) return `${(eth / 1e3).toFixed(2)}K`;
+    if (eth >= 1) return eth.toFixed(2);
+    if (eth >= 0.01) return eth.toFixed(4);
+    return eth.toFixed(6);
+  };
+  
+  const totalValue = formatValue(totalValueRaw);
+  
+  const totalDeposits = positions.reduce((sum, p) => {
+    const depositCount = p.vault?.deposits?.length || 0;
+    return sum + depositCount;
+  }, 0);
 
-  console.log("ProfileContent Stats:", { totalClaims, totalAttestations, totalVotes, triples: triples.length, positions: positions.length });
+  console.log("ProfileContent Stats:", { 
+    totalVotes, 
+    totalAttestations, 
+    totalValue, 
+    totalValueRaw,
+    totalDeposits,
+    positions: positions.length,
+    firstPosition: positions[0]
+  });
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "0px 16px 30px 16px" }}>
@@ -258,6 +292,7 @@ const ProfileContent: React.FC<{
         atomDetails={atomDetails}
         connections={connections}
         walletAddress={walletAddress}
+        showDescription={false}
       />
       </div>
 
@@ -274,28 +309,28 @@ const ProfileContent: React.FC<{
         overflow: "hidden",
       }}>
         <PlayerStatBlock
-          label="Total Claims"
-          value={totalClaims}
-          gradient="linear-gradient(to right, #ffd32a, #f97316)"
+          label="Votes"
+          value={totalVotes}
+          gradient="linear-gradient(to right, #3b82f6, #f97316)"
         />
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
         <PlayerStatBlock
-          label="Total Attestation"
+          label="Attestation"
           value={totalAttestations}
           gradient="linear-gradient(to right, #22c55e, #888, #ffd32a)"
         />
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
         <PlayerStatBlock
-          label="Total Votes"
-          value={totalVotes}
-          gradient="linear-gradient(to right, #3b82f6, #f97316)"
+          label="Value"
+          value={totalValue}
+          gradient="linear-gradient(to right, #a78bfa, #ec4899)"
         />
       </div>
       </div>
 
-      {/* ── Mes Claims ──────────────────────────────────────────────────────── */}
+      {/* ── Mes Attestations ──────────────────────────────────────────────────────── */}
       <div style={{ flexShrink: 0 }}>
-      <SectionDivider title="My Claims" />
+      <SectionDivider title="My Attestations" />
       <ClaimsSection
         activities={activities}
         title=""
@@ -415,13 +450,14 @@ const RightPanel: React.FC<RightPanelProps> = ({
           <AtomContent
             atomDetails={selectedAtomDetails}
             claims={selectedClaims}
+            myPositions={myPositions}
             connections={{ follows: [], followers: [] }}
             walletAddress={walletAddress}
             walletConnected={walletConnected}
             publicClient={wagmiConfig?.publicClient}
             loading={selectedLoading}
             error={selectedError}
-            title="Claims"
+            title="Attestations"
           />
         </div>
       )}

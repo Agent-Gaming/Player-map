@@ -149,13 +149,13 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
           border: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <StatCard label="Total Guilds"       value={totalGuilds}       loading={false}   variant="guild" />
+        <StatCard label="Guilds"       value={totalGuilds}       loading={false}   variant="guild" />
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
-        <StatCard label="Total Players"      value={totalPlayers}      loading={loading} variant="player" />
+        <StatCard label="Players"      value={totalPlayers}      loading={loading} variant="player" />
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
-        <StatCard label="Total Attestation"  value={totalAttestations} loading={loading} variant="attestation" />
+        <StatCard label="Attestation"  value={totalAttestations} loading={loading} variant="attestation" />
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
-        <StatCard label="Total Votes"        value={totalVotes}        loading={loading} variant="triple" />
+        <StatCard label="Votes"        value={totalVotes}        loading={loading} variant="triple" />
       </div>
     </div>
   );

@@ -96,6 +96,8 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Données sidebar "mon profil" ──────────────────────────────────────────────
   const {
     atomDetails: myAtomDetails,
+    triples: myTriples,
+    positions: myPositions,
     activities: myActivities,
     connections: myConnections,
     loading: sidebarLoading,
@@ -248,8 +250,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             {/* Panneau droit — largeur fixe, hauteur 100% du corps */}
             <div
               style={{
-                width: 800,
-                minWidth: 800,
+                width: "50%",
                 height: "100%",
                 overflow: "hidden",
                 display: "flex",
@@ -264,6 +265,8 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
                 wagmiConfig={wagmiConfig}
                 constants={constants}
                 myAtomDetails={myAtomDetails}
+                myTriples={myTriples}
+                myPositions={myPositions}
                 myActivities={myActivities}
                 myConnections={myConnections}
                 sidebarLoading={sidebarLoading}

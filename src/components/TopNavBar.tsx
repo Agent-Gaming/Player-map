@@ -135,7 +135,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         onMouseEnter={() => setHovered("reset")}
         onMouseLeave={() => setHovered("")}
       >
-        <FaProjectDiagram size={45} />
+        <FaProjectDiagram size={35} />
       </button>
 
       {/* ── Back ────────────────────────────────────── */}
@@ -148,7 +148,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         onMouseEnter={() => setHovered("back")}
         onMouseLeave={() => setHovered("")}
       >
-        <FaArrowLeft size={45} />
+        <FaArrowLeft size={35} />
       </button>
 
       {/* ── Forward ─────────────────────────────────── */}
@@ -161,7 +161,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         onMouseEnter={() => setHovered("forward")}
         onMouseLeave={() => setHovered("")}
       >
-        <FaArrowRight size={45} />
+        <FaArrowRight size={35} />
       </button>
 
       {/* ── Spacer ──────────────────────────────────── */}
@@ -219,8 +219,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           <img
             src={searchIconUrl}
             alt="search"
-            width={45}
-            height={45}
+            width={35}
+            height={35}
           />
         </button>
       </div>

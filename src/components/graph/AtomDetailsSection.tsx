@@ -11,12 +11,14 @@ interface AtomDetailsSectionProps {
     followers: any[];
   };
   walletAddress?: string;
+  showDescription?: boolean;
 }
 
 const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   atomDetails,
   connections,
   walletAddress,
+  showDescription = true,
 }) => {
   const [ipfsMetadata, setIpfsMetadata] = useState<any>(null);
 
@@ -136,34 +138,34 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   return (
     <>
       {/* Atom header */}
-      <div style={{display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px" }}>
-        <div style={{width: "100px", height: "100px", overflow: "hidden", borderRadius: "16px" }}>
-          <SafeImage
-            src={imageUrl as string}
-            fallbackSources={imageFallbacks}
-            alt={atomDetails.label || "Atom image"}
-            style={{width: "100%", height: "100%", objectFit: "contain", borderRadius: "16px", display: "block" }}
-            placeholderText={atomDetails.emoji || "?"}
-            showPlaceholder={true}
-          />
-        </div>
-        <div style={{display: "flex", flexDirection: "column", width: "70%" }}>
-          <p style={{fontWeight: 700, fontSize: "1.2rem", color: "#FFD32A",  margin: "0px" }}>
+      <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
+        {/* Image et nom horizontalement */}
+        <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", justifyContent: "center" }}>
+          <div style={{width: "100px", height: "100px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
+            <SafeImage
+              src={imageUrl as string}
+              fallbackSources={imageFallbacks}
+              alt={atomDetails.label || "Atom image"}
+              style={{width: "100%", height: "100%", objectFit: "contain", borderRadius: "16px", display: "block" }}
+              placeholderText={atomDetails.emoji || "?"}
+              showPlaceholder={true}
+            />
+          </div>
+          <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#FFD32A", margin: "0px" }}>
             <strong>{String(atomDetails.label ?? "Not defined")}</strong>
           </p>
-          <p style={{fontSize: "0.875rem"}}>
-            Following: {connections.followers.length} - Followers:{" "}
-            {connections.follows.length}
-          </p>
         </div>
-        <h3 style={{ width:'100%', margin:0 }}>Description</h3>
-        <div style={{ width:"100%", height:"55px", marginBottom:"10px", overflowY: "auto", borderBottom: "1px solid #D9D9D9" }}>
-          <p style={{ marginTop:"2px", marginBottom:"10px" }}>
-            {description}
-          </p>
-        </div>
+        {showDescription && (
+          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
+            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "rgba(255,255,255,0.7)", textAlign: "left" }}>Description</h3>
+            <div style={{ maxHeight:"85px", overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "rgba(255,211,42,0.3) transparent" }}>
+              <p style={{ margin: 0, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", textAlign: "left" }}>
+                {description}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
-      
     </>
   );
 };

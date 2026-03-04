@@ -92,7 +92,6 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     <div
       style={{
         padding: "13px 20px",
-        marginBottom: "10px",
         borderRadius: "8px",
         position: "relative",
         backgroundColor: rowBg,

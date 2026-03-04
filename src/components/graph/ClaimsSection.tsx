@@ -93,23 +93,6 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
         {claim.object?.label || "—"}
       </span>
 
-      {/* Lien ↗ */}
-      <a
-        href={`https://explorer.intuition-api.com/triples/${claim.term_id}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: "rgba(255,211,42,0.8)",
-          fontSize: 12,
-          lineHeight: 1,
-          textDecoration: "none",
-          flexShrink: 0,
-        }}
-        title="View on Intuition"
-      >
-        ↗
-      </a>
-
       {/* Votes */}
       <PositionBubble
         isFor={true}

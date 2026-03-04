@@ -88,6 +88,14 @@ export const useSidebarData = (
   const combinedError = triplesError || positionsError || claimsError || error;
   const combinedLoading = triplesLoading || positionsLoading || claimsLoading;
 
+  console.log("useSidebarData - positions loaded:", {
+    count: positions.length,
+    loading: positionsLoading,
+    error: positionsError,
+    walletAddress,
+    firstPosition: positions[0]
+  });
+
   return {
     atomDetails,
     triples,

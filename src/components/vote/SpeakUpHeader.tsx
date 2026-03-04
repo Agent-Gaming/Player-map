@@ -101,7 +101,7 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
     <div
       style={{
         width: "100%",
-        paddingBottom: 12,
+        paddingBottom: 14,
         marginBottom: 4,
       }}
     >

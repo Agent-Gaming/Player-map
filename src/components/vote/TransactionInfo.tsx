@@ -52,15 +52,6 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
             {calculateEthCost(totalUnits)}
           </div>
         </div>
-
-        <div>
-          <div style={{ fontSize: "0.85em", fontWeight: "bold", color: "#FFD32A", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Total cost
-          </div>
-          <div style={{ fontSize: "1.2em", fontWeight: "bold", color: "#FFFFFF" }}>
-            ${calculateGasCost(numberOfTransactions)}
-          </div>
-        </div>
       </div>
 
       {/* Buttons */}

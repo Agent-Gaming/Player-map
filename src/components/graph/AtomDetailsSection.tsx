@@ -137,9 +137,9 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
 
   // Extraire la description selon le type d'atom
   const getDescription = () => {
-    if (!displayDetails.value) return "No description available";
+    if (!atomDetails.value) return "No description available";
     
-    const value = displayDetails.value;
+    const value = atomDetails.value;
     return (
       value.person?.description ||
       value.organization?.description ||
@@ -156,7 +156,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
       <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
         {/* Image et nom horizontalement */}
         <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", justifyContent: "center" }}>
-          <div style={{width: "100px", height: "100px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
+          <div style={{width: "70px", height: "70px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
             <SafeImage
               src={imageUrl as string}
               fallbackSources={imageFallbacks}

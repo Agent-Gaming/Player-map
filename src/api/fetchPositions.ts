@@ -57,6 +57,9 @@ export const fetchPositions = async (
                 total_assets
                 atom_id
                 triple_id
+                positions_aggregate(where: { shares: { _gt: 0 } }) {
+                  aggregate { count }
+                }
                 atom {
                   term_id
                   label
@@ -84,6 +87,9 @@ export const fetchPositions = async (
                     id
                     total_market_cap
                     total_assets
+                    positions_aggregate(where: { shares: { _gt: 0 } }) {
+                      aggregate { count }
+                    }
                   }
                 }
               }

@@ -1,21 +1,27 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ClaimVoting } from "./ClaimVoting";
+import { SpeakUpHeader } from "./SpeakUpHeader";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
+import { useGameStats } from "../../hooks/useGameStats";
 
 interface VotingModalProps {
+  isOpen: boolean;
   walletConnected: any;
   walletAddress?: string;
   publicClient?: any;
   onClose: () => void;
-  constants: DefaultPlayerMapConstants; // Constantes injectées directement
+  constants: DefaultPlayerMapConstants;
   wagmiConfig?: any;
 }
 
+const PANEL_WIDTH = "720px";
+
 /**
- * Modal component for the voting system using ClaimVoting
+ * Panneau latéral droit pour le système de vote — s'affiche à côté du graphe (in-flow)
  */
 const VotingModal: React.FC<VotingModalProps> = ({
+  isOpen,
   walletConnected,
   walletAddress,
   publicClient,
@@ -23,47 +29,52 @@ const VotingModal: React.FC<VotingModalProps> = ({
   constants,
   wagmiConfig,
 }) => {
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = "auto";
-    };
-  }, []);
+  const stats = useGameStats(constants, Network.MAINNET);
 
   return (
     <div
       style={{
-        zIndex: 1000,
-        position: "fixed",
+        width: isOpen ? PANEL_WIDTH : 0,
+        minWidth: isOpen ? PANEL_WIDTH : 0,
+        height: "100%",
+        overflow: "hidden",
+        backgroundColor: "rgba(0, 0, 0, 0.92)",
+        borderLeft: isOpen ? "1px solid rgba(255, 255, 255, 0.1)" : "none",
+        boxShadow: isOpen ? "-4px 0 24px rgba(0, 0, 0, 0.4)" : "none",
+        transition: "width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1), min-width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1)",
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        inset: "10px 0px 0px 0px",
+        flexDirection: "column",
+        flexShrink: 0,
       }}
     >
-      <div
-        style={{
-          width: "75%",
-          height: "90%",
-          overflow: "hidden",
-          borderRadius: "18px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          backgroundColor: "rgba(0, 0, 0, 0.85)",
-          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
-        }}
-      >
-        <ClaimVoting
-          walletConnected={walletConnected}
-          walletAddress={walletAddress}
-          publicClient={publicClient}
-          onClose={onClose}
-          network={Network.MAINNET}
-          wagmiConfig={wagmiConfig}
-          constants={constants}
-        />
-      </div>
+      {isOpen && (
+        <div
+          style={{
+            width: PANEL_WIDTH,
+            height: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+            minHeight: 0,
+          }}
+        >
+          {/* Header avec stats globales du jeu */}
+          <SpeakUpHeader stats={stats} />
+
+          {/* Contenu de vote — flex:1, overflow hidden pour que la liste interne gère son propre scroll */}
+          <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <ClaimVoting
+              walletConnected={walletConnected}
+              walletAddress={walletAddress}
+              publicClient={publicClient}
+              onClose={onClose}
+              network={Network.MAINNET}
+              wagmiConfig={wagmiConfig}
+              constants={constants}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

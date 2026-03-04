@@ -3,11 +3,14 @@ import {
   convertSharesToTTRUST,
   formatLargeNumber,
 } from "../../utils/conversionUtils";
-import RedeemConfig from "./RedeemConfig";
 import RedeemSelector from "./RedeemSelector";
 import { TripleBubble, AtomBubble, PositionBubble } from "./index";
 import { ATOM_CONTRACT_ADDRESS, atomABI } from "../../abi";
 import SafeImage from "../SafeImage";
+import upSvg from "../../assets/img/up.svg";
+import downSvg from "../../assets/img/down.svg";
+import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
+import downNotSelectedSvg from "../../assets/img/downNotSelected.svg";
 
 interface InfoRowProps {
   label: string;
@@ -279,118 +282,189 @@ const PositionCard: React.FC<PositionCardProps> = ({
     return "Unknown";
   };
 
+  // Vote counts — term = vault où le joueur est positionné
+  const forCount = isFor
+    ? (term?.positions_aggregate?.aggregate?.count ?? 0)
+    : 0;
+  const againstCount = isAgainst
+    ? (term?.positions_aggregate?.aggregate?.count ?? 0)
+    : (term?.triple?.counter_term?.positions_aggregate?.aggregate?.count ?? 0);
+
+  // Subject / predicate / object labels + images
+  const positionComponents = getPositionComponents();
+  const subjectLabel =
+    positionComponents.type === "triple" ? positionComponents.subject : null;
+  const predicateLabel =
+    positionComponents.type === "triple" ? positionComponents.predicate : null;
+  const objectLabel =
+    positionComponents.type === "triple"
+      ? positionComponents.object
+      : positionComponents.type === "atom"
+      ? positionComponents.label
+      : "Unknown";
+  const subjectImage = activeTerm?.triple?.subject?.image;
+  const objectImage = activeTerm?.triple?.object?.image;
+
   return (
     <div
       style={{
-        background: "#232326",
-        borderRadius: 14,
-        padding: "18px 24px",
-        marginBottom: 4,
-        boxShadow: "0 2px 12px rgba(0,0,0,0.13)",
-        borderLeft: `6px solid ${
-          isRedeem ? "#FFD700" : isFor ? "#006FE8" : "#FF9500"
-        }`,
-        position: "relative",
+        padding: "10px 0",
+        marginBottom: "2px",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex",
-        flexDirection: "column",
-        gap: 2,
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "12px",
       }}
-      className="position-card"
     >
-      <div style={{ display: "flex", alignItems: "flex-start" }}>
-        <AtomImage
-          src={position.account?.image}
-          alt={position.account?.label}
-        />
-        <div style={{ flex: 1 }}>
-          {/* Position avec bulles discrètes - sur une ligne */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 4,
-            }}
-          >
-            {(() => {
-              const positionComponents = getPositionComponents();
-              if (positionComponents.type === "triple") {
-                return (
-                  <TripleBubble
-                    subject={positionComponents.subject}
-                    predicate={positionComponents.predicate}
-                    object={positionComponents.object}
-                    fontSize="14px"
-                  />
-                );
-              } else if (positionComponents.type === "atom") {
-                return (
-                  <AtomBubble
-                    label={positionComponents.label}
-                    fontSize="14px"
-                  />
-                );
-              } else {
-                return (
-                  <span style={{ color: "#fff", fontSize: "14px" }}>
-                    Unknown Position
-                  </span>
-                );
-              }
-            })()}
-          </div>
+      {/* Triple / Atom display */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "5px",
+          flex: 1,
+          minWidth: 0,
+        }}
+      >
+        {positionComponents.type === "triple" && subjectLabel ? (
+          <>
+            {/* Subject pill */}
+            <div
+              title={subjectLabel}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                maxWidth: "140px",
+                backgroundColor: "#1a1a1adc",
+                padding: "6px 10px",
+                borderRadius: "4px",
+                overflow: "hidden",
+              }}
+            >
+              {subjectImage && (
+                <img
+                  src={subjectImage}
+                  alt=""
+                  style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
+                />
+              )}
+              <span style={{ fontSize: "0.82em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {subjectLabel}
+              </span>
+            </div>
 
-          {/* Direction avec bulle For/Against - sur une ligne */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: 4,
-            }}
-          >
-            <span style={{ color: "#ffd429", fontWeight: 700, minWidth: 110 }}>
-              Direction:
+            {/* Predicate */}
+            <span
+              title={predicateLabel}
+              style={{
+                display: "inline-block",
+                maxWidth: "90px",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                fontSize: "0.82em",
+                color: "#D9D9D9",
+                fontWeight: "bold",
+              }}
+            >
+              {predicateLabel}
             </span>
-            <PositionBubble isFor={isFor} fontSize="12px" />
-          </div>
 
-          <InfoRow
-            label="Value"
-            value={isLoadingTrust ? "Loading..." : trustAmount || "N/A"}
+            {/* Object pill */}
+            <div
+              title={objectLabel}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                maxWidth: "140px",
+                backgroundColor: "#1a1a1adc",
+                padding: "6px 10px",
+                borderRadius: "4px",
+                overflow: "hidden",
+              }}
+            >
+              {objectImage && (
+                <img
+                  src={objectImage}
+                  alt=""
+                  style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
+                />
+              )}
+              <span style={{ fontSize: "0.82em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {objectLabel}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "5px",
+              backgroundColor: "#1a1a1adc",
+              padding: "6px 10px",
+              borderRadius: "4px",
+              overflow: "hidden",
+              maxWidth: "100%",
+            }}
+          >
+            <span style={{ fontSize: "0.82em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {objectLabel}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Vote display + Redeem */}
+      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+        {/* FOR */}
+        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          <img
+            src={isFor ? upSvg : upNotSelectedSvg}
+            alt="up"
+            style={{ width: 28, height: 28 }}
           />
-          <InfoRow
-            label="Term Value"
-            value={isLoadingTermValue ? "Loading..." : termValue || "N/A"}
-          />
+          <span
+            style={{
+              color: isFor ? "#006FE8" : "rgba(255,255,255,0.5)",
+              fontWeight: "bold",
+              fontSize: "1.1em",
+              minWidth: "20px",
+            }}
+          >
+            {forCount}
+          </span>
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-end",
-            gap: "8px",
-          }}
-        >
-          <RedeemSelector
-            isSelected={isSelected}
-            onSelect={onSelect || (() => {})}
-            positionId={position.id}
+
+        {/* AGAINST */}
+        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          <img
+            src={!isFor ? downSvg : downNotSelectedSvg}
+            alt="down"
+            style={{ width: 28, height: 28 }}
           />
-          
-          {/* Interface de configuration qui apparaît à droite quand la checkbox est cochée */}
-          {isSelected && onAmountChange && (
-            <RedeemConfig
-              positionId={position.id}
-              shares={Number(sharesBigInt)}
-              redeemAmount={redeemAmount}
-              onAmountChange={onAmountChange}
-              publicClient={publicClient}
-              termId={calculationTerm?.id}
-              curveId={position.curve_id || 1}
-            />
-          )}
+          <span
+            style={{
+              color: !isFor ? "#FF9500" : "rgba(255,255,255,0.5)",
+              fontWeight: "bold",
+              fontSize: "1.1em",
+              minWidth: "20px",
+            }}
+          >
+            {againstCount}
+          </span>
         </div>
+
+        {/* Redeem */}
+        <RedeemSelector
+          isSelected={isSelected}
+          onSelect={onSelect || (() => {})}
+          positionId={position.id}
+        />
       </div>
     </div>
   );

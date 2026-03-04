@@ -9,11 +9,12 @@ export const VotingHeader: React.FC<VotingHeaderProps> = ({ onClose }) => {
     <div
       style={{
         display: "flex",
-        justifyContent: "space-between",
+        justifyContent: "center",
         alignItems: "center",
+        position: "relative",
       }}
     >
-      <h2 style={{ fontSize: "1.5em", color: "#FFD32A", margin: "10px", fontWeight: "bold" }}>
+      <h2 style={{ fontSize: "1.5em", color: "#FFD32A", margin: "10px", fontWeight: "bold", textAlign: "center" }}>
         VOTE ON CLAIMS
       </h2>
 
@@ -32,18 +33,14 @@ export const VotingHeader: React.FC<VotingHeaderProps> = ({ onClose }) => {
             e.currentTarget.style.color = "#FFF";
           }}
           style={{
+            position: "absolute",
+            right: 0,
             backgroundColor: "transparent",
             border: "none",
             color: "#FFF",
             cursor: "pointer",
             fontSize: "2.5em",
-            padding: "10px 15px",
-            minWidth: "60px",
-            minHeight: "60px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "color 0.2s, transform 0.1s",
+            padding: "0px",
           }}
           aria-label="Close voting modal"
         >

@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import ClaimsModal from "./ClaimsModal";
-import { TripleBubble, PositionBubble } from "./index";
+import React from "react";
+import { PositionBubble } from "./index";
+import SafeImage from "../SafeImage";
+import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 
 interface ClaimsSectionProps {
   activities: any[];
@@ -8,129 +9,172 @@ interface ClaimsSectionProps {
   walletAddress?: string;
   walletConnected?: any;
   publicClient?: any;
+  constants?: DefaultPlayerMapConstants;
 }
 
 const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   activities,
-  title = "My Claims",
-  walletAddress,
-  walletConnected,
-  publicClient,
+  title,
+  constants,
 }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // ── IDs de prédicats ─────────────────────────────────────────────────────────
+  const IS_PLAYER_OF_ID = constants?.COMMON_IDS?.IS_PLAYER_OF;
+  const IS_ID = constants?.COMMON_IDS?.IS;
+  const guildIds = new Set((constants?.OFFICIAL_GUILDS || []).map((g) => g.id));
 
-  return (
-    <div style={{ width: "100%", display: "flex", flexWrap: "wrap" }}>
-      <h3 style={{ width: "100%", margin: "0px" }}>
-        {title} ({activities.length})
-      </h3>
-      {activities.length > 0 ? (
-        <div style={{ width: "100%", overflowY: "auto" }}>
-          {activities.slice(0, 3).map((claim) => (
-            <div
-              key={claim.term_id}
-              style={{
-                width: "100%",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: "12px",
-                overflow: "hidden",
-                marginBottom: "2px",
-                backgroundColor: "rgba(255, 255, 255, 0.05)",
-              }}
-            >
-              <div
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "16px",
-                  gap: "12px",
-                }}
-              >
-                {/* Triple linéaire : predicate → object */}
-                <div
-                  style={{
-                    display: "flex",
-                    flex: 1,
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  <TripleBubble
-                    subject=""
-                    predicate={String(claim.predicate?.label ?? "")}
-                    object={String(claim.object?.label ?? "")}
-                    fontSize="12px"
-                    showArrows={false}
-                  />
-                </div>
+  // ── Groupes de claims ────────────────────────────────────────────────────────
+  const isPlayerOfClaims = activities.filter((a) =>
+    IS_PLAYER_OF_ID
+      ? a.predicate_id === IS_PLAYER_OF_ID
+      : a.predicate?.label === "is player of"
+  );
+  const isClaims = activities.filter((a) =>
+    IS_ID ? a.predicate_id === IS_ID : a.predicate?.label === "is"
+  );
 
-                {/* Positions For/Against */}
-                <div
-                  style={{ display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  <PositionBubble
-                    isFor={true}
-                    count={
-                      claim.term?.positions_aggregate?.aggregate?.count || 0
-                    }
-                    fontSize="12px"
-                    showCount={true}
-                  />
-                  <PositionBubble
-                    isFor={false}
-                    count={
-                      claim.counter_term?.positions_aggregate?.aggregate
-                        ?.count || 0
-                    }
-                    fontSize="12px"
-                    showCount={true}
-                  />
-                </div>
-              </div>
-            </div>
-          ))}
-          <div
-            style={{
-              padding: "12px",
-              textAlign: "center",
-              fontSize: "12px",
-              color: "rgba(255, 255, 255, 0.6)",
-              fontStyle: "italic",
-              cursor: "pointer",
-              transition: "color 0.2s",
-            }}
-            onClick={() => setIsModalOpen(true)}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = "#fff";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = "rgba(255, 255, 255, 0.6)";
-            }}
-          >
-            Show all {activities.length} claims
-          </div>
-        </div>
+  const games = isPlayerOfClaims.filter((a) => !guildIds.has(a.object_id));
+  const guilds = isPlayerOfClaims.filter((a) => guildIds.has(a.object_id));
+  const playerQualities = isClaims;
+
+  // ── Composant : une ligne de claim ──────────────────────────────────────────
+  const ClaimRow = ({ claim }: { claim: any }) => (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 6,
+        padding: "5px 0",
+        borderBottom: "1px solid rgba(255,255,255,0.05)",
+      }}
+    >
+      {/* Icône */}
+      {claim.object?.image ? (
+        <SafeImage
+          src={claim.object.image}
+          alt={claim.object?.label || ""}
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: "50%",
+            objectFit: "cover",
+            flexShrink: 0,
+          }}
+        />
       ) : (
-        <p style={{ color: "rgba(255, 255, 255, 0.6)", fontStyle: "italic" }}>
-          No claim found
-        </p>
+        <div
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: "50%",
+            background: "rgba(255,255,255,0.08)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 12,
+            flexShrink: 0,
+          }}
+        >
+          ⚛
+        </div>
       )}
 
-      {/* Modal pour afficher tous les claims */}
-      <ClaimsModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        activities={activities}
-        walletAddress={walletAddress}
-        walletConnected={walletConnected}
-        publicClient={publicClient}
+      {/* Nom */}
+      <span
+        style={{
+          flex: 1,
+          fontSize: 12,
+          color: "#fff",
+          fontWeight: 500,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+        }}
+      >
+        {claim.object?.label || "—"}
+      </span>
+
+      {/* Votes */}
+      <PositionBubble
+        isFor={true}
+        count={claim.term?.positions_aggregate?.aggregate?.count || 0}
+        fontSize="11px"
+        showCount={true}
       />
+      <PositionBubble
+        isFor={false}
+        count={claim.counter_term?.positions_aggregate?.aggregate?.count || 0}
+        fontSize="11px"
+        showCount={true}
+      />
+    </div>
+  );
+
+  // ── Composant : groupe avec header ───────────────────────────────────────────
+  const SectionGroup = ({
+    label,
+    items,
+    showCount = true,
+  }: {
+    label: string;
+    items: any[];
+    showCount?: boolean;
+  }) => (
+    <div style={{ marginBottom: 10 }}>
+      <div
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          letterSpacing: 1.2,
+          color: "rgba(255,211,42,0.85)",
+          marginBottom: 4,
+          textTransform: "uppercase",
+        }}
+      >
+        {showCount ? `${items.length} ` : ""}
+        {label}
+      </div>
+      {items.map((claim) => (
+        <ClaimRow key={claim.term_id} claim={claim} />
+      ))}
+    </div>
+  );
+
+  // ── Rendu vide ───────────────────────────────────────────────────────────────
+  if (activities.length === 0) {
+    return (
+      <p style={{ color: "rgba(255, 255, 255, 0.6)", fontStyle: "italic", fontSize: 13 }}>
+        No claim found
+      </p>
+    );
+  }
+
+  return (
+    <div style={{ width: "100%" }}>
+      {title && (
+        <h3 style={{ width: "100%", margin: "0 0 12px" }}>
+          {title} ({activities.length})
+        </h3>
+      )}
+
+      <div style={{ display: "flex", gap: 12, width: "100%", alignItems: "flex-start" }}>
+        {/* Colonne gauche : Games + Guilds */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {games.length > 0 && <SectionGroup label="Game(s)" items={games} />}
+          {guilds.length > 0 && <SectionGroup label="Guild(s)" items={guilds} />}
+          {games.length === 0 && guilds.length === 0 && (
+            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: 0 }}>
+              No games or guilds
+            </p>
+          )}
+        </div>
+
+        {/* Colonne droite : Prédicats "is" (Player qualities) */}
+        {playerQualities.length > 0 && (
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <SectionGroup label="Player" items={playerQualities} showCount={false} />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

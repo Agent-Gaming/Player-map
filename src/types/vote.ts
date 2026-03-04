@@ -25,6 +25,8 @@ export interface VoteItem extends Claim {
   counter_term_position_count?: number; // Number of positions in the AGAINST vault
   userHasPosition?: boolean; // Whether the user already has a position on this triple
   userPositionDirection?: VoteDirection; // Direction of the user's existing position
+  subject_image?: string | null; // Image URL for the subject atom
+  object_image?: string | null;  // Image URL for the object atom
 }
 
 // Response structure after a transaction

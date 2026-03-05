@@ -83,7 +83,7 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
         <div
           style={{
             position: "absolute",
-            bottom: 48,
+            bottom: 14,
             left: "50%",
             transform: "translateX(-50%)",
             zIndex: 50,

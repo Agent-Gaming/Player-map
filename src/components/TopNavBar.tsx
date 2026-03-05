@@ -164,9 +164,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         <FaArrowRight size={35} />
       </button>
 
-      {/* ── Spacer ──────────────────────────────────── */}
-      <div style={{ flex: 1 }} />
-
       {/* ── Search (expands right) ───────────────────── */}
       <div
         ref={searchWrapRef}
@@ -225,6 +222,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           )}
         </div>
       </div>
+
+      {/* ── Spacer ──────────────────────────────────── */}
+      <div style={{ flex: 1 }} />
 
       {/* ── Separator ───────────────────────────────── */}
       <div

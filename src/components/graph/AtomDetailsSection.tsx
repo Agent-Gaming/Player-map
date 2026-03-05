@@ -172,8 +172,8 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
         </div>
         {showDescription && (
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
-            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "rgba(255,255,255,0.7)", textAlign: "left" }}>Description</h3>
-            <div style={{ maxHeight:"85px", overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "rgba(255,211,42,0.3) transparent" }}>
+            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#FFD32A", textAlign: "left" }}>Description</h3>
+            <div style={{ maxHeight:"85px", overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "#ffd32a transparent" }}>
               <p style={{ margin: 0, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", textAlign: "left" }}>
                 {description}
               </p>

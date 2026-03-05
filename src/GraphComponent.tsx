@@ -238,13 +238,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
                 onSpeakUpClick={() => handlePanelModeChange(rightPanelMode === "speakup" ? "atom" : "speakup")}
                 isSpeakUpActive={rightPanelMode === "speakup"}
               />
-
-              {/* Logo Intuition centré sous le bouton Speak Up */}
-              <div style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", opacity: 0.35, zIndex: 10, pointerEvents: "none" }}>
-                <a href="https://portal.intuition.systems/" target="_blank" rel="noopener noreferrer" style={{ pointerEvents: "auto" }}>
-                  <img src={IntuitionLogo} alt="Intuition Systems" style={{ height: 26, width: "auto" }} />
-                </a>
-              </div>
             </div>
 
             {/* Panneau droit — largeur fixe, hauteur 100% du corps */}

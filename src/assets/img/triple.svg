@@ -1,0 +1,10 @@
+<svg width="60" height="11" viewBox="0 0 60 11" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- Barre grise reliant les trois points -->
+<line x1="5.5" y1="5.5" x2="54.5" y2="5.5" stroke="#707070" stroke-width="2" stroke-linecap="round"/>
+<!-- Carré vert -->
+<rect width="11" height="11" fill="#27AE60"/>
+<!-- Cercle gris -->
+<circle cx="29.5" cy="5.5" r="5.5" fill="#707070"/>
+<!-- Cercle jaune -->
+<circle cx="54.5" cy="5.5" r="5.5" fill="#E6B33A"/>
+</svg>

@@ -23,7 +23,7 @@
     "@0xintuition/graphql": "1.0.0-alpha.1",
     "@tanstack/react-query": "^5.87.1",
     "axios": "^1.9.0",
-    "playermap_graph": "0.2.5",
+    "playermap_graph": "0.2.6",
     "react-icons": "^5.5.0"
   },
   "devDependencies": {

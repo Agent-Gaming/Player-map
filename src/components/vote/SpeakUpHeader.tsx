@@ -1,6 +1,7 @@
 import React from "react";
 import { GameStats } from "../../hooks/useGameStats";
 import { ipfsToHttpUrl, isIpfsUrl } from "../../utils/pinata";
+import tripleSvg from "../../assets/img/triple.svg";
 
 interface SpeakUpHeaderProps {
   stats: GameStats;
@@ -22,8 +23,8 @@ const DECORATOR: Record<string, React.CSSProperties> = {
 };
 
 const BAR_GRADIENT: Record<string, string> = {
-  triple: "linear-gradient(to right, #22c55e, #888, #ffd32a)",
-  attestation: "linear-gradient(to right, #3b82f6, #f97316)",
+  triple: "linear-gradient(to right, #3b82f6, #f97316)",
+  attestation: tripleSvg,
 };
 
 const StatCard: React.FC<{
@@ -68,7 +69,11 @@ const StatCard: React.FC<{
           ) : (
             <span style={{ fontSize: 32, fontWeight: "bold", color: "#fff", lineHeight: 1 }}>{value}</span>
           )}
-          <div style={{ width: 72, height: 7, borderRadius: 4, background: BAR_GRADIENT[variant] }} />
+          {variant === "attestation" ? (
+            <img src={BAR_GRADIENT[variant]} alt={variant} style={{ width: 72, height: 11 }} />
+          ) : (
+            <div style={{ width: 72, height: 7, borderRadius: 4, background: BAR_GRADIENT[variant] }} />
+          )}
         </>
       ) : (
         <div

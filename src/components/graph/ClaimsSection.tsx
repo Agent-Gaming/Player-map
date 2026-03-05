@@ -53,8 +53,8 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
           src={claim.object.image}
           alt={claim.object?.label || ""}
           style={{
-            width: 24,
-            height: 24,
+            width: 28,
+            height: 28,
             borderRadius: "50%",
             objectFit: "cover",
             flexShrink: 0,
@@ -63,8 +63,8 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
       ) : (
         <div
           style={{
-            width: 24,
-            height: 24,
+            width: 28,
+            height: 28,
             borderRadius: "50%",
             background: "rgba(255,255,255,0.08)",
             display: "flex",
@@ -82,7 +82,7 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
       <span
         style={{
           flex: 1,
-          fontSize: 12,
+          fontSize: 14,
           color: "#fff",
           fontWeight: 500,
           overflow: "hidden",
@@ -97,13 +97,13 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
       <PositionBubble
         isFor={true}
         count={claim.term?.positions_aggregate?.aggregate?.count || 0}
-        fontSize="11px"
+        fontSize="14px"
         showCount={true}
       />
       <PositionBubble
         isFor={false}
         count={claim.counter_term?.positions_aggregate?.aggregate?.count || 0}
-        fontSize="11px"
+        fontSize="14px"
         showCount={true}
       />
     </div>
@@ -122,7 +122,7 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
     <div style={{ marginBottom: 10 }}>
       <div
         style={{
-          fontSize: 10,
+          fontSize: 14,
           fontWeight: 700,
           letterSpacing: 1.2,
           color: "rgba(255,211,42,0.85)",

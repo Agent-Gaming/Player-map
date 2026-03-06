@@ -111,7 +111,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         top: 0,
         zIndex: 200,
         width: "100%",
-        height: "60px",
+        height: "74px",
         backgroundColor: "rgba(0, 0, 0, 0.95)",
         backdropFilter: "blur(10px)",
         display: "flex",
@@ -164,10 +164,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         <FaArrowRight size={35} />
       </button>
 
-      {/* ── Spacer ──────────────────────────────────── */}
-      <div style={{ flex: 1 }} />
-
-      {/* ── Search (expands left) ───────────────────── */}
+      {/* ── Search (expands right) ───────────────────── */}
       <div
         ref={searchWrapRef}
         style={{
@@ -177,31 +174,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           flexShrink: 0,
         }}
       >
-        {/* SmartSearchInterface expanding to the left */}
-        <div
-          style={{
-            position: "absolute",
-            right: 52,
-            top: "50%",
-            transform: searchOpen
-              ? "translateY(-50%) translateX(0)"
-              : "translateY(-50%) translateX(20px)",
-            width: 560,
-            opacity: searchOpen ? 1 : 0,
-            visibility: searchOpen ? "visible" : "hidden",
-            pointerEvents: searchOpen ? "auto" : "none",
-            transition: "opacity 0.22s ease, transform 0.22s cubic-bezier(.4,0,.2,1), visibility 0.22s ease",
-          }}
-        >
-          {graphControls?.handleSearch && (
-            <SmartSearchInterface
-              endpoint={endpoint}
-              onSearch={graphControls.handleSearch}
-              isSearching={graphControls.isSearching}
-              onSearchStart={graphControls.handleSearchStart ?? (() => {})}
-            />
-          )}
-        </div>
         {/* Search icon button */}
         <button
           style={{
@@ -223,7 +195,36 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             height={35}
           />
         </button>
+        
+        {/* SmartSearchInterface expanding to the right */}
+        <div
+          style={{
+            position: "absolute",
+            left: 52,
+            top: "50%",
+            transform: searchOpen
+              ? "translateY(-50%) translateX(0)"
+              : "translateY(-50%) translateX(-20px)",
+            width: 560,
+            opacity: searchOpen ? 1 : 0,
+            visibility: searchOpen ? "visible" : "hidden",
+            pointerEvents: searchOpen ? "auto" : "none",
+            transition: "opacity 0.22s ease, transform 0.22s cubic-bezier(.4,0,.2,1), visibility 0.22s ease",
+          }}
+        >
+          {graphControls?.handleSearch && (
+            <SmartSearchInterface
+              endpoint={endpoint}
+              onSearch={graphControls.handleSearch}
+              isSearching={graphControls.isSearching}
+              onSearchStart={graphControls.handleSearchStart ?? (() => {})}
+            />
+          )}
+        </div>
       </div>
+
+      {/* ── Spacer ──────────────────────────────────── */}
+      <div style={{ flex: 1 }} />
 
       {/* ── Separator ───────────────────────────────── */}
       <div

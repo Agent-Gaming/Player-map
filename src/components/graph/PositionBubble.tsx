@@ -14,7 +14,7 @@ interface PositionBubbleProps {
 const PositionBubble: React.FC<PositionBubbleProps> = ({ 
   isFor, 
   count, 
-  fontSize = '12px',
+  fontSize = '14px',
   showCount = false 
 }) => {
   const hasCount = count !== undefined && count > 0;
@@ -33,7 +33,7 @@ const PositionBubble: React.FC<PositionBubbleProps> = ({
       <img
         src={icon}
         alt={isFor ? 'up' : 'down'}
-        style={{ width: 14, height: 14, display: 'block', flexShrink: 0 }}
+        style={{ width: 24, height: 24, display: 'block', flexShrink: 0 }}
       />
       <span style={{ 
         fontSize, 

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { fetchAtomDetails, type AtomDetails } from "../../api/fetchAtomDetails";
 import { ipfsToHttpUrl, isIpfsUrl } from "../../utils/pinata";
 import SafeImage from "../SafeImage";
+import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 
 interface AtomDetailsSectionProps {
   atomDetails: any;
@@ -137,9 +138,9 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
 
   // Extraire la description selon le type d'atom
   const getDescription = () => {
-    if (!displayDetails.value) return "No description available";
+    if (!atomDetails.value) return "No description available";
     
-    const value = displayDetails.value;
+    const value = atomDetails.value;
     return (
       value.person?.description ||
       value.organization?.description ||
@@ -154,26 +155,116 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
     <>
       {/* Atom header */}
       <div style={{display: "flex", flexDirection: "column", alignItems: "center", gap: "16px", marginBottom: "16px" }}>
-        {/* Image et nom horizontalement */}
-        <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", justifyContent: "center" }}>
-          <div style={{width: "100px", height: "100px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
-            <SafeImage
-              src={imageUrl as string}
-              fallbackSources={imageFallbacks}
-              alt={atomDetails.label || "Atom image"}
-              style={{width: "100%", height: "100%", objectFit: "contain", borderRadius: "16px", display: "block" }}
-              placeholderText={atomDetails.emoji || "?"}
-              showPlaceholder={true}
-            />
-          </div>
-          <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#FFD32A", margin: "0px" }}>
-            <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-          </p>
-        </div>
+        {/* Vérification de l'atome */}
+        {(() => {
+          const verification = getAtomVerificationStatus(atomDetails.term_id);
+          
+          return (
+            <>
+              {verification.status === "verified" ? (
+                // ─── ATOME VÉRIFIÉ ─────────────────────────────────────
+                <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {/* Badge Verified */}
+                  <div style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    backgroundColor: "#27AE60",
+                    color: "#fff",
+                    padding: "6px 12px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    letterSpacing: "0.05em",
+                    textTransform: "uppercase",
+                    width: "fit-content",
+                    margin: "0 auto",
+                  }}>
+                    <span>✓</span>
+                    <span>Verified by {verification.studio}</span>
+                  </div>
+                  
+                  {/* Image et nom horizontalement */}
+                  <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", justifyContent: "center" }}>
+                    <div style={{width: "70px", height: "70px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
+                      <SafeImage
+                        src={imageUrl as string}
+                        fallbackSources={imageFallbacks}
+                        alt={atomDetails.label || "Atom image"}
+                        style={{width: "100%", height: "100%", objectFit: "contain", borderRadius: "16px", display: "block" }}
+                        placeholderText={atomDetails.emoji || "?"}
+                        showPlaceholder={true}
+                      />
+                    </div>
+                    <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#FFD32A", margin: "0px" }}>
+                      <strong>{String(atomDetails.label ?? "Not defined")}</strong>
+                    </p>
+                  </div>
+                </div>
+              ) : verification.status === "not-verified" ? (
+                // ─── ATOME NON VÉRIFIÉ ─────────────────────────────────
+                <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {/* Encadré d'avertissement */}
+                  <div style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px",
+                    backgroundColor: "rgba(248, 113, 113, 0.15)",
+                    border: "2px solid #f87171",
+                    borderRadius: "8px",
+                    padding: "12px",
+                    textAlign: "center",
+                  }}>
+                    <p style={{
+                      margin: 0,
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "#fecaca",
+                      letterSpacing: "0.05em",
+                      textTransform: "uppercase",
+                    }}>
+                      ⚠ Community-Created
+                    </p>
+                    <p style={{
+                      margin: 0,
+                      fontSize: "13px",
+                      color: "#fca5a5",
+                      lineHeight: "1.4",
+                    }}>
+                      This atom is community-created and has not been reviewed or approved by the rights holder.
+                    </p>
+                  </div>
+                  
+                  {/* Nom uniquement sans image */}
+                  <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#FFD32A", margin: "0px", textAlign: "center" }}>
+                    <strong>{String(atomDetails.label ?? "Not defined")}</strong>
+                  </p>
+                </div>
+              ) : (
+                // ─── COMPORTEMENT PAR DÉFAUT (NORMAL) ──────────────────
+                <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", justifyContent: "center" }}>
+                  <div style={{width: "70px", height: "70px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
+                    <SafeImage
+                      src={imageUrl as string}
+                      fallbackSources={imageFallbacks}
+                      alt={atomDetails.label || "Atom image"}
+                      style={{width: "100%", height: "100%", objectFit: "contain", borderRadius: "16px", display: "block" }}
+                      placeholderText={atomDetails.emoji || "?"}
+                      showPlaceholder={true}
+                    />
+                  </div>
+                  <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#FFD32A", margin: "0px" }}>
+                    <strong>{String(atomDetails.label ?? "Not defined")}</strong>
+                  </p>
+                </div>
+              )}
+            </>
+          );
+        })()}
         {showDescription && (
           <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
-            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "rgba(255,255,255,0.7)", textAlign: "left" }}>Description</h3>
-            <div style={{ maxHeight:"85px", overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "rgba(255,211,42,0.3) transparent" }}>
+            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#FFD32A", textAlign: "left" }}>Description</h3>
+            <div style={{ maxHeight:"85px", overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "#ffd32a transparent" }}>
               <p style={{ margin: 0, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", textAlign: "left" }}>
                 {description}
               </p>

@@ -1,5 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
+import { filterTriplesImages } from '../config/atomFiltering';
 
 export const fetchTriplesForAgent = async (
   objectId: string,
@@ -57,7 +58,8 @@ export const fetchTriplesForAgent = async (
     // Convertir les URLs IPFS en HTTP pour les images
     const enrichedTriples = convertIpfsUrlsInObject(triples);
 
-    return enrichedTriples;
+    // Appliquer le filtre de vérification pour les images
+    return filterTriplesImages(enrichedTriples);
   } catch (error) {
     console.error('Error fetching triples for agent:', error);
     return [];

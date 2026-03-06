@@ -1,5 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { apiCache } from '../utils/apiCache';
+import { filterAtomImage, filterTripleImages } from '../config/atomFiltering';
 
 // Helper pour ajouter un délai entre les requêtes
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -194,11 +195,14 @@ export const fetchActivityHistory = async (
 
           const triplesData = await triplesResponse.json();
           if (!triplesData.errors) {
+            // Appliquer le filtre de vérification aux triples
+            const filteredTriples = (triplesData.data?.triples || []).map((triple: any) => filterTripleImages(triple));
+            
             triplesMap = new Map(
-              (triplesData.data?.triples || []).map((triple: any) => [triple.term_id, triple])
+              filteredTriples.map((triple: any) => [triple.term_id, triple])
             );
             // atoms already embedded in triples (subject/predicate/object)
-            (triplesData.data?.triples || []).forEach((triple: any) => {
+            filteredTriples.forEach((triple: any) => {
               if (triple.subject) atomsMap.set(triple.subject_id, triple.subject);
               if (triple.predicate) atomsMap.set(triple.predicate_id, triple.predicate);
               if (triple.object) atomsMap.set(triple.object_id, triple.object);

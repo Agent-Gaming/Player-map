@@ -25,9 +25,6 @@ const RedeemSelector: React.FC<RedeemSelectorProps> = ({
             accentColor: "#ffd32a",
           }}
         />
-        <span style={{ color: "#ffd32a", fontSize: "12px", fontWeight: "bold" }}>
-          Redeem
-        </span>
       </label>
     </div>
   );

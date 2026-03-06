@@ -308,7 +308,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
   return (
     <div
       style={{
-        padding: "10px 0",
+        padding: "10px 20px",
         marginBottom: "2px",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
         display: "flex",

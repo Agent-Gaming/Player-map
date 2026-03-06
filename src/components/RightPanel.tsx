@@ -10,6 +10,7 @@ import ActivitySection from "./graph/ActivitySection";
 import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
 import { Network } from "../hooks/useAtomData";
 import { useGameStats } from "../hooks/useGameStats";
+import tripleSvg from "../assets/img/triple.svg";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -99,7 +100,8 @@ const PlayerStatBlock: React.FC<{
   label: string;
   value: string | number;
   gradient?: string;
-}> = ({ label, value, gradient }) => (
+  imageSrc?: string;
+}> = ({ label, value, gradient, imageSrc }) => (
   <div
     style={{
       flex: 1,
@@ -117,9 +119,11 @@ const PlayerStatBlock: React.FC<{
     <span style={{ fontSize: 28, fontWeight: 800, color: "#fff", lineHeight: 1 }}>
       {value}
     </span>
-    {gradient && (
+    {imageSrc ? (
+      <img src={imageSrc} alt={label} style={{ width: 72, height: 11 }} />
+    ) : gradient ? (
       <div style={{ width: 60, height: 5, borderRadius: 4, background: gradient }} />
-    )}
+    ) : null}
   </div>
 );
 
@@ -133,7 +137,7 @@ const SectionDivider: React.FC<{ title: string }> = ({ title }) => (
     margin: "18px 0 10px",
   }}>
     <span style={{
-      fontSize: 12,
+      fontSize: 16,
       fontWeight: 700,
       color: "#ffd32a",
       letterSpacing: "0.1em",
@@ -158,10 +162,11 @@ const ProfileTabs: React.FC<{
     padding: "9px 0",
     background: "none",
     border: "none",
+    borderRadius: 0,
     borderBottom: active ? "2px solid #ffd32a" : "2px solid transparent",
     color: active ? "#ffd32a" : "#888",
     fontWeight: 700,
-    fontSize: 11,
+    fontSize: 16,
     letterSpacing: "0.09em",
     textTransform: "uppercase",
     cursor: "pointer",
@@ -188,9 +193,8 @@ const ProfileTabs: React.FC<{
         overflowY: "auto",
         overflowX: "hidden",
         scrollbarWidth: "thin",
-        scrollbarColor: "rgba(255,211,42,0.3) transparent",
+        scrollbarColor: "#ffd32a transparent",
         paddingTop: 4,
-        paddingBottom: 16,
       }}>
         {activeTab === "positions" && (
           <PositionsSection
@@ -317,7 +321,7 @@ const ProfileContent: React.FC<{
         <PlayerStatBlock
           label="Attestation"
           value={totalAttestations}
-          gradient="linear-gradient(to right, #22c55e, #888, #ffd32a)"
+          imageSrc={tripleSvg}
         />
         <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
         <PlayerStatBlock

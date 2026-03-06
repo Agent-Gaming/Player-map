@@ -28,7 +28,7 @@ const RedeemAllButton: React.FC<RedeemAllButtonProps> = ({
         cursor: isLoading ? 'not-allowed' : 'pointer',
       }}
     >
-      {isLoading ? 'Redeeming...' : `Redeem All Selected (${selectedCount})`}
+      {isLoading ? 'Redeeming...' : `Redeem (${selectedCount})`}
     </button>
   );
 };

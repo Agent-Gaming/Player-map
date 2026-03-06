@@ -22,6 +22,7 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
 }) => {
   const [positions, setPositions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isReloading, setIsReloading] = useState(false);
 
   const {
     selectedPositions,
@@ -35,20 +36,21 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
     walletAddress,
   });
 
+  const loadPositions = async () => {
+    if (!accountId) return;
+    setLoading(true);
+    try {
+      const positionsData = await fetchPositions(accountId);
+      setPositions(positionsData);
+    } catch (error) {
+      console.error("Error loading positions:", error);
+      setPositions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadPositions = async () => {
-      if (!accountId) return;
-      setLoading(true);
-      try {
-        const positionsData = await fetchPositions(accountId);
-        setPositions(positionsData);
-      } catch (error) {
-        console.error("Error loading positions:", error);
-        setPositions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadPositions();
   }, [accountId]);
 
@@ -59,11 +61,22 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
       redeemAmounts,
       accountId
     );
-    if (result?.success) clearSelection();
+    if (result?.success) {
+      clearSelection();
+      // Refresh positions après redemption
+      setIsReloading(true);
+      await loadPositions();
+      setIsReloading(false);
+    }
   };
 
   return (
     <div>
+      {isReloading && (
+        <p style={{ color: "#ffd32a", fontSize: 13, padding: "8px 0", textAlign: "center" }}>
+          Refreshing positions…
+        </p>
+      )}
       {loading ? (
         <p style={{ color: "#aaa", fontSize: 13, padding: "8px 0" }}>Loading…</p>
       ) : positions.length === 0 ? (
@@ -82,20 +95,28 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
             />
           ))}
 
-          <div style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            alignItems: "center",
-            marginTop: 10,
-            borderTop: "1px solid rgba(255,255,255,0.08)",
-            paddingTop: 10,
-          }}>
-            <RedeemAllButton
-              selectedCount={selectedPositions.size}
-              onRedeemAll={onRedeemAllSelected}
-              isLoading={isLoading}
-            />
-          </div>
+          {selectedPositions.size > 0 && (
+            <div style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "center",
+              marginTop: 10,
+              paddingTop: 10,
+              paddingBottom: 10,
+              position: "sticky",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: "rgb(0, 0, 0)",
+              zIndex: 10,
+            }}>
+              <RedeemAllButton
+                selectedCount={selectedPositions.size}
+                onRedeemAll={onRedeemAllSelected}
+                isLoading={isLoading}
+              />
+            </div>
+          )}
         </>
       )}
     </div>

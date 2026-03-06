@@ -42,7 +42,7 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
           flexShrink: 0,
         }}>
           <span style={{
-            fontSize: 12,
+            fontSize: 16,
             fontWeight: 700,
             color: "#ffd32a",
             letterSpacing: "0.1em",
@@ -59,7 +59,7 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
         height: "calc(100vh - 352px)",
         overflowY: "auto",
         scrollbarWidth: "thin",
-        scrollbarColor: "rgba(255,211,42,0.3) transparent",
+        scrollbarColor: "#ffd32a transparent",
       }}>
         {claims.map((claim) => {
           const forCount = claim.term?.positions_aggregate?.aggregate?.count ?? 0;
@@ -104,7 +104,7 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
                       />
                     )}
                     <span style={{
-                      fontSize: "0.92em",
+                      fontSize: "14px",
                       color: "#D9D9D9",
                       fontWeight: "bold",
                       overflow: "hidden",
@@ -149,7 +149,7 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
                     />
                   )}
                   <span style={{
-                    fontSize: "0.92em",
+                    fontSize: "14px",
                     color: "#D9D9D9",
                     fontWeight: "bold",
                     overflow: "hidden",

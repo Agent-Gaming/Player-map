@@ -1,5 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
+import { filterAtomsImages } from '../config/atomFiltering';
 
 // Fetch follows and followers
 export const fetchFollowsAndFollowers = async (
@@ -82,8 +83,10 @@ export const fetchFollowsAndFollowers = async (
       const atomsData = await atomsResponse.json();
       // Convertir les URLs IPFS en HTTP pour les images
       const atoms = convertIpfsUrlsInObject(atomsData.data?.atoms || []);
+      // Appliquer le filtre de vérification
+      const filteredAtoms = filterAtomsImages(atoms);
       atomsMap = new Map(
-        atoms.map((atom: any) => [atom.term_id, atom])
+        filteredAtoms.map((atom: any) => [atom.term_id, atom])
       );
     }
 

@@ -1,5 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
+import { filterTriplesImages } from '../config/atomFiltering';
 
 export const fetchClaimsBySubject = async (
   subjectId: string,
@@ -86,7 +87,9 @@ export const fetchClaimsBySubject = async (
       } else {
         // Convertir les URLs IPFS en HTTP pour les images
         const enrichedTriples = convertIpfsUrlsInObject(triples);
-        allTriples.push(...enrichedTriples);
+        // Appliquer le filtre de vérification
+        const filteredTriples = filterTriplesImages(enrichedTriples);
+        allTriples.push(...filteredTriples);
         
         // Si on a reçu moins de batchSize résultats, c'est la dernière page
         if (triples.length < batchSize) {

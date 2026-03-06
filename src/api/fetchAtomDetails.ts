@@ -1,5 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
+import { filterAtomImage } from '../config/atomFiltering';
 
 // Interface pour les détails d'un atom
 export interface AtomDetails {
@@ -103,12 +104,15 @@ export const fetchAtomDetails = async (atomId: string, network: Network = Networ
       ? ipfsToHttpUrl(atom.image) 
       : atom.image;
 
-    return {
+    const result = {
       ...atom,
       image: imageUrl,
       term: termDetails ? { total_market_cap: termDetails.total_market_cap } : undefined,
       value: atom.value || undefined
     } as AtomDetails;
+
+    // Appliquer le filtre de vérification pour les images
+    return filterAtomImage(result);
   } catch (error) {
     console.error('Error fetching atom details:', error);
     return null;

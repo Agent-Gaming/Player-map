@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './Positions.module.css';
 import upSvg from '../../assets/img/up.svg';
 import downSvg from '../../assets/img/down.svg';
 import upNotSelectedSvg from '../../assets/img/upNotSelected.svg';
@@ -23,23 +24,16 @@ const PositionBubble: React.FC<PositionBubbleProps> = ({
     : (hasCount ? downSvg : downNotSelectedSvg);
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
-      padding: '4px 8px',
-      borderRadius: '6px',
-    }}>
+    <div className={styles.bubble}>
       <img
         src={icon}
         alt={isFor ? 'up' : 'down'}
-        style={{ width: 24, height: 24, display: 'block', flexShrink: 0 }}
+        className={styles.bubbleIcon}
       />
-      <span style={{ 
-        fontSize, 
-        color: isFor ? '#006FE8' : '#FF9500', 
-        fontWeight: '600' 
-      }}>
+      <span
+        className={styles.bubbleLabel}
+        style={{ fontSize, color: isFor ? '#006FE8' : '#FF9500' }}
+      >
         {showCount && count !== undefined ? count : (isFor ? 'For' : 'Against')}
       </span>
     </div>

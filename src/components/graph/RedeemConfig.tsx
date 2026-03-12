@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ATOM_CONTRACT_ADDRESS, atomABI } from "../../abi";
+import styles from "./Positions.module.css";
 
 interface RedeemConfigProps {
   positionId: string;
@@ -219,23 +220,8 @@ const RedeemConfig: React.FC<RedeemConfigProps> = ({
   };
 
   return (
-    <div
-      style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "flex-end",
-      gap: "6px",
-        minWidth: "200px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "6px",
-          width: "100%",
-        }}
-      >
+    <div className={styles.redeemOuter}>
+      <div className={styles.redeemInner}>
         <input
           type="number"
           value={
@@ -252,21 +238,13 @@ const RedeemConfig: React.FC<RedeemConfigProps> = ({
           placeholder={isLoadingRedeemTrust ? "Loading..." : "0.0000"}
           min={0}
           step="0.0001"
-          style={{
-            width: "100%",
-            padding: "4px 8px",
-            borderRadius: "4px",
-            border: "1px solid #374151",
-            backgroundColor: "#232326",
-            color: "#fff",
-            fontSize: "12px",
-          }}
+          className={styles.redeemInput}
         />
-        <p style={{ color: "#9ca3af", fontSize: "10px" }}>
+        <p className={styles.redeemMaxLabel}>
           Max: {isLoadingMaxTrust ? "Loading..." : maxTrustAmount || "N/A"}
         </p>
         
-        <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+        <div className={styles.redeemPctGrid}>
           {[
             { label: "25%", multiplier: 0.25 },
             { label: "50%", multiplier: 0.5 },
@@ -281,19 +259,7 @@ const RedeemConfig: React.FC<RedeemConfigProps> = ({
                 // Since fees are proportional, X% of shares = X% of TRUST (both gross and net)
                 onAmountChange(positionId, shares * multiplier);
               }}
-              style={{
-                padding: "0px 4px",
-                borderRadius: "4px",
-                border: "1px solid #374151",
-                backgroundColor: "#232326",
-                color: "#fff",
-                fontSize: "12px",
-                cursor: "pointer",
-                minWidth: "32px",
-                textAlign: "center",
-                height: "20px",
-                lineHeight: "20px",
-              }}
+              className={styles.redeemPctBtn}
             >
               {label}
             </button>

@@ -7,6 +7,7 @@ import RedeemSelector from "./RedeemSelector";
 import { TripleBubble, AtomBubble, PositionBubble } from "./index";
 import { ATOM_CONTRACT_ADDRESS, atomABI } from "../../abi";
 import SafeImage from "../SafeImage";
+import styles from "./Positions.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
@@ -18,11 +19,11 @@ interface InfoRowProps {
 }
 
 const InfoRow: React.FC<InfoRowProps> = ({ label, value }) => (
-  <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
-    <span style={{ color: "#ffd429", fontWeight: 700, minWidth: 110 }}>
+  <div className={styles.infoRow}>
+    <span className={styles.infoRowLabel}>
       {label}:
     </span>
-    <span style={{ color: "#fff" }}>{value || "N/A"}</span>
+    <span className={styles.infoRowValue}>{value || "N/A"}</span>
   </div>
 );
 
@@ -306,52 +307,24 @@ const PositionCard: React.FC<PositionCardProps> = ({
   const objectImage = activeTerm?.triple?.object?.image;
 
   return (
-    <div
-      style={{
-        padding: "10px 20px",
-        marginBottom: "2px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "12px",
-      }}
-    >
+    <div className={styles.cardRow}>
       {/* Triple / Atom display */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "5px",
-          flex: 1,
-          minWidth: 0,
-        }}
-      >
+      <div className={styles.tripleWrap}>
         {positionComponents.type === "triple" && subjectLabel ? (
           <>
             {/* Subject pill */}
             <div
               title={subjectLabel}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                maxWidth: "140px",
-                backgroundColor: "#1a1a1adc",
-                padding: "6px 10px",
-                borderRadius: "4px",
-                overflow: "hidden",
-              }}
+              className={styles.pillSm}
             >
               {subjectImage && (
                 <img
                   src={subjectImage}
                   alt=""
-                  style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
+                  className={styles.pillSmImage}
                 />
               )}
-              <span style={{ fontSize: "0.82em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span className={styles.pillSmLabel}>
                 {subjectLabel}
               </span>
             </div>
@@ -359,16 +332,7 @@ const PositionCard: React.FC<PositionCardProps> = ({
             {/* Predicate */}
             <span
               title={predicateLabel}
-              style={{
-                display: "inline-block",
-                maxWidth: "90px",
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                fontSize: "0.82em",
-                color: "#D9D9D9",
-                fontWeight: "bold",
-              }}
+              className={styles.predicateText}
             >
               {predicateLabel}
             </span>
@@ -376,43 +340,25 @@ const PositionCard: React.FC<PositionCardProps> = ({
             {/* Object pill */}
             <div
               title={objectLabel}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                maxWidth: "140px",
-                backgroundColor: "#1a1a1adc",
-                padding: "6px 10px",
-                borderRadius: "4px",
-                overflow: "hidden",
-              }}
+              className={styles.pillSm}
             >
               {objectImage && (
                 <img
                   src={objectImage}
                   alt=""
-                  style={{ width: 16, height: 16, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
+                  className={styles.pillSmImage}
                 />
               )}
-              <span style={{ fontSize: "0.82em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span className={styles.pillSmLabel}>
                 {objectLabel}
               </span>
             </div>
           </>
         ) : (
           <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-              backgroundColor: "#1a1a1adc",
-              padding: "6px 10px",
-              borderRadius: "4px",
-              overflow: "hidden",
-              maxWidth: "100%",
-            }}
+            className={styles.pillSmFull}
           >
-            <span style={{ fontSize: "0.82em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span className={styles.pillSmLabel}>
               {objectLabel}
             </span>
           </div>
@@ -420,40 +366,32 @@ const PositionCard: React.FC<PositionCardProps> = ({
       </div>
 
       {/* Vote display + Redeem */}
-      <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+      <div className={styles.cardVoteGroup}>
         {/* FOR */}
-        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+        <div className={styles.cardVoteItem}>
           <img
             src={isFor ? upSvg : upNotSelectedSvg}
             alt="up"
-            style={{ width: 28, height: 28 }}
+            className={styles.cardVoteImg}
           />
           <span
-            style={{
-              color: isFor ? "#006FE8" : "rgba(255,255,255,0.5)",
-              fontWeight: "bold",
-              fontSize: "1.1em",
-              minWidth: "20px",
-            }}
+            className={styles.cardVoteCount}
+            style={{ color: isFor ? "#006FE8" : "rgba(255,255,255,0.5)" }}
           >
             {forCount}
           </span>
         </div>
 
         {/* AGAINST */}
-        <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+        <div className={styles.cardVoteItem}>
           <img
             src={!isFor ? downSvg : downNotSelectedSvg}
             alt="down"
-            style={{ width: 28, height: 28 }}
+            className={styles.cardVoteImg}
           />
           <span
-            style={{
-              color: !isFor ? "#FF9500" : "rgba(255,255,255,0.5)",
-              fontWeight: "bold",
-              fontSize: "1.1em",
-              minWidth: "20px",
-            }}
+            className={styles.cardVoteCount}
+            style={{ color: !isFor ? "#FF9500" : "rgba(255,255,255,0.5)" }}
           >
             {againstCount}
           </span>

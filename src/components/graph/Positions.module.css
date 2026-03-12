@@ -1,0 +1,423 @@
+@import "../../styles/variables.css";
+
+/* ─── PositionsSection ──────────────────────────────────────────── */
+
+.stateMessage {
+  color: #aaa;
+  font-size: 13px;
+  padding: 8px 0;
+}
+
+.stateMessageRefreshing {
+  color: var(--color-primary);
+  font-size: 13px;
+  padding: 8px 0;
+  text-align: center;
+}
+
+.stickyFooter {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgb(0, 0, 0);
+  z-index: 10;
+}
+
+/* ─── PositionBubble ────────────────────────────────────────────── */
+
+.bubble {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.bubbleIcon {
+  width: 24px;
+  height: 24px;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* .bubbleLabel: fontSize + color kept inline (dynamic props) */
+.bubbleLabel {
+  font-weight: 600;
+}
+
+/* ─── PositionCard ──────────────────────────────────────────────── */
+
+.cardRow {
+  padding: 10px 20px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tripleWrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Small pill (subject / object) */
+.pillSm {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 140px;
+  background-color: #1a1a1adc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Full-width atom pill */
+.pillSmFull {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  background-color: #1a1a1adc;
+  padding: 6px 10px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pillSmImage {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.pillSmLabel {
+  font-size: 0.82em;
+  color: #d9d9d9;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.predicateText {
+  display: inline-block;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.82em;
+  color: #d9d9d9;
+  font-weight: bold;
+}
+
+.cardVoteGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.cardVoteItem {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.cardVoteImg {
+  width: 28px;
+  height: 28px;
+}
+
+/* .cardVoteCount: color kept inline (dynamic) */
+.cardVoteCount {
+  font-weight: bold;
+  font-size: 1.1em;
+  min-width: 20px;
+}
+
+/* InfoRow (internal sub-component) */
+.infoRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.infoRowLabel {
+  color: #ffd429;
+  font-weight: 700;
+  min-width: 110px;
+}
+
+.infoRowValue {
+  color: #fff;
+}
+
+/* ─── RedeemAllButton ───────────────────────────────────────────── */
+
+.redeemAllBtn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--color-primary);
+  color: #000;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.redeemAllBtn:disabled {
+  background-color: #374151;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* ─── RedeemConfig ──────────────────────────────────────────────── */
+
+.redeemOuter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  min-width: 200px;
+}
+
+.redeemInner {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.redeemInput {
+  width: 100%;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #374151;
+  background-color: #232326;
+  color: #fff;
+  font-size: 12px;
+}
+
+.redeemMaxLabel {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.redeemPctGrid {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.redeemPctBtn {
+  padding: 0 4px;
+  border-radius: 4px;
+  border: 1px solid #374151;
+  background-color: #232326;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 32px;
+  text-align: center;
+  height: 20px;
+  line-height: 20px;
+}
+
+/* ─── RedeemSelector ────────────────────────────────────────────── */
+
+.redeemSelectorWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.redeemSelectorLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.redeemCheckbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--color-primary);
+}
+
+/* ─── SidebarDrawer ─────────────────────────────────────────────── */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1200;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+/* .drawer: width / minWidth / border kept inline (dynamic: open state) */
+.drawer {
+  position: absolute;
+  top: 18%;
+  left: 5px;
+  height: 68%;
+  background-color: rgba(0, 0, 0, 0.85);
+  border-radius: 18px;
+  transition: width 0.35s cubic-bezier(0.4, 1.3, 0.5, 1);
+  z-index: 1300;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.drawerCloseBtn {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-size: 50px;
+  position: absolute;
+  padding: 10px 15px;
+  top: 0;
+  right: 5px;
+  cursor: pointer;
+  z-index: 1302;
+  transition: color 0.2s, transform 0.1s;
+  min-width: 60px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawerCloseBtn:hover {
+  transform: scale(1.1);
+  color: #ffe066;
+}
+
+.drawerContent {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* ─── TripleBubble ──────────────────────────────────────────────── */
+
+.tripleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* fontSize kept inline (dynamic prop) */
+.tripleBubble {
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: rgba(255, 255, 255, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tripleBubbleText {
+  color: #fff;
+}
+
+.tripleArrow {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+/* backgroundColor kept inline (different per bubble: subject/predicate/object) */
+.tripleDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
+/* ─── PaginationInfo ────────────────────────────────────────────── */
+
+.paginationInfo {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ─── Pagination ────────────────────────────────────────────────── */
+
+.paginationRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pageNumbers {
+  display: flex;
+  gap: 4px;
+}
+
+.navBtn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.navBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.navBtn:disabled {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
+}
+
+.pageNumBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 32px;
+  transition: all 0.2s;
+  font-weight: 400;
+}
+
+.pageNumBtn:hover:not(.pageNumBtnActive) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.pageNumBtnActive {
+  background: var(--color-primary);
+  color: #18181b;
+  font-weight: 600;
+}
+
+.pageEllipsis {
+  color: rgba(255, 255, 255, 0.6);
+  padding: 6px 4px;
+  font-size: 12px;
+}
+

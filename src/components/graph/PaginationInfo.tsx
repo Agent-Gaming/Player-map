@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './Positions.module.css';
 
 interface PaginationInfoProps {
   currentPage: number;
@@ -15,7 +16,7 @@ const PaginationInfo: React.FC<PaginationInfoProps> = ({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)' }}>
+    <div className={styles.paginationInfo}>
       Showing {startItem}-{endItem} of {totalItems}
     </div>
   );

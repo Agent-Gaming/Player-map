@@ -6,7 +6,7 @@ import {
 import { fetchPositions } from "../../api/fetchPositions";
 import { useRedeemAmounts } from "../../hooks/useRedeemAmounts";
 import { useRedeemExecution } from "../../hooks/useRedeemExecution";
-import styles from "./PositionsSection.module.css";
+import styles from "./Positions.module.css";
 
 interface PositionsSectionProps {
   accountId: string;

@@ -1,0 +1,58 @@
+@import "../../styles/variables.css";
+
+/* Panel "wallet non connecté" */
+.walletPrompt {
+  background-color: rgba(0, 0, 0, 0.85);
+  min-height: 100%;
+  opacity: 0.9;
+  color: #fff;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Panel "pas de player atom" */
+.playerPrompt {
+  background-color: rgba(0, 0, 0, 0.85);
+  min-height: 100%;
+  color: #fff;
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  max-width: 100%;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Vue principale */
+.root {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  color: #fff;
+  min-height: 0;
+}
+
+.headerSlot {
+  flex-shrink: 0;
+  padding: 15px 15px 0;
+}
+
+.scrollList {
+  flex: 1;
+  overflow-y: scroll;
+  padding: 10px 15px;
+  min-height: 0;
+}
+
+.footer {
+  flex-shrink: 0;
+}

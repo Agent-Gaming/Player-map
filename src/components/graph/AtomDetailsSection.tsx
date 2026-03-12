@@ -6,6 +6,7 @@ import SafeImage from "../SafeImage";
 import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import verifiedIcon from "../../assets/img/verified.svg";
 import communityIcon from "../../assets/img/community.svg";
+import styles from "./AtomDetailsSection.module.css";
 
 interface AtomDetailsSectionProps {
   atomDetails: any;
@@ -157,18 +158,18 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   return (
     <>
       {/* Atom header */}
-      <div style={{display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "16px", marginBottom: "16px" }}>
+      <div className={styles.header}>
         {/* Vérification de l'atome */}
         {(() => {
           const verification = getAtomVerificationStatus(atomDetails.term_id);
           
           return (
-            <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div className={styles.headerContent}>
               {verification.status === "verified" ? (
                 // ─── ATOME VÉRIFIÉ ─────────────────────────────────────
-                <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", width: "100%" }}>
+                <div className={styles.rowFlex}>
                   {/* Image à gauche */}
-                  <div style={{width: "70px", height: "70px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
+                  <div className={styles.imageContainer}>
                     <SafeImage
                       src={imageUrl as string}
                       fallbackSources={imageFallbacks}
@@ -180,54 +181,26 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                   </div>
                   
                   {/* Nom et badge */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
-                    <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#ffffff", margin: "0px" }}>
+                  <div className={styles.nameRow}>
+                    <p className={styles.atomName}>
                       <strong>{String(atomDetails.label ?? "Not defined")}</strong>
                     </p>
                     
                     {/* Badge verified avec tooltip */}
                     <div 
-                      style={{ position: "relative", display: "inline-flex" }}
+                      className={styles.badgeWrapper}
                       onMouseEnter={() => setShowTooltip('verified')}
                       onMouseLeave={() => setShowTooltip(null)}
                     >
                       <img 
                         src={verifiedIcon} 
                         alt="Verified" 
-                        style={{ width: "24px", height: "24px", cursor: "pointer" }}
+                        className={styles.badgeIcon}
                       />
                       {showTooltip === 'verified' && (
-                        <div style={{
-                          position: "absolute",
-                          top: "calc(100% + 8px)",
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                          backgroundColor: "rgba(20, 20, 20, 0.8)",
-                          color: "#fff",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          whiteSpace: "normal",
-                          width: "240px",
-                          wordBreak: "break-word",
-                          textAlign: "center",
-                          zIndex: 1000,
-                          boxShadow: "0 4px 12px rgba(20, 20, 20, 0.9)",
-                          lineHeight: "1.4",
-                        }}>
+                        <div className={styles.tooltip}>
                           Verified by {verification.studio}
-                          <div style={{
-                            position: "absolute",
-                            top: "-4px",
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            width: 0,
-                            height: 0,
-                            borderLeft: "6px solid transparent",
-                            borderRight: "6px solid transparent",
-                            borderBottom: "6px solid rgba(20, 20, 20, 0.9)",
-                          }} />
+                          <div className={styles.tooltipArrow} />
                         </div>
                       )}
                     </div>
@@ -235,56 +208,28 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                 </div>
               ) : verification.status === "not-verified" ? (
                 // ─── ATOME NON VÉRIFIÉ ─────────────────────────────────
-                <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", width: "100%" }}>
+                <div className={styles.rowFlex}>
                   {/* Nom et badge (sans image) */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flex: 1 }}>
-                    <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#ffffff", margin: "0px" }}>
+                  <div className={styles.nameRow}>
+                    <p className={styles.atomName}>
                       <strong>{String(atomDetails.label ?? "Not defined")}</strong>
                     </p>
                     
                     {/* Badge community avec tooltip */}
                     <div 
-                      style={{ position: "relative", display: "inline-flex" }}
+                      className={styles.badgeWrapper}
                       onMouseEnter={() => setShowTooltip('community')}
                       onMouseLeave={() => setShowTooltip(null)}
                     >
                       <img 
                         src={communityIcon} 
                         alt="Community" 
-                        style={{ width: "24px", height: "24px", cursor: "pointer" }}
+                        className={styles.badgeIcon}
                       />
                       {showTooltip === 'community' && (
-                        <div style={{
-                          position: "absolute",
-                          top: "calc(100% + 8px)",
-                          left: "50%",
-                          transform: "translateX(-50%)",
-                          backgroundColor: "rgba(20, 20, 20, 0.9)",
-                          color: "#fff",
-                          padding: "8px 12px",
-                          borderRadius: "6px",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                          whiteSpace: "normal",
-                          maxWidth: "280px",
-                          width: "280px",
-                          zIndex: 1000,
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-                          textAlign: "center",
-                          lineHeight: "1.4",
-                        }}>
+                        <div className={`${styles.tooltip} ${styles.tooltipWide}`}>
                           This atom is community-created and has not been reviewed or approved by the rights holder
-                          <div style={{
-                            position: "absolute",
-                            top: "-4px",
-                            left: "50%",
-                            transform: "translateX(-50%)",
-                            width: 0,
-                            height: 0,
-                            borderLeft: "6px solid transparent",
-                            borderRight: "6px solid transparent",
-                            borderBottom: "6px solid rgba(20, 20, 20, 0.9)",
-                          }} />
+                          <div className={styles.tooltipArrow} />
                         </div>
                       )}
                     </div>
@@ -292,9 +237,9 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                 </div>
               ) : (
                 // ─── COMPORTEMENT PAR DÉFAUT (NORMAL) ──────────────────
-                <div style={{display: "flex", flexDirection: "row", alignItems: "center", gap: "16px", width: "100%" }}>
+                <div className={styles.rowFlex}>
                   {/* Image à gauche */}
-                  <div style={{width: "70px", height: "70px", overflow: "hidden", borderRadius: "16px", flexShrink: 0 }}>
+                  <div className={styles.imageContainer}>
                     <SafeImage
                       src={imageUrl as string}
                       fallbackSources={imageFallbacks}
@@ -306,7 +251,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                   </div>
                   
                   {/* Nom sans badge */}
-                  <p style={{fontWeight: 700, fontSize: "1.5rem", color: "#FFD32A", margin: "0px" }}>
+                  <p className={styles.atomNameAccent}>
                     <strong>{String(atomDetails.label ?? "Not defined")}</strong>
                   </p>
                 </div>
@@ -315,10 +260,10 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
           );
         })()}
         {showDescription && (
-          <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "8px" }}>
-            <h3 style={{ margin: 0, fontSize: "0.9rem", color: "#FFD32A", textAlign: "left" }}>Description</h3>
-            <div style={{ maxHeight:"85px", overflowY: "auto", scrollbarWidth: "thin", scrollbarColor: "#ffd32a transparent" }}>
-              <p style={{ margin: 0, fontSize: "0.875rem", color: "rgba(255,255,255,0.9)", textAlign: "left" }}>
+          <div className={styles.descriptionSection}>
+            <h3 className={styles.descriptionLabel}>Description</h3>
+            <div className={styles.descriptionScroll}>
+              <p className={styles.descriptionText}>
                 {description}
               </p>
             </div>

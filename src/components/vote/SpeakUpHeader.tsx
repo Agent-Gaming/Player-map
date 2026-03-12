@@ -2,6 +2,7 @@ import React from "react";
 import { GameStats } from "../../hooks/useGameStats";
 import { ipfsToHttpUrl, isIpfsUrl } from "../../utils/pinata";
 import tripleSvg from "../../assets/img/triple.svg";
+import styles from "./SpeakUpHeader.module.css";
 
 interface SpeakUpHeaderProps {
   stats: GameStats;
@@ -36,28 +37,9 @@ const StatCard: React.FC<{
   const isBar = variant === "triple" || variant === "attestation";
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: 6,
-        flex: 1,
-        padding: "8px 4px",
-      }}
-    >
+    <div className={styles.statCard}>
       {/* Label */}
-      <span
-        style={{
-          fontSize: 12,
-          fontWeight: "bold",
-          color: "#ffd32a",
-          letterSpacing: "0.08em",
-          textTransform: "uppercase",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <span className={styles.statLabel}>
         {label}
       </span>
 
@@ -65,31 +47,24 @@ const StatCard: React.FC<{
       {isBar ? (
         <>
           {loading ? (
-            <div style={{ width: 36, height: 28, background: "rgba(255,255,255,0.1)", borderRadius: 4 }} />
+            <div className={styles.skeletonBar} />
           ) : (
-            <span style={{ fontSize: 32, fontWeight: "bold", color: "#fff", lineHeight: 1 }}>{value}</span>
+            <span className={styles.statNumberLarge}>{value}</span>
           )}
           {variant === "attestation" ? (
-            <img src={BAR_GRADIENT[variant]} alt={variant} style={{ width: 72, height: 11 }} />
+            <img src={BAR_GRADIENT[variant]} alt={variant} className={styles.statBarImage} />
           ) : (
-            <div style={{ width: 72, height: 7, borderRadius: 4, background: BAR_GRADIENT[variant] }} />
+            <div className={styles.statBar} style={{ background: BAR_GRADIENT[variant] }} />
           )}
         </>
       ) : (
         <div
-          style={{
-            ...DECORATOR[variant],
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 54,
-            height: 54,
-          }}
+          className={`${styles.statValueBoxBase} ${variant === "guild" ? styles.statValueBoxGuild : styles.statValueBoxPlayer}`}
         >
           {loading ? (
-            <div style={{ width: 24, height: 24, background: "rgba(255,255,255,0.1)", borderRadius: 4 }} />
+            <div className={styles.skeleton} />
           ) : (
-            <span style={{ fontSize: 26, fontWeight: "bold", color: "#fff", lineHeight: 1 }}>{value}</span>
+            <span className={styles.statNumber}>{value}</span>
           )}
         </div>
       )}
@@ -103,63 +78,30 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
   const imageUrl = gameImage ? (isIpfsUrl(gameImage) ? ipfsToHttpUrl(gameImage) : gameImage) : null;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        paddingBottom: 14,
-        marginBottom: 4,
-      }}
-    >
+    <div className={styles.header}>
       {/* Titre du jeu */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-          padding: "14px 16px 12px",
-        }}
-      >
+      <div className={styles.titleRow}>
         {imageUrl && (
           <img
             src={imageUrl}
             alt={gameName}
-            style={{ width: 38, height: 38, borderRadius: 6, objectFit: "cover" }}
+            className={styles.gameImage}
             onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
         )}
-        <span
-          style={{
-            fontSize: 32,
-            fontWeight: "bold",
-            color: "#fff",
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-          }}
-        >
+        <span className={styles.gameName}>
           {loading ? "Loading..." : (gameName || "—")}
         </span>
       </div>
 
       {/* Statistiques */}
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "space-around",
-          alignItems: "stretch",
-          background: "rgba(255,255,255,0.03)",
-          borderRadius: 12,
-          margin: "0 12px",
-          border: "1px solid rgba(255,255,255,0.06)",
-        }}
-      >
+      <div className={styles.statsRow}>
         <StatCard label="Guilds"       value={totalGuilds}       loading={false}   variant="guild" />
-        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <div className={styles.statsDivider} />
         <StatCard label="Players"      value={totalPlayers}      loading={loading} variant="player" />
-        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <div className={styles.statsDivider} />
         <StatCard label="Attestation"  value={totalAttestations} loading={loading} variant="attestation" />
-        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <div className={styles.statsDivider} />
         <StatCard label="Votes"        value={totalVotes}        loading={loading} variant="triple" />
       </div>
     </div>

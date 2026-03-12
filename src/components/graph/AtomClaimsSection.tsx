@@ -1,5 +1,6 @@
 import React from "react";
 import SafeImage from "../SafeImage";
+import styles from "./AtomClaimsSection.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
@@ -25,42 +26,24 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
 
   if (claims.length === 0) {
     return (
-      <p style={{ color: "rgba(255,255,255,0.5)", fontStyle: "italic", fontSize: 13 }}>
+      <p className={styles.emptyMessage}>
         No attestation found.
       </p>
     );
   }
 
   return (
-    <div style={{ width: "100%", display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+    <div className={styles.root}>
       {title && (
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          margin: "0 0 10px",
-          flexShrink: 0,
-        }}>
-          <span style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: "#ffd32a",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            whiteSpace: "nowrap",
-          }}>
+        <div className={styles.header}>
+          <span className={styles.headerTitle}>
             {title} ({claims.length})
           </span>
-          <div style={{ flex: 1, height: 1, background: "rgba(255,211,42,0.2)" }} />
+          <div className={styles.headerDivider} />
         </div>
       )}
 
-      <div style={{
-        height: "calc(100vh - 352px)",
-        overflowY: "auto",
-        scrollbarWidth: "thin",
-        scrollbarColor: "#ffd32a transparent",
-      }}>
+      <div className={styles.scrollList}>
         {claims.map((claim) => {
           const forCount = claim.term?.positions_aggregate?.aggregate?.count ?? 0;
           const againstCount = claim.counter_term?.positions_aggregate?.aggregate?.count ?? 0;
@@ -72,30 +55,13 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
           return (
             <div
               key={claim.term_id}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 10,
-                padding: "8px 0",
-                borderBottom: "1px solid rgba(255,255,255,0.06)",
-              }}
+              className={styles.claimRow}
             >
               {/* Subject + Predicate + Object */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1, minWidth: 0, flexWrap: "wrap" }}>
+              <div className={styles.tripleWrapper}>
                 {/* Subject pill */}
                 {claim.subject && (
-                  <div style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 5,
-                    backgroundColor: "#1a1a1adc",
-                    padding: "5px 10px",
-                    borderRadius: 4,
-                    overflow: "hidden",
-                    minWidth: 0,
-                    maxWidth: "35%",
-                  }}>
+                  <div className={styles.pill}>
                     {claim.subject?.image && (
                       <SafeImage
                         src={claim.subject.image}
@@ -103,44 +69,19 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
                         style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
                       />
                     )}
-                    <span style={{
-                      fontSize: "14px",
-                      color: "#D9D9D9",
-                      fontWeight: "bold",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}>
+                    <span className={styles.pillLabel}>
                       {claim.subject?.label ?? "—"}
                     </span>
                   </div>
                 )}
 
                 {/* Predicate label */}
-                <span style={{
-                  fontSize: "0.88em",
-                  color: "rgba(255,255,255,0.45)",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  maxWidth: 90,
-                  flexShrink: 0,
-                }}>
+                <span className={styles.predicate}>
                   {claim.predicate?.label ?? ""}
                 </span>
 
                 {/* Object pill */}
-                <div style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 5,
-                  backgroundColor: "#1a1a1adc",
-                  padding: "5px 10px",
-                  borderRadius: 4,
-                  overflow: "hidden",
-                  minWidth: 0,
-                  maxWidth: "35%",
-                }}>
+                <div className={styles.pill}>
                   {claim.object?.image && (
                     <SafeImage
                       src={claim.object.image}
@@ -148,40 +89,29 @@ const AtomClaimsSection: React.FC<AtomClaimsSectionProps> = ({
                       style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
                     />
                   )}
-                  <span style={{
-                    fontSize: "14px",
-                    color: "#D9D9D9",
-                    fontWeight: "bold",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}>
+                  <span className={styles.pillLabel}>
                     {claim.object?.label ?? "—"}
                   </span>
                 </div>
               </div>
 
               {/* Votes */}
-              <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <img src={hasVotedFor ? upSvg : upNotSelectedSvg} alt="up" style={{ width: 18, height: 18 }} />
-                  <span style={{
-                    fontSize: "0.85em",
-                    fontWeight: "bold",
-                    color: hasVotedFor ? "#006FE8" : "rgba(255,255,255,0.35)",
-                    minWidth: 14,
-                  }}>
+              <div className={styles.voteGroup}>
+                <div className={styles.voteItem}>
+                  <img src={hasVotedFor ? upSvg : upNotSelectedSvg} alt="up" className={styles.voteIcon} />
+                  <span
+                    className={styles.voteCount}
+                    style={{ color: hasVotedFor ? "#006FE8" : "rgba(255,255,255,0.35)" }}
+                  >
                     {forCount}
                   </span>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 3 }}>
-                  <img src={hasVotedAgainst ? downSvg : downNotSelectedSvg} alt="down" style={{ width: 18, height: 18 }} />
-                  <span style={{
-                    fontSize: "0.85em",
-                    fontWeight: "bold",
-                    color: hasVotedAgainst ? "#FF9500" : "rgba(255,255,255,0.35)",
-                    minWidth: 14,
-                  }}>
+                <div className={styles.voteItem}>
+                  <img src={hasVotedAgainst ? downSvg : downNotSelectedSvg} alt="down" className={styles.voteIcon} />
+                  <span
+                    className={styles.voteCount}
+                    style={{ color: hasVotedAgainst ? "#FF9500" : "rgba(255,255,255,0.35)" }}
+                  >
                     {againstCount}
                   </span>
                 </div>

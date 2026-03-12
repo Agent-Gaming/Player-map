@@ -1,0 +1,118 @@
+@import "../../styles/variables.css";
+
+.emptyMessage {
+  color: rgba(255, 255, 255, 0.5);
+  font-style: italic;
+  font-size: 13px;
+}
+
+.root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+  flex-shrink: 0;
+}
+
+.headerTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.headerDivider {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 211, 42, 0.2);
+}
+
+.scrollList {
+  height: calc(100vh - 352px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+}
+
+.claimRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.tripleWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: #1a1a1adc;
+  padding: 5px 10px;
+  border-radius: 4px;
+  overflow: hidden;
+  min-width: 0;
+  max-width: 35%;
+}
+
+.pillLabel {
+  font-size: 14px;
+  color: #d9d9d9;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.predicate {
+  font-size: 0.88em;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90px;
+  flex-shrink: 0;
+}
+
+.voteGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.voteItem {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.voteIcon {
+  width: 18px;
+  height: 18px;
+}
+
+.voteCount {
+  font-size: 0.85em;
+  font-weight: bold;
+  min-width: 14px;
+}

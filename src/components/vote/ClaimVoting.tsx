@@ -12,6 +12,7 @@ import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import RegistrationForm from "../../RegistrationForm";
 import { useNetworkCheck } from '../../shared/hooks/useNetworkCheck';
 import { NetworkSwitchMessage } from '../../shared/components/NetworkSwitchMessage';
+import styles from "./ClaimVoting.module.css";
 
 interface ClaimVotingProps {
   walletConnected?: any;
@@ -153,21 +154,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   // Si l'utilisateur n'a pas connecté son wallet, afficher juste la modale de connexion
   if (!isWalletReady) {
     return (
-      <div
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.85)",
-          minHeight: "100%",
-          opacity: "0.9",
-          color: "#fff",
-          padding: "15px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          borderRadius: "18px",
-          maxWidth: "100%",
-          margin: "0 auto",
-          position: "relative",
-          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
-        }}
-      >
+      <div className={styles.walletPrompt}>
         <ConnectWalletModal
           isOpen={true}
           onConnectWallet={onConnectWallet || (() => {})}
@@ -179,20 +166,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   // Si l'utilisateur a connecté son wallet mais n'a pas de player
   if (isWalletReady && !hasPlayerAtom && !tripleLoading) {
     return (
-      <div
-        style={{
-          backgroundColor: "rgba(0, 0, 0, 0.85)",
-          minHeight: "100%",
-          color: "#fff",
-          padding: "15px",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          borderRadius: "18px",
-          maxWidth: "100%",
-          margin: "0 auto",
-          position: "relative",
-          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.3)",
-        }}
-      >
+      <div className={styles.playerPrompt}>
         <CreatePlayerModal
           isOpen={true}
           onCreatePlayer={handleCreatePlayer}
@@ -215,32 +189,14 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
 
   // Affichage normal si wallet connecté et player existe
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        color: "#fff",
-        minHeight: 0,
-      }}
-    >
+    <div className={styles.root}>
       {/* En-tête fix — hauteur automatique */}
-      <div style={{ flexShrink: 0, padding: "15px 15px 0" }}>
+      <div className={styles.headerSlot}>
         <VotingHeader onClose={onClose} />
       </div>
       <br />
       {/* Liste scrollable — prend tout l'espace disponible */}
-      <div
-        style={{
-          flex: 1,
-          overflowY: "scroll",
-          padding: "10px 15px",
-          minHeight: 0,
-        }}
-      >
+      <div className={styles.scrollList}>
         <ClaimList
           isLoading={isLoading || tripleLoading}
           voteItems={voteItems}
@@ -253,7 +209,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
       </div>
 
       {/* Footer fix — toujours visible en bas */}
-      <div style={{ flexShrink: 0 }}>
+      <div className={styles.footer}>
         <TransactionInfo
           numberOfTransactions={numberOfTransactions}
           totalUnits={totalUnits}

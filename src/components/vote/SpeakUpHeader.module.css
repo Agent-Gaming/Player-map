@@ -1,0 +1,133 @@
+@import "../../styles/variables.css";
+
+/* ─── SpeakUpHeader ───────────────────────────────────────────── */
+
+.header {
+  width: 100%;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px 12px;
+}
+
+.gameImage {
+  width: 38px;
+  height: 38px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.gameName {
+  font-size: 32px;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statsRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  margin: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.statsDivider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ─── StatCard ────────────────────────────────────────────────── */
+
+.statCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex: 1;
+  padding: 8px 4px;
+}
+
+.statLabel {
+  font-size: 12px;
+  font-weight: bold;
+  color: var(--color-primary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Skeleton placeholder (bar variant, loading) */
+.skeletonBar {
+  width: 36px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Large number (bar variants: triple / attestation) */
+.statNumberLarge {
+  font-size: 32px;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1;
+}
+
+/* Attestation bar image */
+.statBarImage {
+  width: 72px;
+  height: 11px;
+}
+
+/* Triple gradient bar — background kept inline (dynamic value) */
+.statBar {
+  width: 72px;
+  height: 7px;
+  border-radius: 4px;
+}
+
+/* Icon box base (guild / player variants) */
+.statValueBoxBase {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+}
+
+.statValueBoxGuild {
+  border: 3px solid #22c55e;
+  border-radius: 5px;
+}
+
+.statValueBoxPlayer {
+  border: 3px solid var(--color-primary);
+  border-radius: 50%;
+}
+
+/* Skeleton inside icon box (loading) */
+.skeleton {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+/* Number inside icon box */
+.statNumber {
+  font-size: 26px;
+  font-weight: bold;
+  color: #fff;
+  line-height: 1;
+}

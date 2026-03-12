@@ -1,0 +1,216 @@
+@import "../styles/variables.css";
+
+/* ─── Panneau principal ───────────────────────────────────────── */
+.panel {
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.92);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ─── Slot de mode (speakup / atom / profile) ─────────────────── */
+.modeSlot {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.modeSlotScrollable {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 211, 42, 0.3) transparent;
+}
+
+/* ─── Messages d'état ──────────────────────────────────────────── */
+.stateMessage {
+  padding: 20px;
+  color: #aaa;
+  font-size: 14px;
+}
+
+.stateMessageError {
+  padding: 20px;
+  color: #f87171;
+  font-size: 14px;
+}
+
+/* ─── AtomContent ─────────────────────────────────────────────── */
+.atomContent {
+  padding: 0 16px 16px;
+}
+
+/* ─── ProfileContent ──────────────────────────────────────────── */
+.profileContent {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  padding: 0 16px 30px 16px;
+}
+
+.profileHeader {
+  flex-shrink: 0;
+}
+
+/* ─── Stats joueur ────────────────────────────────────────────── */
+.statsBlock {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  margin: 16px 0 0;
+  overflow: hidden;
+}
+
+.statsRow {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 6px;
+  gap: 6px;
+}
+
+.statsDivider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.statLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.statValue {
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+
+.statBar {
+  width: 60px;
+  height: 5px;
+  border-radius: 4px;
+  /* background est dynamique (gradient prop) → reste inline */
+}
+
+.statImage {
+  width: 72px;
+  height: 11px;
+}
+
+/* ─── Section divider ─────────────────────────────────────────── */
+.sectionDividerRow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 10px;
+}
+
+.sectionDividerTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.sectionDividerLine {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 211, 42, 0.2);
+}
+
+.sectionDivider {
+  flex-shrink: 0;
+}
+
+/* ─── Onglets Positions / Activity ───────────────────────────── */
+.tabsContainer {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-top: 18px;
+}
+
+.tabHeaders {
+  flex-shrink: 0;
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab {
+  flex: 1;
+  padding: 9px 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  color: #888;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  outline: none;
+}
+
+.tab:focus {
+  outline: none;
+}
+
+.tabActive {
+  border-bottom-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.tabContent {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary) transparent;
+  padding-top: 4px;
+}
+
+/* ─── SpeakUpContent ──────────────────────────────────────────── */
+.speakUpContent {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.speakUpBody {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  margin: 0 12px 17px 12px;
+  background: rgb(65 65 65 / 15%);
+}

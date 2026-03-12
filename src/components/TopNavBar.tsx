@@ -5,6 +5,16 @@ import { isIpfsUrl, ipfsToHttpUrl } from "../utils/pinata";
 import SafeImage from "./SafeImage";
 import searchIconUrl from "../assets/img/search.svg";
 import agentLogoUrl from "../assets/img/agent.svg";
+import infoIconUrl from "../assets/img/info.svg";
+
+// ─── Disclaimer Text ───────────────────────────────────────────────────────────
+
+const DISCLAIMER_TEXT = {
+  p1: "Intuition is a decentralized protocol enabling users to create and attest to structured relationships between digital entities.",
+  p2: "Unless expressly marked as \"Certified by Studio\", game titles, character names and related references are community-generated identifiers used for descriptive purposes only.",
+  p3: "No affiliation, endorsement, or sponsorship by any game studio is implied."
+};
+
 // ─── Styles ────────────────────────────────────────────────────────────────────
 
 const BTN_BASE: React.CSSProperties = {
@@ -84,6 +94,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   const userName = myAtomDetails?.label as string | undefined;
   const [hovered, setHovered] = useState<string>("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
   const searchWrapRef = useRef<HTMLDivElement>(null);
 
   const getBtnStyle = (key: string, disabled = false): React.CSSProperties => {
@@ -230,6 +241,53 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
       <div
         style={{ width: 1, height: 32, background: "rgba(255,255,255,0.12)" }}
       />
+
+      {/* ── Info button ─────────────────────────────── */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+        <button
+          style={getBtnStyle("info")}
+          onMouseEnter={() => {
+            setHovered("info");
+            setShowInfoTooltip(true);
+          }}
+          onMouseLeave={() => {
+            setHovered("");
+            setShowInfoTooltip(false);
+          }}
+          aria-label="Information"
+          title="Information"
+        >
+          <img src={infoIconUrl} alt="Info" style={{ width: 30, height: 30 }} />
+        </button>
+        {showInfoTooltip && (
+          <div style={{
+            position: "absolute",
+            top: "calc(65% + 12px)",
+            left: "50%",
+            transform: "translateX(-90%)",
+            backgroundColor: "rgba(20, 20, 20, 0.9)",
+            color: "#fff",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            fontSize: "12px",
+            fontWeight: 500,
+            width: "320px",
+            zIndex: 1000,
+            lineHeight: "1.5",
+            textAlign: "left",
+          }}>
+            <p style={{ margin: 0, marginBottom: "8px" }}>
+              {DISCLAIMER_TEXT.p1}
+            </p>
+            <p style={{ margin: 0, marginBottom: "8px" }}>
+              {DISCLAIMER_TEXT.p2}
+            </p>
+            <p style={{ margin: 0 }}>
+              {DISCLAIMER_TEXT.p3}
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* ── Profile button (right) ───────────────────── */}
       <button

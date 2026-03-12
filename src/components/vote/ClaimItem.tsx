@@ -2,6 +2,7 @@ import React from "react";
 import { VoteItem, VoteDirection } from "../../types/vote";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
+import styles from "./ClaimItem.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
@@ -90,168 +91,88 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
 
   return (
     <div
-      style={{
-        padding: "13px 20px",
-        borderRadius: "8px",
-        position: "relative",
-        backgroundColor: rowBg,
-        border: rowBorder,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "12px",
-        transition: "background-color 0.2s ease, border 0.2s ease",
-      }}
+      className={styles.row}
+      style={{ backgroundColor: rowBg, border: rowBorder }}
     >
       {/* Triple details */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "5px",
-          flex: 1,
-          minWidth: 0,
-        }}
-      >
+      <div className={styles.tripleWrapper}>
         <div
           title={subject}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            maxWidth: "180px",
-            backgroundColor: "#1a1a1adc",
-            padding: "8px 12px",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
+          className={styles.pill}
         >
           {subject_image && (
             <img
               src={subject_image}
               alt=""
-              style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
+              className={styles.pillImage}
             />
           )}
-          <span style={{ fontSize: "1em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span className={styles.pillLabel}>
             {subject}
           </span>
         </div>
         <span
           title={predicate}
-          style={{
-            display: "inline-block",
-            maxWidth: "100px",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            padding: "8px 12px",
-            fontSize: "1em",
-            color: "#D9D9D9",
-            fontWeight: "bold",
-          }}
+          className={styles.predicate}
         >
           {predicate}
         </span>
         <div
           title={object}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "5px",
-            maxWidth: "180px",
-            backgroundColor: "#1a1a1adc",
-            padding: "8px 12px",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
+          className={styles.pill}
         >
           {object_image && (
             <img
               src={object_image}
               alt=""
-              style={{ width: 18, height: 18, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }}
+              className={styles.pillImage}
             />
           )}
-          <span style={{ fontSize: "1em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span className={styles.pillLabel}>
             {object}
           </span>
         </div>
       </div>
 
       {/* Vote buttons */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "16px",
-          flexShrink: 0,
-        }}
-      >
+      <div className={styles.voteGroup}>
         {/* UP */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <div className={styles.voteItem}>
           <button
             onClick={upDisabled ? undefined : handleUpClick}
             disabled={upDisabled}
-            style={{
-              background: "none",
-              border: "none",
-              outline: "none",
-              padding: 0,
-              cursor: upDisabled ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-            }}
+            className={styles.voteBtn}
           >
             <img
               src={isSelectedFor || hasForPosition ? upSvg : upNotSelectedSvg}
               alt="vote up"
-              style={{ width: 32, height: 32 }}
+              className={styles.voteIcon}
             />
           </button>
           <span
-            style={{
-              color: isSelectedFor || hasForPosition ? "#006FE8" : "rgba(255,255,255,0.7)",
-              fontWeight: "bold",
-              fontSize: "1.3em",
-              minWidth: "24px",
-              textAlign: "left",
-            }}
+            className={styles.voteCount}
+            style={{ color: isSelectedFor || hasForPosition ? "#006FE8" : "rgba(255,255,255,0.7)" }}
           >
             {term_position_count}
           </span>
         </div>
 
         {/* DOWN */}
-        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+        <div className={styles.voteItem}>
           <button
             onClick={downDisabled ? undefined : handleDownClick}
             disabled={downDisabled}
-            style={{
-              background: "none",
-              border: "none",
-              outline: "none",
-              padding: 0,
-              cursor: downDisabled ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-            }}
+            className={styles.voteBtn}
           >
             <img
               src={isSelectedAgainst || hasAgainstPosition ? downSvg : downNotSelectedSvg}
               alt="vote down"
-              style={{ width: 32, height: 32 }}
+              className={styles.voteIcon}
             />
           </button>
           <span
-            style={{
-              color: isSelectedAgainst || hasAgainstPosition ? "#FF9500" : "rgba(255,255,255,0.7)",
-              fontWeight: "bold",
-              fontSize: "1.3em",
-              minWidth: "24px",
-              textAlign: "left",
-            }}
+            className={styles.voteCount}
+            style={{ color: isSelectedAgainst || hasAgainstPosition ? "#FF9500" : "rgba(255,255,255,0.7)" }}
           >
             {counter_term_position_count}
           </span>

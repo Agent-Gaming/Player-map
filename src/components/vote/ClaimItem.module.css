@@ -81,6 +81,11 @@
   align-items: center;
 }
 
+.voteBtn:focus,
+.voteBtn:focus-visible {
+  outline: none;
+}
+
 .voteBtn:disabled {
   cursor: not-allowed;
 }

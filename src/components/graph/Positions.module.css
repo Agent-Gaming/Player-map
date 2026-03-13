@@ -1,4 +1,4 @@
-@import "../../styles/variables.css";
+ @import "../../styles/variables.css";
 
 /* ─── PositionsSection ──────────────────────────────────────────── */
 
@@ -184,6 +184,11 @@
   background-color: #374151;
   color: #9ca3af;
   cursor: not-allowed;
+}
+
+.redeemAllBtn:focus,
+.redeemAllBtn:focus-visible {
+  outline: none;
 }
 
 /* ─── RedeemConfig ──────────────────────────────────────────────── */
@@ -392,6 +397,11 @@
   cursor: not-allowed;
 }
 
+.navBtn:focus,
+.navBtn:focus-visible {
+  outline: none;
+}
+
 .pageNumBtn {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -413,6 +423,11 @@
   background: var(--color-primary);
   color: #18181b;
   font-weight: 600;
+}
+
+.pageNumBtn:focus,
+.pageNumBtn:focus-visible {
+  outline: none;
 }
 
 .pageEllipsis {

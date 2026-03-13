@@ -13,6 +13,7 @@ import { usePlayerCreationService } from "./services/playerCreationService";
 import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "./shared/components/NetworkSwitchMessage";
 import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
+import styles from "./RegistrationForm.module.css";
 
 interface RegistrationFormProps {
   isOpen: boolean;
@@ -227,47 +228,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.7)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        zIndex: 1000,
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#101020",
-          color: "#fff",
-          padding: "30px",
-          borderRadius: "10px",
-          maxWidth: "760px",
-          width: "90%",
-          position: "relative",
-          border: "1px solid #FFD32A",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: "40px",
-            right: "10px",
-            fontSize: "10px",
-            color: "#666",
-            textAlign: "left",
-            backgroundColor: "rgba(0,0,0,0.3)",
-            padding: "5px",
-            borderRadius: "3px",
-            maxWidth: "200px",
-            overflow: "hidden",
-          }}
-        >
+    <div className={styles.overlay}>
+      <div className={styles.card}>
+        <div className={styles.walletInfo}>
           <div>
             Wallet:{" "}
             {walletAddress
@@ -278,16 +241,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 
         <button
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: "10px",
-            right: "10px",
-            backgroundColor: "transparent",
-            border: "none",
-            fontSize: "20px",
-            color: "#666",
-            cursor: "pointer",
-          }}
+          className={styles.closeBtn}
         >
           ×
         </button>
@@ -295,15 +249,9 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         <img
           src={IntuitionLogo}
           alt="Intuition Logo"
-          style={{ width: "100px", marginBottom: "10px" }}
+          className={styles.logo}
         />
-        <h2
-          style={{
-            fontSize: "1.5em",
-            margin: "0 0 20px 0",
-            textAlign: "center",
-          }}
-        >
+        <h2 className={styles.title}>
           Create Your Player
         </h2>
 

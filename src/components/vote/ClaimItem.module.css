@@ -96,3 +96,25 @@
   min-width: 24px;
   text-align: left;
 }
+
+.voteCountFor {
+  color: #006fe8;
+}
+
+.voteCountAgainst {
+  color: #ff9500;
+}
+
+.voteCountDefault {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rowFor {
+  background-color: rgba(0, 111, 232, 0.15);
+  border: 1px solid rgba(0, 111, 232, 0.6);
+}
+
+.rowAgainst {
+  background-color: rgba(255, 149, 0, 0.15);
+  border: 1px solid rgba(255, 149, 0, 0.6);
+}

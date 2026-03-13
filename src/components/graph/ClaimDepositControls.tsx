@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchPositions } from "../../api/fetchPositions";
 import { Network } from "../../hooks/useAtomData";
+import styles from "./ClaimDepositControls.module.css";
 
 interface ClaimDepositControlsProps {
   claim: any;
@@ -156,34 +157,16 @@ const ClaimDepositControls: React.FC<ClaimDepositControlsProps> = ({
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        marginTop: "4px",
-        justifyContent: "flex-end", // Aligner à droite
-      }}
-    >
+    <div className={styles.wrapper}>
       {/* Error message */}
       {error && (
-        <div
-          style={{
-            color: "#ff6b6b",
-            fontSize: "10px",
-            marginRight: "8px",
-            padding: "2px 6px",
-            backgroundColor: "rgba(255, 107, 107, 0.1)",
-            borderRadius: "3px",
-            border: "1px solid rgba(255, 107, 107, 0.3)",
-          }}
-        >
+        <div className={styles.errorMsg}>
           {error}
         </div>
       )}
 
       {/* Trust Input */}
-      <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+      <div className={styles.trustRow}>
         <input
           type="number"
           value={trust}
@@ -191,46 +174,17 @@ const ClaimDepositControls: React.FC<ClaimDepositControlsProps> = ({
           step="0.001"
           min="0.01"
           placeholder="0.000"
-          style={{
-            width: "65px",
-            padding: "2px",
-            backgroundColor: "rgba(255, 255, 255, 0.05)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-            borderRadius: "6px",
-            color: "#fff",
-            fontSize: "12px",
-            textAlign: "left",
-            marginBottom: "2px",
-          }}
+          className={styles.trustInput}
           disabled={position === "neutral"}
         />
-        <span
-          style={{
-            fontSize: "12px",
-            color: "rgba(255, 255, 255, 0.6)",
-            fontWeight: "500",
-          }}
-        >
+        <span className={styles.trustLabel}>
           TRUST
         </span>
       </div>
 
       {/* Toggle 3 positions - Switch style */}
       <div
-        style={{
-          position: "relative",
-          width: "60px",
-          height: "20px",
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
-          borderRadius: "10px",
-          cursor: "pointer",
-          opacity:
-            canSelectPosition("for") &&
-            canSelectPosition("against") &&
-            canSelectPosition("neutral")
-              ? 1
-              : 0.5,
-        }}
+        className={`${styles.toggle} ${!(canSelectPosition("for") && canSelectPosition("against") && canSelectPosition("neutral")) ? styles.toggleDisabled : ''}`}
         onClick={() => {
           // Cycle through positions: neutral -> for -> against -> neutral
           if (position === "neutral" && canSelectPosition("for")) {
@@ -263,27 +217,7 @@ const ClaimDepositControls: React.FC<ClaimDepositControlsProps> = ({
       >
         {/* Switch indicator */}
         <div
-          style={{
-            position: "absolute",
-            top: "2px",
-            left:
-              position === "for"
-                ? "2px"
-                : position === "against"
-                ? "42px"
-                : "20px",
-            width: "16px",
-            height: "16px",
-            backgroundColor:
-              position === "for"
-                ? "rgb(0, 111, 232)"
-                : position === "against"
-                ? "rgb(255, 149, 0)"
-                : "rgba(255, 255, 255, 0.3)",
-            borderRadius: "50%",
-            transition: "all 0.2s ease",
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.3)",
-          }}
+          className={`${styles.toggleKnob} ${position === 'for' ? styles.knobFor : position === 'against' ? styles.knobAgainst : styles.knobNeutral}`}
         />
       </div>
     </div>

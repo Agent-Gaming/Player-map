@@ -5,3 +5,7 @@
   --color-background-secondary: rgba(255, 255, 255, 0.03);
 }
 
+button {
+  outline: none;
+}
+

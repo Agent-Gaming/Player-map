@@ -91,8 +91,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
 
   return (
     <div
-      className={styles.row}
-      style={{ backgroundColor: rowBg, border: rowBorder }}
+      className={`${styles.row} ${isSelectedFor ? styles.rowFor : isSelectedAgainst ? styles.rowAgainst : ''}`}
     >
       {/* Triple details */}
       <div className={styles.tripleWrapper}>
@@ -150,8 +149,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             />
           </button>
           <span
-            className={styles.voteCount}
-            style={{ color: isSelectedFor || hasForPosition ? "#006FE8" : "rgba(255,255,255,0.7)" }}
+            className={`${styles.voteCount} ${(isSelectedFor || hasForPosition) ? styles.voteCountFor : styles.voteCountDefault}`}
           >
             {term_position_count}
           </span>
@@ -171,8 +169,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             />
           </button>
           <span
-            className={styles.voteCount}
-            style={{ color: isSelectedAgainst || hasAgainstPosition ? "#FF9500" : "rgba(255,255,255,0.7)" }}
+            className={`${styles.voteCount} ${(isSelectedAgainst || hasAgainstPosition) ? styles.voteCountAgainst : styles.voteCountDefault}`}
           >
             {counter_term_position_count}
           </span>

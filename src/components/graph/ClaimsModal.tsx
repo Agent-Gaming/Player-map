@@ -6,6 +6,7 @@ import { TripleBubble, PositionBubble } from './index';
 import ClaimDepositControls from './ClaimDepositControls';
 import { useDepositTriple } from '../../hooks/useDepositTriple';
 import { VoteDirection } from '../../types/vote';
+import styles from './ClaimsModal.module.css';
 
 interface ClaimsModalProps {
   isOpen: boolean;
@@ -97,36 +98,16 @@ const ClaimsModal: React.FC<ClaimsModalProps> = ({
       onClose={handleClose}
       title={`All Claims (${activities.length})`}
     >
-      <div style={{ padding: '0' }}>
-        <div style={{ padding: '16px 24px 16px' }}>
+      <div className={styles.body}>
+        <div className={styles.claimList}>
           {currentActivities.map((claim) => (
             <div
               key={claim.term_id}
-              style={{
-                width: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                marginBottom: '2px',
-                backgroundColor: 'rgba(255, 255, 255, 0.05)',
-              }}
+              className={styles.claimItem}
             >
-              <div
-                style={{
-                  width: '100%',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '16px 16px 10px 16px',
-                  gap: '12px',
-                }}
-              >
+              <div className={styles.claimRow}>
                 {/* Triple linéaire : predicate → object */}
-                <div style={{ display: 'flex', flex: 1, alignItems: 'center', gap: '8px' }}>
+                <div className={styles.tripleArea}>
                   <TripleBubble
                     subject=""
                     predicate={claim.predicate.label}
@@ -137,7 +118,7 @@ const ClaimsModal: React.FC<ClaimsModalProps> = ({
                 </div>
 
                 {/* Positions For/Against */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className={styles.positionsArea}>
                   <PositionBubble 
                     isFor={true} 
                     count={claim.term?.positions_aggregate?.aggregate?.count || 0}
@@ -154,7 +135,7 @@ const ClaimsModal: React.FC<ClaimsModalProps> = ({
               </div>
               
               {/* Deposit Controls */}
-              <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end', marginBottom: '5px', marginRight: '16px' }}>
+              <div className={styles.depositArea}>
                 <ClaimDepositControls
                   claim={claim}
                   walletAddress={walletAddress}
@@ -170,17 +151,7 @@ const ClaimsModal: React.FC<ClaimsModalProps> = ({
         </div>
         
         {/* Footer fixe */}
-        <div style={{ 
-          borderTop: '1px solid #374151', 
-          padding: '16px 24px',
-          backgroundColor: '#18181b',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          position: 'sticky',
-          bottom: 0,
-          zIndex: 10
-        }}>
+        <div className={styles.footer}>
           {/* Info à gauche */}
           <div>
             <PaginationInfo
@@ -192,33 +163,11 @@ const ClaimsModal: React.FC<ClaimsModalProps> = ({
           
           {/* Bouton Deposit All Selected au centre */}
           {selectedCount > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'center', flex: 1 }}>
+            <div className={styles.depositAllCenter}>
               <button
                 onClick={handleDepositAll}
                 disabled={isDepositing}
-                style={{
-                  backgroundColor: '#ffd32a',
-                  color: '#000',
-                  border: 'none',
-                  borderRadius: '8px',
-                  padding: '12px 24px',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  cursor: isDepositing ? 'not-allowed' : 'pointer',
-                  opacity: isDepositing ? 0.7 : 1,
-                  transition: 'all 0.2s',
-                  minWidth: '200px'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isDepositing) {
-                    e.currentTarget.style.backgroundColor = '#ffed4e';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isDepositing) {
-                    e.currentTarget.style.backgroundColor = '#ffd32a';
-                  }
-                }}
+                className={styles.depositAllBtn}
               >
                 {isDepositing ? 'Processing...' : `Deposit All Selected (${selectedCount})`}
               </button>

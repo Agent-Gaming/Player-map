@@ -1,0 +1,97 @@
+@import "../../styles/variables.css";
+
+.body {
+  padding: 0;
+}
+
+.claimList {
+  padding: 16px 24px;
+}
+
+.claimItem {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2px;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.claimRow {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 16px 10px 16px;
+  gap: 12px;
+}
+
+.tripleArea {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+}
+
+.positionsArea {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.depositArea {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 5px;
+  margin-right: 16px;
+}
+
+.footer {
+  border-top: 1px solid #374151;
+  padding: 16px 24px;
+  background-color: #18181b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.depositAllCenter {
+  display: flex;
+  justify-content: center;
+  flex: 1;
+}
+
+.depositAllBtn {
+  background-color: #ffd32a;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 200px;
+}
+
+.depositAllBtn:hover:not(:disabled) {
+  background-color: #ffed4e;
+}
+
+.depositAllBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.depositAllBtn:focus,
+.depositAllBtn:focus-visible {
+  outline: none;
+}

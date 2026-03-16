@@ -1,0 +1,29 @@
+/* ─── Outer panel (static parts — dynamic: width, minWidth, borderLeft, boxShadow) */
+.panel {
+  height: 100%;
+  overflow: hidden;
+  background-color: rgba(0, 0, 0, 0.92);
+  transition: width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1),
+              min-width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+/* ─── Inner content wrapper (dynamic: width kept inline) */
+.innerPanel {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ─── Voting content area */
+.content {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}

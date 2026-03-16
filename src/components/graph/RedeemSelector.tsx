@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./Positions.module.css";
 
 interface RedeemSelectorProps {
   isSelected: boolean;
@@ -12,18 +13,13 @@ const RedeemSelector: React.FC<RedeemSelectorProps> = ({
   positionId 
 }) => {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-      
-      <label style={{ display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" }}>
+    <div className={styles.redeemSelectorWrapper}>
+      <label className={styles.redeemSelectorLabel}>
         <input
           type="checkbox"
           checked={isSelected}
           onChange={(e) => onSelect(positionId, e.target.checked)}
-          style={{
-            width: "16px",
-            height: "16px",
-            accentColor: "#ffd32a",
-          }}
+          className={styles.redeemCheckbox}
         />
       </label>
     </div>

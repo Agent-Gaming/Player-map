@@ -1,0 +1,96 @@
+@import "./styles/variables.css";
+
+/* ─── Error state ──────────────────────────────────────────────────────── */
+.errorContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.errorTitle {
+  color: red;
+  text-align: center;
+}
+
+.mutedText {
+  text-align: center;
+  color: #666;
+}
+
+.reloadBtn {
+  padding: 10px 20px;
+  background-color: #ffd32a;
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* ─── Loading state ────────────────────────────────────────────────────── */
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #ffd32a;
+  border-top: 4px solid transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ─── Layout ───────────────────────────────────────────────────────────── */
+.root {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.homeBlurred {
+  filter: blur(3px);
+  opacity: 0.7;
+}
+
+.homeVisible {
+  filter: none;
+  opacity: 1;
+}
+
+.mainLayout {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.graphPane {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.rightPane {
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}

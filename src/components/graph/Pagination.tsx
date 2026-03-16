@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from './Positions.module.css';
 
 interface PaginationProps {
   currentPage: number;
@@ -21,37 +22,18 @@ const Pagination: React.FC<PaginationProps> = ({
   if (totalPages <= 1) return null;
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div className={styles.paginationRow}>
         {/* Bouton Previous */}
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          style={{
-            background: currentPage === 1 ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '6px',
-            color: currentPage === 1 ? 'rgba(255, 255, 255, 0.4)' : '#fff',
-            padding: '6px 12px',
-            fontSize: '12px',
-            cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (currentPage > 1) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (currentPage > 1) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            }
-          }}
+          className={styles.navBtn}
         >
           ←
         </button>
 
         {/* Numéros de page avec ellipses */}
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div className={styles.pageNumbers}>
           {(() => {
             const getVisiblePages = () => {
               const pages = [];
@@ -94,11 +76,7 @@ const Pagination: React.FC<PaginationProps> = ({
                 return (
                   <span
                     key={`ellipsis-${index}`}
-                    style={{
-                      color: 'rgba(255, 255, 255, 0.6)',
-                      padding: '6px 4px',
-                      fontSize: '12px',
-                    }}
+                    className={styles.pageEllipsis}
                   >
                     ...
                   </span>
@@ -109,28 +87,7 @@ const Pagination: React.FC<PaginationProps> = ({
                 <button
                   key={page}
                   onClick={() => onPageChange(page as number)}
-                  style={{
-                    background: page === currentPage ? '#ffd32a' : 'rgba(255, 255, 255, 0.1)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '6px',
-                    color: page === currentPage ? '#18181b' : '#fff',
-                    padding: '6px 10px',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    minWidth: '32px',
-                    transition: 'all 0.2s',
-                    fontWeight: page === currentPage ? '600' : '400',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (page !== currentPage) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (page !== currentPage) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                    }
-                  }}
+                  className={`${styles.pageNumBtn} ${page === currentPage ? styles.pageNumBtnActive : ''}`}
                 >
                   {page}
                 </button>
@@ -143,26 +100,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
-          style={{
-            background: currentPage === totalPages ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.2)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '6px',
-            color: currentPage === totalPages ? 'rgba(255, 255, 255, 0.4)' : '#fff',
-            padding: '6px 12px',
-            fontSize: '12px',
-            cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-            transition: 'all 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            if (currentPage < totalPages) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (currentPage < totalPages) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-            }
-          }}
+          className={styles.navBtn}
         >
           →
         </button>

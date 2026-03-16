@@ -6,6 +6,7 @@ import {
 import { fetchPositions } from "../../api/fetchPositions";
 import { useRedeemAmounts } from "../../hooks/useRedeemAmounts";
 import { useRedeemExecution } from "../../hooks/useRedeemExecution";
+import styles from "./Positions.module.css";
 
 interface PositionsSectionProps {
   accountId: string;
@@ -73,14 +74,12 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
   return (
     <div>
       {isReloading && (
-        <p style={{ color: "#ffd32a", fontSize: 13, padding: "8px 0", textAlign: "center" }}>
-          Refreshing positions…
-        </p>
+        <p className={styles.stateMessageRefreshing}>Refreshing positions…</p>
       )}
       {loading ? (
-        <p style={{ color: "#aaa", fontSize: 13, padding: "8px 0" }}>Loading…</p>
+        <p className={styles.stateMessage}>Loading…</p>
       ) : positions.length === 0 ? (
-        <p style={{ color: "#aaa", fontSize: 13, padding: "8px 0" }}>No positions found.</p>
+        <p className={styles.stateMessage}>No positions found.</p>
       ) : (
         <>
           {positions.map((position, index) => (
@@ -96,20 +95,7 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
           ))}
 
           {selectedPositions.size > 0 && (
-            <div style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "center",
-              marginTop: 10,
-              paddingTop: 10,
-              paddingBottom: 10,
-              position: "sticky",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              backgroundColor: "rgb(0, 0, 0)",
-              zIndex: 10,
-            }}>
+            <div className={styles.stickyFooter}>
               <RedeemAllButton
                 selectedCount={selectedPositions.size}
                 onRedeemAll={onRedeemAllSelected}

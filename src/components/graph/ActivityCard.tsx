@@ -3,6 +3,7 @@ import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
 import downNotSelectedSvg from "../../assets/img/downNotSelected.svg";
+import styles from "./ActivityCard.module.css";
 
 interface ActivityCardProps {
   activity: any;
@@ -65,57 +66,43 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
     : null;
 
   return (
-    <div
-      style={{
-        padding: "10px 0",
-        marginBottom: "2px",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: "12px",
-      }}
-    >
+    <div className={styles.card}>
       {/* Triple / Atom display */}
-      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "5px", flex: 1, minWidth: 0 }}>
+      <div className={styles.tripleArea}>
         {/* Badge Deposit / Redeem */}
-        <span style={{
-          fontSize: "0.72em",
-          fontWeight: 700,
-          letterSpacing: "0.05em",
-          color: isRedeem ? "#f87171" : "#4ade80",
-          flexShrink: 0,
-        }}>{isRedeem ? "Redeem" : "Deposit"}</span>
+        <span className={`${styles.badge} ${isRedeem ? styles.badgeRedeem : styles.badgeDeposit}`}>
+          {isRedeem ? "Redeem" : "Deposit"}
+        </span>
         {activityComponents.type === 'triple' && subjectLabel ? (
           <>
-            <div title={subjectLabel} style={{ display: "inline-flex", alignItems: "center", gap: "5px", maxWidth: "130px", backgroundColor: "#1a1a1adc", padding: "5px 9px", borderRadius: "4px", overflow: "hidden" }}>
-              {subjectImage && <img src={subjectImage} alt="" style={{ width: 14, height: 14, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />}
-              <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{subjectLabel}</span>
+            <div title={subjectLabel} className={styles.pill}>
+              {subjectImage && <img src={subjectImage} alt="" className={styles.pillImg} />}
+              <span className={styles.pillLabel}>{subjectLabel}</span>
             </div>
-            <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", maxWidth: "80px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{predicateLabel}</span>
-            <div title={objectLabel} style={{ display: "inline-flex", alignItems: "center", gap: "5px", maxWidth: "130px", backgroundColor: "#1a1a1adc", padding: "5px 9px", borderRadius: "4px", overflow: "hidden" }}>
-              {objectImage && <img src={objectImage} alt="" style={{ width: 14, height: 14, borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} />}
-              <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{objectLabel}</span>
+            <span className={styles.predicate}>{predicateLabel}</span>
+            <div title={objectLabel} className={styles.pill}>
+              {objectImage && <img src={objectImage} alt="" className={styles.pillImg} />}
+              <span className={styles.pillLabel}>{objectLabel}</span>
             </div>
           </>
         ) : (
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "5px", backgroundColor: "#1a1a1adc", padding: "5px 9px", borderRadius: "4px", overflow: "hidden", maxWidth: "100%" }}>
-            <span style={{ fontSize: "0.78em", color: "#D9D9D9", fontWeight: "bold", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{objectLabel}</span>
+          <div className={styles.pillFull}>
+            <span className={styles.pillLabel}>{objectLabel}</span>
           </div>
         )}
       </div>
 
       {/* Vote icons + date */}
-      <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <img src={isFor ? upSvg : upNotSelectedSvg} alt="up" style={{ width: 24, height: 24 }} />
-          <span style={{ color: isFor ? "#006FE8" : "rgba(255,255,255,0.45)", fontWeight: "bold", fontSize: "0.95em", minWidth: 16 }}>{forCount}</span>
+      <div className={styles.voteArea}>
+        <div className={styles.voteGroup}>
+          <img src={isFor ? upSvg : upNotSelectedSvg} alt="up" className={styles.voteImg} />
+          <span className={`${styles.voteCount} ${isFor ? styles.voteCountFor : styles.voteCountDefault}`}>{forCount}</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-          <img src={isAgainst ? downSvg : downNotSelectedSvg} alt="down" style={{ width: 24, height: 24 }} />
-          <span style={{ color: isAgainst ? "#FF9500" : "rgba(255,255,255,0.45)", fontWeight: "bold", fontSize: "0.95em", minWidth: 16 }}>{againstCount}</span>
+        <div className={styles.voteGroup}>
+          <img src={isAgainst ? downSvg : downNotSelectedSvg} alt="down" className={styles.voteImg} />
+          <span className={`${styles.voteCount} ${isAgainst ? styles.voteCountAgainst : styles.voteCountDefault}`}>{againstCount}</span>
         </div>
-        {dateStr && <span style={{ fontSize: "0.72em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{dateStr}</span>}
+        {dateStr && <span className={styles.dateStr}>{dateStr}</span>}
       </div>
     </div>
   );

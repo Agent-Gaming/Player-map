@@ -1,5 +1,6 @@
 import React from 'react';
 import TruncatedText from './TruncatedText';
+import styles from './Positions.module.css';
 
 interface TripleBubbleProps {
   subject: string;
@@ -18,80 +19,35 @@ const TripleBubble: React.FC<TripleBubbleProps> = ({
   showArrows = true,
 }) => {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+    <div className={styles.tripleRow}>
       {/* Sujet - seulement si non vide */}
       {subject && (
         <>
-          <div style={{
-            padding: '4px 8px',
-            borderRadius: '12px',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            fontSize,
-            color: '#fff',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px'
-          }}>
-            <div style={{ 
-              width: '4px', 
-              height: '4px', 
-              borderRadius: '50%', 
-              backgroundColor: '#FF9500'
-            }} />
-            <TruncatedText text={subject} maxLength={10} />
+          <div className={styles.tripleBubble} style={{ fontSize }}>
+            <div className={styles.tripleDot} style={{ backgroundColor: '#FF9500' }} />
+            <TruncatedText text={subject} maxLength={10} className={styles.tripleBubbleText} />
           </div>
           
           {showArrows && (
-            <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>→</div>
+            <div className={styles.tripleArrow}>→</div>
           )}
         </>
       )}
       
       {/* Prédicat */}
-      <div style={{
-        padding: '4px 8px',
-        borderRadius: '12px',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        fontSize,
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px'
-      }}>
-        <div style={{ 
-          width: '4px', 
-          height: '4px', 
-          borderRadius: '50%', 
-          backgroundColor: '#006FE8'
-        }} />
-        <TruncatedText text={predicate} maxLength={8} />
+      <div className={styles.tripleBubble} style={{ fontSize }}>
+        <div className={styles.tripleDot} style={{ backgroundColor: '#006FE8' }} />
+        <TruncatedText text={predicate} maxLength={8} className={styles.tripleBubbleText} />
       </div>
       
       {showArrows && (
-        <div style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '12px' }}>→</div>
+        <div className={styles.tripleArrow}>→</div>
       )}
       
       {/* Objet */}
-      <div style={{
-        padding: '4px 8px',
-        borderRadius: '12px',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        backgroundColor: 'rgba(255, 255, 255, 0.05)',
-        fontSize,
-        color: '#fff',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px'
-      }}>
-        <div style={{ 
-          width: '4px', 
-          height: '4px', 
-          borderRadius: '50%', 
-          backgroundColor: '#4CAF50'
-        }} />
-        <TruncatedText text={object} maxLength={12} />
+      <div className={styles.tripleBubble} style={{ fontSize }}>
+        <div className={styles.tripleDot} style={{ backgroundColor: '#4CAF50' }} />
+        <TruncatedText text={object} maxLength={12} className={styles.tripleBubbleText} />
       </div>
     </div>
   );

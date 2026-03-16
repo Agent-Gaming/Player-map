@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
 import { GraphVisualization } from "playermap_graph";
 import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
 import Atom from "./assets/img/atom.svg";
+import styles from "./PlayerMapGraph.module.css";
 
 interface GraphControls {
   goBack: () => void;
@@ -37,36 +38,9 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
   onSpeakUpClick,
   isSpeakUpActive = false,
 }) => {
-  const [hovered, setHovered] = useState(false);
-
-  const btnStyle: React.CSSProperties = {
-    background: isSpeakUpActive ? "#ffd42a" : "#ffd32a",
-    color: "#18181b",
-    borderRadius: 12,
-    padding: "0 18px",
-    height: 50,
-    fontSize: 16,
-    fontWeight: "bolder" as const,
-    letterSpacing: "0.05em",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.35)",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    transition: "background 0.15s, transform 0.1s",
-    transform: hovered ? "translateY(-2px) scale(1.03)" : "none",
-    outline: "none",
-  };
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
+    <div className={styles.wrapper}>
       <GraphVisualization
         endpoint="base"
         onNodeSelect={onNodeSelect}
@@ -80,23 +54,13 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
 
       {/* Bouton SPEAK UP — overlay centré en bas du graphe */}
       {onSpeakUpClick && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 14,
-            left: "50%",
-            transform: "translateX(-50%)",
-            zIndex: 50,
-          }}
-        >
+        <div className={styles.speakUpOverlay}>
           <button
-            style={btnStyle}
+            className={`${styles.speakUpBtn} ${isSpeakUpActive ? styles.speakUpBtnActive : ''}`}
             onClick={onSpeakUpClick}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
             aria-label="Speak Up"
           >
-            <img src={Atom} alt="" style={{ width: 32, pointerEvents: "none" }} />
+            <img src={Atom} alt="" className={styles.speakUpIcon} />
             SPEAK UP
           </button>
         </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./VoteComponents.module.css";
 
 type TransactionStatusType = {
   status: "idle" | "pending" | "success" | "error" | "approval_pending" | "whitelist_error";
@@ -16,34 +17,15 @@ export const TransactionStatusDisplay: React.FC<TransactionStatusDisplayProps> =
     return null;
   }
 
+  const statusClass = {
+    pending: styles.txStatusPending,
+    approval_pending: styles.txStatusApprovalPending,
+    success: styles.txStatusSuccess,
+    error: styles.txStatusError,
+  }[transactionStatus.status] ?? styles.txStatusPending;
+
   return (
-    <div
-      style={{
-        marginTop: "25px",
-        padding: "20px",
-        borderRadius: "8px",
-        backgroundColor:
-          transactionStatus.status === "pending"
-            ? "#10172d"
-            : transactionStatus.status === "approval_pending"
-            ? "rgba(255, 211, 42, 0.1)"
-            : transactionStatus.status === "success"
-            ? "rgba(0, 128, 0, 0.1)"
-            : "rgba(255, 0, 0, 0.1)",
-        color:
-          transactionStatus.status === "success"
-            ? "#4CAF50"
-            : transactionStatus.status === "error"
-            ? "#F44336"
-            : transactionStatus.status === "approval_pending"
-            ? "#FFD32A"
-            : "#FFF",
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        border: "1px solid #1e3b70",
-      }}
-    >
+    <div className={`${styles.txStatus} ${statusClass}`}>
       <div>
         {transactionStatus.message}
       </div>

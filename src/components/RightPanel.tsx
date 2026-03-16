@@ -11,6 +11,7 @@ import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
 import { Network } from "../hooks/useAtomData";
 import { useGameStats } from "../hooks/useGameStats";
 import tripleSvg from "../assets/img/triple.svg";
+import styles from "./RightPanel.module.css";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -67,17 +68,17 @@ const AtomContent: React.FC<{
   error,
   title = "Attestation",
 }) => {
-  if (loading) return <p style={{ padding: 20, color: "#aaa" }}>Loading…</p>;
-  if (error) return <p style={{ padding: 20, color: "#f87171" }}>{error}</p>;
+  if (loading) return <p className={styles.stateMessage}>Loading…</p>;
+  if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
     return (
-      <p style={{ padding: 20, color: "#aaa", fontSize: 14 }}>
+      <p className={styles.stateMessage}>
         Click on a graph node to view its details.
       </p>
     );
 
   return (
-    <div style={{ padding: "0 16px 16px" }}>
+    <div className={styles.atomContent}>
       <AtomDetailsSection
         atomDetails={atomDetails}
         connections={connections}
@@ -102,27 +103,13 @@ const PlayerStatBlock: React.FC<{
   gradient?: string;
   imageSrc?: string;
 }> = ({ label, value, gradient, imageSrc }) => (
-  <div
-    style={{
-      flex: 1,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "10px 6px",
-      gap: 6,
-    }}
-  >
-    <span style={{ fontSize: 11, fontWeight: 700, color: "#ffd32a", letterSpacing: "0.07em", textTransform: "uppercase", textAlign: "center", whiteSpace: "nowrap" }}>
-      {label}
-    </span>
-    <span style={{ fontSize: 28, fontWeight: 800, color: "#fff", lineHeight: 1 }}>
-      {value}
-    </span>
+  <div className={styles.statsRow}>
+    <span className={styles.statLabel}>{label}</span>
+    <span className={styles.statValue}>{value}</span>
     {imageSrc ? (
-      <img src={imageSrc} alt={label} style={{ width: 72, height: 11 }} />
+      <img src={imageSrc} alt={label} className={styles.statImage} />
     ) : gradient ? (
-      <div style={{ width: 60, height: 5, borderRadius: 4, background: gradient }} />
+      <div className={styles.statBar} style={{ background: gradient }} />
     ) : null}
   </div>
 );
@@ -130,21 +117,9 @@ const PlayerStatBlock: React.FC<{
 // ─── Séparateur de section ────────────────────────────────────────────────────────
 
 const SectionDivider: React.FC<{ title: string }> = ({ title }) => (
-  <div style={{
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-    margin: "18px 0 10px",
-  }}>
-    <span style={{
-      fontSize: 16,
-      fontWeight: 700,
-      color: "#ffd32a",
-      letterSpacing: "0.1em",
-      textTransform: "uppercase",
-      whiteSpace: "nowrap",
-    }}>{title}</span>
-    <div style={{ flex: 1, height: 1, background: "rgba(255,211,42,0.2)" }} />
+  <div className={styles.sectionDividerRow}>
+    <span className={styles.sectionDividerTitle}>{title}</span>
+    <div className={styles.sectionDividerLine} />
   </div>
 );
 
@@ -157,45 +132,26 @@ const ProfileTabs: React.FC<{
 }> = ({ walletAddress, walletConnected, publicClient }) => {
   const [activeTab, setActiveTab] = useState<"positions" | "activity">("positions");
 
-  const tabStyle = (active: boolean): React.CSSProperties => ({
-    flex: 1,
-    padding: "9px 0",
-    background: "none",
-    border: "none",
-    borderRadius: 0,
-    borderBottom: active ? "2px solid #ffd32a" : "2px solid transparent",
-    color: active ? "#ffd32a" : "#888",
-    fontWeight: 700,
-    fontSize: 16,
-    letterSpacing: "0.09em",
-    textTransform: "uppercase",
-    cursor: "pointer",
-    transition: "color 0.15s, border-color 0.15s",
-    outline: "none",
-  });
-
   return (
-    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", marginTop: 18 }}>
+    <div className={styles.tabsContainer}>
       {/* ── En-têtes onglets ─── */}
-      <div style={{ flexShrink: 0, display: "flex", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-        <button style={tabStyle(activeTab === "positions")} onClick={() => setActiveTab("positions")}>
+      <div className={styles.tabHeaders}>
+        <button
+          className={`${styles.tab} ${activeTab === "positions" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("positions")}
+        >
           My Positions
         </button>
-        <button style={tabStyle(activeTab === "activity")} onClick={() => setActiveTab("activity")}>
+        <button
+          className={`${styles.tab} ${activeTab === "activity" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("activity")}
+        >
           Activity History
         </button>
       </div>
 
       {/* ── Contenu avec scrollbar ─── */}
-      <div style={{
-        flex: 1,
-        minHeight: 0,
-        overflowY: "auto",
-        overflowX: "hidden",
-        scrollbarWidth: "thin",
-        scrollbarColor: "#ffd32a transparent",
-        paddingTop: 4,
-      }}>
+      <div className={styles.tabContent}>
         {activeTab === "positions" && (
           <PositionsSection
             accountId={walletAddress || ""}
@@ -239,11 +195,11 @@ const ProfileContent: React.FC<{
   error,
   constants,
 }) => {
-  if (loading) return <p style={{ padding: 20, color: "#aaa" }}>Loading…</p>;
-  if (error) return <p style={{ padding: 20, color: "#f87171" }}>{error}</p>;
+  if (loading) return <p className={styles.stateMessage}>Loading…</p>;
+  if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
     return (
-      <p style={{ padding: 20, color: "#aaa", fontSize: 14 }}>
+      <p className={styles.stateMessage}>
         Connect your wallet to view your profile.
       </p>
     );
@@ -289,9 +245,9 @@ const ProfileContent: React.FC<{
   });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", padding: "0px 16px 30px 16px" }}>
+    <div className={styles.profileContent}>
       {/* ── Header joueur ───────────────────────────────────────────────────── */}
-      <div style={{ flexShrink: 0 }}>
+      <div className={styles.profileHeader}>
       <AtomDetailsSection
         atomDetails={atomDetails}
         connections={connections}
@@ -301,29 +257,20 @@ const ProfileContent: React.FC<{
       </div>
 
       {/* ── Bloc de stats ──────────────────────────────────────────────────── */}
-      <div style={{ flexShrink: 0 }}>
-      <div style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "stretch",
-        background: "rgba(255,255,255,0.03)",
-        borderRadius: 12,
-        border: "1px solid rgba(255,255,255,0.07)",
-        margin: "16px 0 0",
-        overflow: "hidden",
-      }}>
+      <div className={styles.profileHeader}>
+      <div className={styles.statsBlock}>
         <PlayerStatBlock
           label="Votes"
           value={totalVotes}
           gradient="linear-gradient(to right, #3b82f6, #f97316)"
         />
-        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <div className={styles.statsDivider} />
         <PlayerStatBlock
           label="Attestation"
           value={totalAttestations}
           imageSrc={tripleSvg}
         />
-        <div style={{ width: 1, background: "rgba(255,255,255,0.08)" }} />
+        <div className={styles.statsDivider} />
         <PlayerStatBlock
           label="Value"
           value={totalValue}
@@ -333,7 +280,7 @@ const ProfileContent: React.FC<{
       </div>
 
       {/* ── Mes Attestations ──────────────────────────────────────────────────────── */}
-      <div style={{ flexShrink: 0 }}>
+      <div className={styles.sectionDivider}>
       <SectionDivider title="My Attestations" />
       <ClaimsSection
         activities={activities}
@@ -366,28 +313,9 @@ const SpeakUpContent: React.FC<{
   const stats = useGameStats(constants, Network.MAINNET);
 
   return (
-    <div
-      style={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        minHeight: 0,
-      }}
-    >
+    <div className={styles.speakUpContent}>
       <SpeakUpHeader stats={stats} />
-      <div
-        style={{
-          flex: 1,
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          minHeight: 0,
-          border: "1px solid rgba(255, 255, 255, 0.06)",
-          borderRadius: "12px",
-          margin: "0px 12px 17px 12px",
-          background: "rgb(65 65 65 / 15%)",
-        }}
-      >
+      <div className={styles.speakUpBody}>
         <ClaimVoting
           walletConnected={walletConnected}
           walletAddress={walletAddress}
@@ -424,21 +352,11 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
 
   return (
-    <aside
-      style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "rgba(0, 0, 0, 0.92)",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
-
+    <aside className={styles.panel}>
 
       {/* SpeakUp */}
       {mode === "speakup" && (
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <div className={styles.modeSlot}>
           <SpeakUpContent
             walletAddress={walletAddress}
             walletConnected={walletConnected}
@@ -450,7 +368,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
       {/* Atom – scroll externe car l'intérieur est partiellement fixe */}
       {mode === "atom" && (
-        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0, scrollbarWidth: "thin", scrollbarColor: "rgba(255,211,42,0.3) transparent" }}>
+        <div className={styles.modeSlotScrollable}>
           <AtomContent
             atomDetails={selectedAtomDetails}
             claims={selectedClaims}
@@ -468,7 +386,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
       {/* Profile – pas de scroll externe, seulement les listes internes */}
       {mode === "profile" && (
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <div className={styles.modeSlot}>
           <ProfileContent
             atomDetails={myAtomDetails}
             connections={myConnections}

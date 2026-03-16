@@ -24,6 +24,7 @@ import {
 import { usePlayerConstants } from "./hooks/usePlayerConstants";
 import initGraphql from "./config/graphql";
 import IntuitionLogo from "./assets/img/Intuition-logo.svg";
+import styles from "./GraphComponent.module.css";
 
 interface GraphComponentProps {
   walletConnected?: boolean;
@@ -149,10 +150,10 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Erreur ────────────────────────────────────────────────────────────────────
   if (hasError) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", flexDirection: "column", gap: 20 }}>
-        <h2 style={{ color: "red", textAlign: "center" }}>Error loading data</h2>
-        <p style={{ textAlign: "center", color: "#666" }}>{(hasError as any).message || "An unexpected error occurred"}</p>
-        <button onClick={() => window.location.reload()} style={{ padding: "10px 20px", backgroundColor: "#FFD32A", color: "#000", border: "none", borderRadius: 5, cursor: "pointer" }}>
+      <div className={styles.errorContainer}>
+        <h2 className={styles.errorTitle}>Error loading data</h2>
+        <p className={styles.mutedText}>{(hasError as any).message || "An unexpected error occurred"}</p>
+        <button onClick={() => window.location.reload()} className={styles.reloadBtn}>
           Reload page
         </button>
       </div>
@@ -162,23 +163,23 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Chargement ────────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", flexDirection: "column", gap: 20 }}>
-        <div style={{ width: 50, height: 50, border: "4px solid #FFD32A", borderTop: "4px solid transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-        <p style={{ textAlign: "center", color: "#666" }}>Loading player data…</p>
+      <div className={styles.errorContainer}>
+        <div className={styles.spinner} />
+        <p className={styles.mutedText}>Loading player data…</p>
       </div>
     );
   }
 
   // ── Rendu principal ───────────────────────────────────────────────────────────
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}>
+    <div className={styles.root}>
 
       {/* Modal connexion wallet */}
       <ConnectWalletModal isOpen={!isWalletReady} onConnectWallet={handleConnectWallet} />
 
       {/* Home / inscription — wallet non connecté ou pas encore de player */}
       {(!isWalletReady || (isWalletReady && !hasConfirmedPlayer)) && (
-        <div style={{ filter: !isWalletReady ? "blur(3px)" : "none", opacity: !isWalletReady ? 0.7 : 1 }}>
+        <div className={!isWalletReady ? styles.homeBlurred : styles.homeVisible}>
           <PlayerMapHome
             walletConnected={isWalletReady}
             walletAddress={walletAddress}
@@ -191,15 +192,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
 
       {/* ── Layout principal : navbar + graphe + panneau ─────────────────────── */}
       {isWalletReady && hasConfirmedPlayer && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            width: "100%",
-            height: "100vh",
-            overflow: "hidden",
-          }}
-        >
+        <div className={styles.mainLayout}>
           {/* Navbar fixe en haut */}
           <TopNavBar
             graphControls={graphControls}
@@ -210,25 +203,9 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
           />
 
           {/* Corps : graphe (gauche) + panneau droit */}
-          <div
-            style={{
-              display: "flex",
-              flex: 1,
-              minHeight: 0,
-              width: "100%",
-              overflow: "hidden",
-            }}
-          >
+          <div className={styles.body}>
             {/* Graphe — prend tout l'espace restant */}
-            <div
-              style={{
-                flex: 1,
-                minWidth: 0,
-                height: "100%",
-                overflow: "hidden",
-                position: "relative",
-              }}
-            >
+            <div className={styles.graphPane}>
               <PlayerMapGraph
                 walletAddress={walletAddress}
                 constants={constants}
@@ -241,16 +218,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             </div>
 
             {/* Panneau droit — largeur fixe, hauteur 100% du corps */}
-            <div
-              style={{
-                width: "50%",
-                height: "100%",
-                overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
-                flexShrink: 0,
-              }}
-            >
+            <div className={styles.rightPane}>
               <RightPanel
                 mode={rightPanelMode}
                 walletAddress={walletAddress}

@@ -2,6 +2,7 @@ import React from "react";
 import { PositionBubble } from "./index";
 import SafeImage from "../SafeImage";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
+import styles from "./ClaimsSection.module.css";
 
 interface ClaimsSectionProps {
   activities: any[];
@@ -38,58 +39,20 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
 
   // ── Composant : une ligne de claim ──────────────────────────────────────────
   const ClaimRow = ({ claim }: { claim: any }) => (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        padding: "5px 0",
-        borderBottom: "1px solid rgba(255,255,255,0.05)",
-      }}
-    >
+    <div className={styles.claimRow}>
       {/* Icône */}
       {claim.object?.image ? (
         <SafeImage
           src={claim.object.image}
           alt={claim.object?.label || ""}
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: "50%",
-            objectFit: "cover",
-            flexShrink: 0,
-          }}
+          style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}
         />
       ) : (
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,0.08)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: 12,
-            flexShrink: 0,
-          }}
-        >
-          ⚛
-        </div>
+        <div className={styles.claimIconPlaceholder}>⚛</div>
       )}
 
       {/* Nom */}
-      <span
-        style={{
-          flex: 1,
-          fontSize: 14,
-          color: "#fff",
-          fontWeight: 500,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
+      <span className={styles.claimLabel}>
         {claim.object?.label || "—"}
       </span>
 
@@ -119,17 +82,8 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
     items: any[];
     showCount?: boolean;
   }) => (
-    <div style={{ marginBottom: 10 }}>
-      <div
-        style={{
-          fontSize: 14,
-          fontWeight: 700,
-          letterSpacing: 1.2,
-          color: "rgba(255,211,42,0.85)",
-          marginBottom: 4,
-          textTransform: "uppercase",
-        }}
-      >
+    <div className={styles.groupWrapper}>
+      <div className={styles.groupLabel}>
         {showCount ? `${items.length} ` : ""}
         {label}
       </div>
@@ -141,36 +95,30 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
 
   // ── Rendu vide ───────────────────────────────────────────────────────────────
   if (activities.length === 0) {
-    return (
-      <p style={{ color: "rgba(255, 255, 255, 0.6)", fontStyle: "italic", fontSize: 13 }}>
-        No claim found
-      </p>
-    );
+    return <p className={styles.emptyMessage}>No claim found</p>;
   }
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className={styles.root}>
       {title && (
-        <h3 style={{ width: "100%", margin: "0 0 12px" }}>
+        <h3 className={styles.title}>
           {title} ({activities.length})
         </h3>
       )}
 
-      <div style={{ display: "flex", gap: 12, width: "100%", alignItems: "flex-start" }}>
+      <div className={styles.columns}>
         {/* Colonne gauche : Games + Guilds */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className={styles.column}>
           {games.length > 0 && <SectionGroup label="Game(s)" items={games} />}
           {guilds.length > 0 && <SectionGroup label="Guild(s)" items={guilds} />}
           {games.length === 0 && guilds.length === 0 && (
-            <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 12, margin: 0 }}>
-              No games or guilds
-            </p>
+            <p className={styles.noGamesMessage}>No games or guilds</p>
           )}
         </div>
 
         {/* Colonne droite : Prédicats "is" (Player qualities) */}
         {playerQualities.length > 0 && (
-          <div style={{ flex: 1, minWidth: 0 }}>
+          <div className={styles.column}>
             <SectionGroup label="Player" items={playerQualities} showCount={false} />
           </div>
         )}

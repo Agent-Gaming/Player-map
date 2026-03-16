@@ -3,6 +3,7 @@ import { VoteItem, VoteDirection } from "../../types/vote";
 import { ClaimItem } from "./ClaimItem";
 import { Network } from "../../hooks/useAtomData";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
+import styles from "./ClaimList.module.css";
 
 interface ClaimListProps {
   isLoading: boolean;
@@ -34,34 +35,13 @@ export const ClaimList: React.FC<ClaimListProps> = ({
       : "Loading claims...";
 
     return (
-      <div
-        style={{
-          textAlign: "center",
-          padding: "0px 20px",
-          color: "#6b7280",
-          fontSize: "1.1em",
-        }}
-      >
-        <div style={{ marginBottom: "10px" }}>{progressText}</div>
+      <div className={styles.loadingState}>
+        <div className={styles.loadingText}>{progressText}</div>
         {loadingProgress && (
-          <div
-            style={{
-              width: "100%",
-              backgroundColor: "#374151",
-              borderRadius: "4px",
-              overflow: "hidden",
-              marginTop: "10px",
-            }}
-          >
+          <div className={styles.progressTrack}>
             <div
-              style={{
-                width: `${
-                  (loadingProgress.loaded / loadingProgress.total) * 100
-                }%`,
-                height: "8px",
-                backgroundColor: "#3b82f6",
-                transition: "width 0.3s ease",
-              }}
+              className={styles.progressFill}
+              style={{ width: `${(loadingProgress.loaded / loadingProgress.total) * 100}%` }}
             />
           </div>
         )}
@@ -70,7 +50,7 @@ export const ClaimList: React.FC<ClaimListProps> = ({
   }
 
   return (
-    <div style={{ }}>
+    <div>
       {voteItems.map((item) => (
         <ClaimItem
           key={item.id.toString()}

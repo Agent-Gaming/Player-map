@@ -1,4 +1,5 @@
 import React from "react";
+import styles from "./Positions.module.css";
 
 interface RedeemAllButtonProps {
   selectedCount: number;
@@ -17,16 +18,7 @@ const RedeemAllButton: React.FC<RedeemAllButtonProps> = ({
     <button
       onClick={onRedeemAll}
       disabled={isLoading}
-      style={{
-        padding: '8px 16px',
-        borderRadius: '6px',
-        border: 'none',
-        backgroundColor: isLoading ? '#374151' : '#ffd32a',
-        color: isLoading ? '#9ca3af' : '#000',
-        fontSize: '14px',
-        fontWeight: 'bold',
-        cursor: isLoading ? 'not-allowed' : 'pointer',
-      }}
+      className={styles.redeemAllBtn}
     >
       {isLoading ? 'Redeeming...' : `Redeem (${selectedCount})`}
     </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, CSSProperties } from 'react';
+import styles from './SafeImage.module.css';
 
 interface SafeImageProps {
   src?: string;
@@ -68,14 +69,9 @@ const SafeImage: React.FC<SafeImageProps> = ({
   if (!imgSrc || (hasError && showPlaceholder && !fallbackSrc)) {
     return (
       <div
+        className={styles.placeholder}
         style={{
           ...style,
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: 'rgba(255, 211, 42, 0.2)',
-          color: '#FFD32A',
-          fontWeight: 'bold',
           fontSize: style?.width ? `${parseInt(String(style.width)) / 3}px` : '24px',
         }}
         title={alt}

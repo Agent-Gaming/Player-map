@@ -1,0 +1,81 @@
+@import "../../styles/variables.css";
+
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  justify-content: flex-end;
+}
+
+.errorMsg {
+  color: #ff6b6b;
+  font-size: 10px;
+  margin-right: 8px;
+  padding: 2px 6px;
+  background-color: rgba(255, 107, 107, 0.1);
+  border-radius: 3px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+.trustRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.trustInput {
+  width: 65px;
+  padding: 2px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 12px;
+  text-align: left;
+  margin-bottom: 2px;
+}
+
+.trustLabel {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+}
+
+.toggle {
+  position: relative;
+  width: 60px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.toggleDisabled {
+  opacity: 0.5;
+}
+
+.toggleKnob {
+  position: absolute;
+  top: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.knobFor {
+  left: 2px;
+  background-color: rgb(0, 111, 232);
+}
+
+.knobAgainst {
+  left: 42px;
+  background-color: rgb(255, 149, 0);
+}
+
+.knobNeutral {
+  left: 20px;
+  background-color: rgba(255, 255, 255, 0.3);
+}

@@ -1,0 +1,10 @@
+@import "../styles/variables.css";
+
+.placeholder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(255, 211, 42, 0.2);
+  color: #ffd32a;
+  font-weight: bold;
+}

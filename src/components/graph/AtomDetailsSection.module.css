@@ -35,7 +35,14 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   flex: 1;
+  min-width: 0;
 }
 
 .atomName {
@@ -102,19 +109,6 @@
   border-bottom: 6px solid rgba(20, 20, 20, 0.9);
 }
 
-.descriptionSection {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.descriptionLabel {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--color-primary);
-  text-align: left;
-}
 
 .descriptionScroll {
   max-height: 85px;

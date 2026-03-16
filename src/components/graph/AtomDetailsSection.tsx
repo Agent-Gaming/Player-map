@@ -180,59 +180,73 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                     />
                   </div>
                   
-                  {/* Nom et badge */}
-                  <div className={styles.nameRow}>
-                    <p className={styles.atomName}>
-                      <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-                    </p>
-                    
-                    {/* Badge verified avec tooltip */}
-                    <div 
-                      className={styles.badgeWrapper}
-                      onMouseEnter={() => setShowTooltip('verified')}
-                      onMouseLeave={() => setShowTooltip(null)}
-                    >
-                      <img 
-                        src={verifiedIcon} 
-                        alt="Verified" 
-                        className={styles.badgeIcon}
-                      />
-                      {showTooltip === 'verified' && (
-                        <div className={styles.tooltip}>
-                          Verified by {verification.studio}
-                          <div className={styles.tooltipArrow} />
-                        </div>
-                      )}
+                  {/* Colonne droite: nom + badge + description */}
+                  <div className={styles.rightColumn}>
+                    <div className={styles.nameRow}>
+                      <p className={styles.atomName}>
+                        <strong>{String(atomDetails.label ?? "Not defined")}</strong>
+                      </p>
+                      
+                      {/* Badge verified avec tooltip */}
+                      <div 
+                        className={styles.badgeWrapper}
+                        onMouseEnter={() => setShowTooltip('verified')}
+                        onMouseLeave={() => setShowTooltip(null)}
+                      >
+                        <img 
+                          src={verifiedIcon} 
+                          alt="Verified" 
+                          className={styles.badgeIcon}
+                        />
+                        {showTooltip === 'verified' && (
+                          <div className={styles.tooltip}>
+                            Verified by {verification.studio}
+                            <div className={styles.tooltipArrow} />
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    {showDescription && (
+                      <div className={styles.descriptionScroll}>
+                        <p className={styles.descriptionText}>{description}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : verification.status === "not-verified" ? (
                 // ─── ATOME NON VÉRIFIÉ ─────────────────────────────────
                 <div className={styles.rowFlex}>
-                  {/* Nom et badge (sans image) */}
-                  <div className={styles.nameRow}>
-                    <p className={styles.atomName}>
-                      <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-                    </p>
-                    
-                    {/* Badge community avec tooltip */}
-                    <div 
-                      className={styles.badgeWrapper}
-                      onMouseEnter={() => setShowTooltip('community')}
-                      onMouseLeave={() => setShowTooltip(null)}
-                    >
-                      <img 
-                        src={communityIcon} 
-                        alt="Community" 
-                        className={styles.badgeIcon}
-                      />
-                      {showTooltip === 'community' && (
-                        <div className={`${styles.tooltip} ${styles.tooltipWide}`}>
-                          This atom is community-created and has not been reviewed or approved by the rights holder
-                          <div className={styles.tooltipArrow} />
-                        </div>
-                      )}
+                  {/* Nom + badge + description (sans image) */}
+                  <div className={styles.rightColumn}>
+                    <div className={styles.nameRow}>
+                      <p className={styles.atomName}>
+                        <strong>{String(atomDetails.label ?? "Not defined")}</strong>
+                      </p>
+                      
+                      {/* Badge community avec tooltip */}
+                      <div 
+                        className={styles.badgeWrapper}
+                        onMouseEnter={() => setShowTooltip('community')}
+                        onMouseLeave={() => setShowTooltip(null)}
+                      >
+                        <img 
+                          src={communityIcon} 
+                          alt="Community" 
+                          className={styles.badgeIcon}
+                        />
+                        {showTooltip === 'community' && (
+                          <div className={`${styles.tooltip} ${styles.tooltipWide}`}>
+                            This atom is community-created and has not been reviewed or approved by the rights holder
+                            <div className={styles.tooltipArrow} />
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    {showDescription && (
+                      <div className={styles.descriptionScroll}>
+                        <p className={styles.descriptionText}>{description}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -250,25 +264,23 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                     />
                   </div>
                   
-                  {/* Nom sans badge */}
-                  <p className={styles.atomNameAccent}>
-                    <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-                  </p>
+                  {/* Colonne droite: nom + description */}
+                  <div className={styles.rightColumn}>
+                    <p className={styles.atomNameAccent}>
+                      <strong>{String(atomDetails.label ?? "Not defined")}</strong>
+                    </p>
+                    {showDescription && (
+                      <div className={styles.descriptionScroll}>
+                        <p className={styles.descriptionText}>{description}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           );
         })()}
-        {showDescription && (
-          <div className={styles.descriptionSection}>
-            <h3 className={styles.descriptionLabel}>Description</h3>
-            <div className={styles.descriptionScroll}>
-              <p className={styles.descriptionText}>
-                {description}
-              </p>
-            </div>
-          </div>
-        )}
+
       </div>
     </>
   );

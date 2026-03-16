@@ -1,7 +1,11 @@
 import React from "react";
+import { useState } from "react";
 import { GameStats } from "../../hooks/useGameStats";
 import { ipfsToHttpUrl, isIpfsUrl } from "../../utils/pinata";
 import tripleSvg from "../../assets/img/triple.svg";
+import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
+import verifiedIcon from "../../assets/img/verified.svg";
+import communityIcon from "../../assets/img/community.svg";
 import styles from "./SpeakUpHeader.module.css";
 
 interface SpeakUpHeaderProps {
@@ -73,9 +77,11 @@ const StatCard: React.FC<{
 };
 
 export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
-  const { gameName, gameImage, totalGuilds, totalPlayers, totalVotes, totalAttestations, loading } = stats;
+  const { gameName, gameImage, gameTermId, totalGuilds, totalPlayers, totalVotes, totalAttestations, loading } = stats;
+  const [showTooltip, setShowTooltip] = useState(false);
 
   const imageUrl = gameImage ? (isIpfsUrl(gameImage) ? ipfsToHttpUrl(gameImage) : gameImage) : null;
+  const verification = gameTermId ? getAtomVerificationStatus(gameTermId) : null;
 
   return (
     <div className={styles.header}>
@@ -92,6 +98,31 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
         <span className={styles.gameName}>
           {loading ? "Loading..." : (gameName || "—")}
         </span>
+        {verification && (
+          <div
+            className={styles.badgeWrapper}
+            onMouseEnter={() => setShowTooltip(true)}
+            onMouseLeave={() => setShowTooltip(false)}
+          >
+            {verification.status === "verified" ? (
+              <img src={verifiedIcon} alt="Verified" className={styles.badgeIcon} />
+            ) : verification.status === "not-verified" ? (
+              <img src={communityIcon} alt="Community" className={styles.badgeIcon} />
+            ) : null}
+            {showTooltip && verification.status === "verified" && (
+              <div className={styles.tooltip}>
+                Verified by {verification.studio}
+                <div className={styles.tooltipArrow} />
+              </div>
+            )}
+            {showTooltip && verification.status === "not-verified" && (
+              <div className={styles.tooltip}>
+                Community-created, not reviewed by the rights holder
+                <div className={styles.tooltipArrow} />
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Statistiques */}

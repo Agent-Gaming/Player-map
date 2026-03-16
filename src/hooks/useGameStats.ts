@@ -5,6 +5,7 @@ import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
 export interface GameStats {
   gameName: string;
   gameImage: string | null;
+  gameTermId: string | null;
   totalGuilds: number;
   totalPlayers: number;
   totalVotes: number;        // total votes (positions) sur les claims prédéfinis
@@ -115,6 +116,7 @@ export const useGameStats = (
   return {
     gameName,
     gameImage,
+    gameTermId: gamesId ?? null,
     totalGuilds,
     totalPlayers,
     totalVotes,

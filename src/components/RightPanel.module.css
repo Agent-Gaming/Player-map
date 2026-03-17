@@ -24,7 +24,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   min-height: 0;
-  scrollbar-width: thin;
+  scrollbar-width: auto;
   scrollbar-color: rgba(255, 211, 42, 0.3) transparent;
 }
 
@@ -190,7 +190,7 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: thin;
+  scrollbar-width: auto;
   scrollbar-color: var(--color-primary) transparent;
   padding-top: 4px;
 }

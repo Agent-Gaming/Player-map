@@ -75,7 +75,9 @@
   top: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background-color: rgba(20, 20, 20, 0.8);
+  background-color: rgba(20, 20, 20, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   color: #fff;
   padding: 8px 12px;
   border-radius: 6px;
@@ -91,9 +93,11 @@
 }
 
 .tooltipWide {
-  width: 280px;
-  max-width: 280px;
-  background-color: rgba(20, 20, 20, 0.9);
+  width: 380px;
+  max-width: 380px;
+  background-color: rgba(20, 20, 20, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
@@ -106,14 +110,14 @@
   height: 0;
   border-left: 6px solid transparent;
   border-right: 6px solid transparent;
-  border-bottom: 6px solid rgba(20, 20, 20, 0.9);
+  border-bottom: 6px solid rgba(20, 20, 20, 0.75);
 }
 
 
 .descriptionScroll {
   max-height: 85px;
   overflow-y: auto;
-  scrollbar-width: thin;
+  scrollbar-width: auto;
   scrollbar-color: var(--color-primary) transparent;
 }
 

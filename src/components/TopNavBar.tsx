@@ -132,9 +132,6 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
       {/* ── Spacer ──────────────────────────────────── */}
       <div className={styles.spacer} />
 
-      {/* ── Separator ───────────────────────────────── */}
-      <div className={styles.separator} />
-
       {/* ── Info button ─────────────────────────────── */}
       <div className={styles.infoWrapper}>
         <button
@@ -154,6 +151,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           </div>
         )}
       </div>
+
+      {/* ── Separator ───────────────────────────────── */}
+      <div className={styles.separator} />
 
       {/* ── Profile button (right) ───────────────────── */}
       <button

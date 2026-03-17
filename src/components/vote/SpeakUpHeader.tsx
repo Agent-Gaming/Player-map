@@ -111,13 +111,13 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
             ) : null}
             {showTooltip && verification.status === "verified" && (
               <div className={styles.tooltip}>
-                Verified by {verification.studio}
+                Verified by studio : This atom is approved by the rights holder.
                 <div className={styles.tooltipArrow} />
               </div>
             )}
             {showTooltip && verification.status === "not-verified" && (
               <div className={styles.tooltip}>
-                Community-created, not reviewed by the rights holder
+                Community created : This atom is community-created and has not been reviewed or approved by the rights holder.
                 <div className={styles.tooltipArrow} />
               </div>
             )}

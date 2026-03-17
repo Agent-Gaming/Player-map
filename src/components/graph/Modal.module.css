@@ -70,4 +70,6 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  scrollbar-width: auto;
+  scrollbar-color: var(--color-primary) transparent;
 }

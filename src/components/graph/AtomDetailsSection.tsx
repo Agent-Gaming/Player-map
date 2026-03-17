@@ -200,7 +200,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                         />
                         {showTooltip === 'verified' && (
                           <div className={styles.tooltip}>
-                            Verified by {verification.studio}
+                            Verified by studio : This atom is approved by the rights holder.
                             <div className={styles.tooltipArrow} />
                           </div>
                         )}
@@ -236,7 +236,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                         />
                         {showTooltip === 'community' && (
                           <div className={`${styles.tooltip} ${styles.tooltipWide}`}>
-                            This atom is community-created and has not been reviewed or approved by the rights holder
+                            Community created : This atom is community-created and has not been reviewed or approved by the rights holder.
                             <div className={styles.tooltipArrow} />
                           </div>
                         )}

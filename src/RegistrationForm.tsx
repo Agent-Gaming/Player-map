@@ -14,6 +14,10 @@ import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "./shared/components/NetworkSwitchMessage";
 import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
 import styles from "./RegistrationForm.module.css";
+import { usePlayerAliases } from './hooks/usePlayerAliases';
+import { useCreateAlias } from './hooks/useCreateAlias';
+import { useDepositTriple } from './hooks/useDepositTriple';
+import { VoteDirection } from './types/vote';
 
 interface RegistrationFormProps {
   isOpen: boolean;
@@ -77,6 +81,44 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     constants, // Passer les constantes personnalisées !
     publicClient
   );
+
+  const [aliasInput, setAliasInput] = useState('');
+  const [depositError, setDepositError] = useState<string | undefined>(undefined);
+
+  const { aliases, primaryAlias, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases({
+    walletAddress,
+    constants,
+  });
+
+  const {
+    createAlias,
+    reset: _resetAlias,
+    step: aliasStep,
+    isCreating,
+    error: aliasError,
+  } = useCreateAlias({
+    walletConnected,
+    walletAddress,
+    constants,
+    publicClient,
+    playerAtomId,
+  });
+
+  const { depositTriple, isLoading: isDepositing } = useDepositTriple({
+    walletConnected,
+    walletAddress,
+    publicClient,
+  });
+
+  const handleUseExistingAlias = async (tripleId: string) => {
+    setDepositError(undefined);
+    const result = await depositTriple([
+      { claimId: tripleId, units: 1, direction: VoteDirection.For },
+    ]);
+    if (!result.success) {
+      setDepositError(result.error ?? 'Deposit failed');
+    }
+  };
 
   const { isCorrectNetwork, currentChainId, targetChainId, allowedChainIds } =
     useNetworkCheck({
@@ -279,6 +321,18 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
             isUploading={isUploading}
             fileInputRef={fileInputRef}
             constants={constants} // Passer les constantes personnalisées !
+            aliases={aliases}
+            primaryAlias={primaryAlias}
+            aliasesLoading={aliasesLoading}
+            aliasInput={aliasInput}
+            onAliasInputChange={setAliasInput}
+            onCreateAlias={() => createAlias(aliasInput)}
+            onUseExistingAlias={handleUseExistingAlias}
+            aliasStep={aliasStep}
+            isCreating={isCreating}
+            aliasError={aliasError}
+            isDepositing={isDepositing}
+            depositError={depositError}
           />
         )}
       </div>

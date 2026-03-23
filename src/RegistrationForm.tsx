@@ -85,14 +85,14 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   const [aliasInput, setAliasInput] = useState('');
   const [depositError, setDepositError] = useState<string | undefined>(undefined);
 
-  const { aliases, primaryAlias, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases({
+  const { aliases, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases({
     walletAddress,
     constants,
   });
 
   const {
     createAlias,
-    reset: _resetAlias,
+    reset: resetAlias,
     step: aliasStep,
     isCreating,
     error: aliasError,
@@ -311,7 +311,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
             atomId={atomId}
             tripleCreated={tripleCreated}
             walletAddress={walletAddress}
-            hasExistingAtom={hasExistingAtom}
+            hasExistingAtom={hasExistingAtom && playerAtomId !== null}
             formData={formData}
             handleInputChange={handleInputChange}
             handleSelectChange={handleSelectChange}
@@ -322,11 +322,11 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
             fileInputRef={fileInputRef}
             constants={constants} // Passer les constantes personnalisées !
             aliases={aliases}
-            primaryAlias={primaryAlias}
             aliasesLoading={aliasesLoading}
             aliasInput={aliasInput}
             onAliasInputChange={setAliasInput}
             onCreateAlias={() => createAlias(aliasInput)}
+            onResetAlias={resetAlias}
             onUseExistingAlias={handleUseExistingAlias}
             aliasStep={aliasStep}
             isCreating={isCreating}

@@ -29,7 +29,6 @@ interface PlayerCreationProgressProps {
   constants: DefaultPlayerMapConstants; // Constantes injectées
   // Alias section — only rendered when hasExistingAtom is true
   aliases?: PlayerAlias[];
-  primaryAlias?: PlayerAlias | null;
   aliasesLoading?: boolean;
   aliasInput?: string;
   onAliasInputChange?: (val: string) => void;
@@ -42,6 +41,8 @@ interface PlayerCreationProgressProps {
   // Deposit feedback (for "Utiliser" button)
   isDepositing?: boolean;
   depositError?: string;
+  // Called when the user cancels after an error — resets alias flow so they can try a different pseudo
+  onResetAlias?: () => void;
 }
 
 const PreviewImage = ({ src }: { src: string }) => {
@@ -113,6 +114,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
   aliasError,
   isDepositing,
   depositError,
+  onResetAlias,
 }) => {
   // Utiliser les constantes passées en paramètre
   const { OFFICIAL_GUILDS } = constants;
@@ -373,21 +375,36 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
                   To keep atom and triple consistent: disable the input on error too, or
                   call reset() when the input changes after an error. The simplest safe approach:
                   disable the input whenever aliasStep is not 'idle'. */}
-              <button
-                onClick={onCreateAlias}
-                style={{
-                  marginTop: "6px",
-                  padding: "6px 14px",
-                  backgroundColor: "#2e2e40",
-                  color: "#fff",
-                  border: "1px solid #555",
-                  borderRadius: "4px",
-                  cursor: "pointer",
-                  fontSize: "0.85em",
-                }}
-              >
-                Réessayer
-              </button>
+              <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+                <button
+                  onClick={onCreateAlias}
+                  style={{
+                    padding: "6px 14px",
+                    backgroundColor: "#2e2e40",
+                    color: "#fff",
+                    border: "1px solid #555",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "0.85em",
+                  }}
+                >
+                  Réessayer
+                </button>
+                <button
+                  onClick={onResetAlias}
+                  style={{
+                    padding: "6px 14px",
+                    backgroundColor: "#2e2e40",
+                    color: "#ff8888",
+                    border: "1px solid #555",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "0.85em",
+                  }}
+                >
+                  Annuler
+                </button>
+              </div>
             </div>
           )}
 

@@ -36,6 +36,12 @@ export const useCreateAlias = ({
     if (!walletConnected || !walletAddress || !playerAtomId) return;
     if (!pseudo.trim()) return;
 
+    const predicateId = constants.HAS_ALIAS_PREDICATE_ID;
+    if (!predicateId || predicateId.startsWith('<')) {
+      setState({ step: 'error', error: 'HAS_ALIAS_PREDICATE_ID is not configured — set it in your PlayerMapConstants' });
+      return;
+    }
+
     try {
       // Step 1 — create pseudo atom
       // Skip if pseudoAtomId already exists (retry path: atom was created but triple failed)
@@ -53,7 +59,7 @@ export const useCreateAlias = ({
       await batchCreateTriple([
         {
           subjectId: BigInt(playerAtomId),
-          predicateId: BigInt(constants.HAS_ALIAS_PREDICATE_ID),
+          predicateId: BigInt(predicateId),
           objectId: BigInt(pseudoAtomId),
         },
       ]);

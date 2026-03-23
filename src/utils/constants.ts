@@ -6,7 +6,10 @@ export const COMMON_IDS = {
   FOLLOWS: "0x8f9b5dc2e7b8bd12f6762c839830672f1d13c08e72b5f09f194cafc153f2df8a", // prédicat --> follows
   IS: "0x2af261bce70c2fc3a1abf882e3e89b23066fcd150bfda27fab69f9f55ed2d9d0",  // prédicat --> is
   IS_PLAYER_OF: "0x05f1707d8cb50571d01021f09a664826aa1be2ff43504c0cca55eef87142f84f",  // prédicat --> is player of
+  HAS_ALIAS: '<HAS_ALIAS_PREDICATE_ID_PLACEHOLDER>', // predicate → has alias
 };
+
+export const HAS_ALIAS_PREDICATE_ID = COMMON_IDS.HAS_ALIAS;
 
 // Types de triples pour les joueurs
 export const PLAYER_TRIPLE_TYPES = {
@@ -76,5 +79,6 @@ export const DEFAULT_CONSTANTS = {
   COMMON_IDS,
   PLAYER_TRIPLE_TYPES,
   OFFICIAL_GUILDS,
-  PREDEFINED_CLAIM_IDS
+  PREDEFINED_CLAIM_IDS,
+  HAS_ALIAS_PREDICATE_ID,
 };

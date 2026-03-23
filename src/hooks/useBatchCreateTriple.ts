@@ -69,15 +69,6 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
     }
   };
 
-  // Function to calculate required amount for a triple (uses VALUE_PER_TRIPLE directly)
-  const calculateTripleAmount = async (
-    subjectId: bigint,
-    predicateId: bigint,
-    objectId: bigint
-  ): Promise<bigint> => {
-    return VALUE_PER_TRIPLE;
-  };
-
   // Function to create multiple triples in a single transaction
   const batchCreateTriple = async (triples: TripleToCreate[]): Promise<any> => {
     if (!walletConnected || !walletAddress) {
@@ -85,13 +76,25 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
     }
 
     try {
-      // Calculate required amounts for each triple (uses VALUE_PER_TRIPLE directly)
+      // Fetch minimum triple cost from contract; fall back to env value
+      let costPerTriple = VALUE_PER_TRIPLE;
+      if (publicClient?.readContract) {
+        try {
+          const contractMin = await publicClient.readContract({
+            address: ATOM_CONTRACT_ADDRESS,
+            abi: atomABI,
+            functionName: 'getTripleCost',
+          }) as bigint;
+          if (contractMin > costPerTriple) costPerTriple = contractMin;
+        } catch { /* fall back to env value */ }
+      }
+
       const assets: bigint[] = [];
       let totalValue = 0n;
 
       for (const triple of triples) {
-        assets.push(VALUE_PER_TRIPLE);
-        totalValue += VALUE_PER_TRIPLE;
+        assets.push(costPerTriple);
+        totalValue += costPerTriple;
       }
 
       // Prepare arrays for createTriples function (v2)

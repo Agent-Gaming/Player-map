@@ -112,7 +112,21 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
             account: walletAddress as `0x${string}`,
           });
         } catch (simErr: any) {
-          const reason = simErr?.cause?.reason || simErr?.shortMessage || simErr?.message || String(simErr);
+          console.error('[createAtom] simulation raw error:', simErr);
+          console.error('[createAtom] cause:', simErr?.cause);
+          console.error('[createAtom] cause.data:', simErr?.cause?.data);
+          console.error('[createAtom] args used:', {
+            contract: ATOM_CONTRACT_ADDRESS,
+            dataBytes,
+            requiredAmount: requiredAmount?.toString(),
+            value: requiredAmount?.toString(),
+            account: walletAddress,
+          });
+          const reason = simErr?.cause?.data?.errorName
+            || simErr?.cause?.reason
+            || simErr?.shortMessage
+            || simErr?.message
+            || String(simErr);
           throw new Error(`createAtoms simulation failed: ${reason}`);
         }
       }

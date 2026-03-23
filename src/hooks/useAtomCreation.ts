@@ -100,21 +100,26 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       // 4. Fetch the minimum required amount from the contract.
       // VALUE_PER_ATOM (from env) is used as fallback when publicClient is unavailable.
       let requiredAmount = VALUE_PER_ATOM;
-      console.log('[createAtom] publicClient type:', typeof publicClient, 'has readContract:', !!publicClient?.readContract);
       if (publicClient?.readContract) {
+        let contractMin: bigint | undefined;
         try {
-          const contractMin = await publicClient.readContract({
-            address: ATOM_CONTRACT_ADDRESS,
-            abi: atomABI,
-            functionName: 'getAtomCreationCost',
+          contractMin = await publicClient.readContract({
+            address: ATOM_CONTRACT_ADDRESS, abi: atomABI, functionName: 'getAtomCreationCost',
           }) as bigint;
-          console.log('[createAtom] getAtomCreationCost returned:', contractMin?.toString());
-          if (contractMin > requiredAmount) requiredAmount = contractMin;
-        } catch (e) {
-          console.warn('[createAtom] getAtomCreationCost failed, using env value:', e);
+        } catch { /* not available on this deployment */ }
+        if (contractMin === undefined) {
+          try {
+            contractMin = await publicClient.readContract({
+              address: ATOM_CONTRACT_ADDRESS, abi: atomABI, functionName: 'getAtomCost',
+            }) as bigint;
+          } catch { /* not available either */ }
         }
-      } else {
-        console.warn('[createAtom] publicClient.readContract unavailable — using env VALUE_PER_ATOM:', VALUE_PER_ATOM?.toString());
+        if (contractMin !== undefined) {
+          console.log('[createAtom] contract minimum atom cost:', contractMin.toString());
+          if (contractMin > requiredAmount) requiredAmount = contractMin;
+        } else {
+          console.warn('[createAtom] could not read atom cost from contract, using env value:', VALUE_PER_ATOM?.toString());
+        }
       }
 
       // 5. Simulate first to surface the actual revert reason, then write

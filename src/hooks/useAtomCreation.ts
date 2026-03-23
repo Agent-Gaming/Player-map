@@ -23,6 +23,52 @@ export interface UseAtomCreationProps {
   publicClient?: any;
 }
 
+async function waitForAtomId(
+  txHash: any,
+  walletConnected: any,
+  publicClient: any
+): Promise<bigint> {
+  // Normalize txHash
+  const normalizedTxHash = typeof txHash === 'string' ? txHash : txHash.hash || txHash;
+
+  let receipt: any;
+  if (publicClient && publicClient.waitForTransactionReceipt) {
+    receipt = await publicClient.waitForTransactionReceipt({ hash: normalizedTxHash });
+  } else if (walletConnected.waitForTransactionReceipt) {
+    receipt = await walletConnected.waitForTransactionReceipt({ hash: normalizedTxHash });
+  } else if (txHash.wait) {
+    receipt = await txHash.wait();
+  } else if (publicClient && publicClient.getTransactionReceipt) {
+    const maxAttempts = 30;
+    const delay = 2000;
+    for (let i = 0; i < maxAttempts; i++) {
+      try {
+        receipt = await publicClient.getTransactionReceipt({ hash: normalizedTxHash });
+        if (receipt) break;
+      } catch (_) { /* not yet confirmed */ }
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    if (!receipt) throw new Error('Transaction receipt not found after waiting');
+  } else {
+    throw new Error('No method available to wait for transaction receipt. publicClient is required.');
+  }
+
+  if (!receipt) throw new Error('Transaction receipt not found');
+  if (receipt.status === 'reverted' || receipt.status === 0) {
+    throw new Error('Transaction reverted. Check gas or contract error.');
+  }
+  if (!receipt.logs || receipt.logs.length === 0) {
+    throw new Error('Transaction receipt contains no logs. Transaction may have been reverted.');
+  }
+
+  const events = parseEventLogs({ abi: atomABI, logs: receipt.logs });
+  const atomCreatedEvent = events.find((e: any) => e.eventName === 'AtomCreated') as any;
+  if (!atomCreatedEvent?.args?.termId) {
+    throw new Error('AtomCreated event not found in transaction receipt');
+  }
+  return BigInt(atomCreatedEvent.args.termId);
+}
+
 export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }: UseAtomCreationProps) => {
   // Fonction pour créer un atome à partir des données utilisateur
   const createAtom = async (input: IpfsAtomInput): Promise<{ atomId: bigint; ipfsHash: string }> => {
@@ -64,78 +110,10 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
           [requiredAmount]
         ],
         value: requiredAmount,
-        gas: 2000000n, // Limit gas to 2M to prevent MetaMask from using excessive values
+        gas: 2000000n,
       });
 
-      // 6. Wait for transaction confirmation
-      // Normalize txHash (can be a string or an object with hash)
-      const normalizedTxHash = typeof txHash === 'string' ? txHash : txHash.hash || txHash;
-      
-      let receipt;
-      // Try first with publicClient (Viem)
-      if (publicClient && publicClient.waitForTransactionReceipt) {
-        receipt = await publicClient.waitForTransactionReceipt({ hash: normalizedTxHash });
-      } 
-      // Otherwise try with walletConnected
-      else if (walletConnected.waitForTransactionReceipt) {
-        receipt = await walletConnected.waitForTransactionReceipt({ hash: normalizedTxHash });
-      } 
-      // Otherwise try with txHash.wait (ethers.js)
-      else if (txHash.wait) {
-        receipt = await txHash.wait();
-      } 
-      // Last resort: use publicClient.getTransactionReceipt with polling
-      else if (publicClient && publicClient.getTransactionReceipt) {
-        // Manual polling to retrieve receipt
-        const maxAttempts = 30; // 30 attempts
-        const delay = 2000; // 2 seconds between each attempt
-        for (let i = 0; i < maxAttempts; i++) {
-          try {
-            receipt = await publicClient.getTransactionReceipt({ hash: normalizedTxHash });
-            if (receipt) break;
-          } catch (error) {
-            // Transaction not yet confirmed, continue waiting
-          }
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-        if (!receipt) {
-          throw new Error('Transaction receipt not found after waiting');
-        }
-      } 
-      else {
-        throw new Error('No method available to wait for transaction receipt. publicClient is required.');
-      }
-
-      // 7. Verify that receipt exists and check transaction status
-      if (!receipt) {
-        throw new Error('Transaction receipt not found');
-      }
-
-      // Check if transaction was successful
-      if (receipt.status === 'reverted' || receipt.status === 0) {
-        throw new Error('Transaction reverted. The transaction may have failed due to insufficient gas or contract error.');
-      }
-
-      // Verify that receipt contains logs
-      if (!receipt.logs || receipt.logs.length === 0) {
-        throw new Error('Transaction receipt does not contain logs. Transaction may have been reverted.');
-      }
-
-      // 8. Decode events from receipt
-      const events = parseEventLogs({
-        abi: atomABI,
-        logs: receipt.logs
-      });
-
-      // 9. Find AtomCreated event and extract real atomId (termId)
-      const atomCreatedEvent = events.find((e: any) => e.eventName === 'AtomCreated') as any;
-      
-      if (!atomCreatedEvent || !atomCreatedEvent.args || !atomCreatedEvent.args.termId) {
-        throw new Error('AtomCreated event not found in transaction receipt');
-      }
-
-      // 10. Extract real atomId from event
-      const realAtomId = atomCreatedEvent.args.termId;
+      const realAtomId = await waitForAtomId(txHash, walletConnected, publicClient);
 
       return {
         atomId: BigInt(realAtomId),
@@ -147,7 +125,35 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     }
   };
 
+  // Creates a simple string atom (raw bytes, no JSON-LD or IPFS).
+  // Used for alias pseudonyms and other raw-string atoms.
+  const createStringAtom = async (str: string): Promise<{ atomId: bigint }> => {
+    if (!walletConnected || !walletAddress) {
+      throw new Error('Wallet not connected');
+    }
+    try {
+      // Encode string as raw UTF-8 bytes (no JSON-LD wrapper)
+      const dataBytes = toHex(str);
+      // createAtoms ABI: (bytes[] data, uint256[] values)
+      // value sent = sum of per-atom amounts array = VALUE_PER_ATOM for one atom
+      const txHash = await walletConnected.writeContract({
+        address: ATOM_CONTRACT_ADDRESS,
+        abi: atomABI,
+        functionName: 'createAtoms',
+        args: [[dataBytes], [VALUE_PER_ATOM]],
+        value: VALUE_PER_ATOM,
+        gas: 2000000n,
+      });
+      const realAtomId = await waitForAtomId(txHash, walletConnected, publicClient);
+      return { atomId: realAtomId };
+    } catch (error) {
+      console.error('Error creating string atom:', error);
+      throw error;
+    }
+  };
+
   return {
     createAtom,
+    createStringAtom,
   };
-}; 
+};

@@ -56,7 +56,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
 }) => {
   const [formData, setFormData] = useState({
     pseudo: "",
-    userId: "",
     image: "",
     guildId: "",
   });
@@ -133,7 +132,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       try {
         // Utiliser getEventSelector pour calculer la signature de l'événement AtomCreated
         const eventHash = getEventSelector(
-          "AtomCreated(address,address,bytes,uint256)"
+          "AtomCreated(address,bytes32,bytes,address)"
         );
 
         // Utiliser fetch directement pour contourner le bug viem
@@ -231,7 +230,6 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
       // Use the complete service to create a player (atom + triples)
       const result = await createPlayer({
         pseudo: formData.pseudo,
-        userId: formData.userId,
         image: formData.image || undefined,
         guildId: formData.guildId ? BigInt(formData.guildId) : undefined,
       });
@@ -302,7 +300,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
             currentChainId={currentChainId}
             targetChainId={targetChainId}
           />
-        ) : (
+        ) : ( 
           <PlayerCreationProgress
             step={step}
             isCreatingAtom={isCreatingAtom}

@@ -15,7 +15,6 @@ interface PlayerCreationProgressProps {
   hasExistingAtom: boolean;
   formData: {
     pseudo: string;
-    userId: string;
     image: string;
     guildId?: string;
   };
@@ -433,34 +432,6 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
               value={formData.pseudo}
               onChange={handleInputChange}
               placeholder="Enter your username"
-              style={{
-                width: "100%",
-                padding: "8px",
-                backgroundColor: "#1e1e30",
-                border: "1px solid #333",
-                color: "#fff",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
-
-          <div style={{ marginBottom: "15px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontSize: "0.9em",
-                textAlign: "left",
-              }}
-            >
-              Player UID (optional)
-            </label>
-            <input
-              type="text"
-              name="userId"
-              value={formData.userId}
-              onChange={handleInputChange}
-              placeholder="Enter your Player UID"
               style={{
                 width: "100%",
                 padding: "8px",

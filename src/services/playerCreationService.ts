@@ -5,9 +5,8 @@ import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
 // Interface pour les données du joueur
 export interface PlayerData {
   pseudo: string;
-  userId: string;
   image?: string | undefined;
-  guildId?: bigint; // Ajout du guildId facultatif
+  guildId?: bigint;
 }
 
 // Service pour gérer la création complète d'un joueur (atome + triples)
@@ -35,8 +34,7 @@ export const usePlayerCreationService = (
       // Étape 1: Créer l'atome du joueur
       const atomResult = await createAtom({
         name: playerData.pseudo,
-        description: playerData.userId,
-        image: playerData.image
+        image: playerData.image,
       });
 
       const playerAtomId = atomResult.atomId;

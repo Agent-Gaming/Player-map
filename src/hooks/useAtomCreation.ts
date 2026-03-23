@@ -100,7 +100,23 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       // 4. Use VALUE_PER_ATOM directly
       const requiredAmount = VALUE_PER_ATOM;
 
-      // 5. Create the atom with createAtoms
+      // 5. Simulate first to surface the actual revert reason, then write
+      if (publicClient?.simulateContract) {
+        try {
+          await publicClient.simulateContract({
+            address: ATOM_CONTRACT_ADDRESS,
+            abi: atomABI,
+            functionName: 'createAtoms',
+            args: [[dataBytes], [requiredAmount]],
+            value: requiredAmount,
+            account: walletAddress as `0x${string}`,
+          });
+        } catch (simErr: any) {
+          const reason = simErr?.cause?.reason || simErr?.shortMessage || simErr?.message || String(simErr);
+          throw new Error(`createAtoms simulation failed: ${reason}`);
+        }
+      }
+
       const txHash = await walletConnected.writeContract({
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,

@@ -100,6 +100,7 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       // 4. Fetch the minimum required amount from the contract.
       // VALUE_PER_ATOM (from env) is used as fallback when publicClient is unavailable.
       let requiredAmount = VALUE_PER_ATOM;
+      console.log('[createAtom] publicClient type:', typeof publicClient, 'has readContract:', !!publicClient?.readContract);
       if (publicClient?.readContract) {
         try {
           const contractMin = await publicClient.readContract({
@@ -107,10 +108,13 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
             abi: atomABI,
             functionName: 'getAtomCreationCost',
           }) as bigint;
+          console.log('[createAtom] getAtomCreationCost returned:', contractMin?.toString());
           if (contractMin > requiredAmount) requiredAmount = contractMin;
-        } catch {
-          // If the read fails, fall back to the env-configured value
+        } catch (e) {
+          console.warn('[createAtom] getAtomCreationCost failed, using env value:', e);
         }
+      } else {
+        console.warn('[createAtom] publicClient.readContract unavailable — using env VALUE_PER_ATOM:', VALUE_PER_ATOM?.toString());
       }
 
       // 5. Simulate first to surface the actual revert reason, then write

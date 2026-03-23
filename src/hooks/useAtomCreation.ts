@@ -97,8 +97,21 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       // 3. Upload to IPFS for reference (optional)
       const { ipfsHash } = await hashDataToIPFS(atomData);
 
-      // 4. Use VALUE_PER_ATOM directly
-      const requiredAmount = VALUE_PER_ATOM;
+      // 4. Fetch the minimum required amount from the contract.
+      // VALUE_PER_ATOM (from env) is used as fallback when publicClient is unavailable.
+      let requiredAmount = VALUE_PER_ATOM;
+      if (publicClient?.readContract) {
+        try {
+          const contractMin = await publicClient.readContract({
+            address: ATOM_CONTRACT_ADDRESS,
+            abi: atomABI,
+            functionName: 'getAtomCreationCost',
+          }) as bigint;
+          if (contractMin > requiredAmount) requiredAmount = contractMin;
+        } catch {
+          // If the read fails, fall back to the env-configured value
+        }
+      }
 
       // 5. Simulate first to surface the actual revert reason, then write
       if (publicClient?.simulateContract) {
@@ -164,14 +177,24 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     try {
       // Encode string as raw UTF-8 bytes (no JSON-LD wrapper)
       const dataBytes = toHex(str);
-      // createAtoms ABI: (bytes[] data, uint256[] values)
-      // value sent = sum of per-atom amounts array = VALUE_PER_ATOM for one atom
+      // Fetch minimum from contract; fall back to env value if unavailable
+      let atomCost = VALUE_PER_ATOM;
+      if (publicClient?.readContract) {
+        try {
+          const contractMin = await publicClient.readContract({
+            address: ATOM_CONTRACT_ADDRESS,
+            abi: atomABI,
+            functionName: 'getAtomCreationCost',
+          }) as bigint;
+          if (contractMin > atomCost) atomCost = contractMin;
+        } catch { /* fall back to env value */ }
+      }
       const txHash = await walletConnected.writeContract({
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
         functionName: 'createAtoms',
-        args: [[dataBytes], [VALUE_PER_ATOM]],
-        value: VALUE_PER_ATOM,
+        args: [[dataBytes], [atomCost]],
+        value: atomCost,
         gas: 2000000n,
       });
       const realAtomId = await waitForAtomId(txHash, walletConnected, publicClient);

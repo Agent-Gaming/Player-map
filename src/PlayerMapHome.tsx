@@ -1,5 +1,7 @@
 import React from "react";
-import IntuitionLogo from "./assets/img/logo.svg";
+import AgentLogo from "./assets/img/agent.svg";
+import IntuitionSmallLogo from "./assets/img/Intuition-logo.svg";
+import LogoAgentBg from "./assets/img/logo-agent.svg";
 import Atom from "./assets/img/atom.svg";
 import styles from "./PlayerMapHome.module.css";
 
@@ -37,14 +39,18 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
   return (
     <div className={styles.container}>
+      <img src={LogoAgentBg} alt="" aria-hidden="true" className={styles.backgroundLogo} />
       <div className={styles.topBar} />
-      <img
-        src={IntuitionLogo}
-        alt="Intuition Logo"
-        className={styles.logo}
-      />
+      <div className={styles.logoRow}>
+        <img
+          src={AgentLogo}
+          alt="Agent Logo"
+          className={styles.logo}
+        />
+        <span className={styles.logoText}>- PLAYER MAP</span>
+      </div>
       <h2 className={styles.title}>
-        BOSS FIGHTERS COMMUNITY PLAYER MAP
+        GAMING COMMUNITY GRAPH
       </h2>
 
       <div className={styles.textBlock}>
@@ -53,7 +59,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
           appeared !
         </p>
         <p>
-          Everything of which the Boss Fighters community would one day be
+          Everything of which the gaming community would one day be
           composed, would be born in an instant.
         </p>
         <p>
@@ -93,7 +99,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
           You need to connect your{" "}
           <span className={styles.highlight}>wallet (Intuition network)</span>{" "}
           and pay{" "}
-          <span className={styles.highlight}>0.05 $TRUST (less than $0.49)</span>{" "}
+          <span className={styles.highlight}>1 $TRUST (less than $0.20)</span>{" "}
           to create your player !
         </p>
 
@@ -108,6 +114,15 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
           />
           CREATE YOUR PLAYER
         </button>
+        <div className={styles.networkBadge}>
+          ON{" "}
+          <img
+            src={IntuitionSmallLogo}
+            alt="Intuition"
+            className={styles.networkLogo}
+          />{" "}
+          MAINNET
+        </div>
       </div>
 
       <div className={styles.bottomBar} />

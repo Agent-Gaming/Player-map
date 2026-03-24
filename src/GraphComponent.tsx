@@ -12,7 +12,6 @@ import { useSelectedAtomData } from "./hooks/useSelectedAtomData";
 import { useSelectedAtomClaims } from "./hooks/useSelectedAtomClaims";
 import PlayerMapHome from "./PlayerMapHome";
 import PlayerMapGraph from "./PlayerMapGraph";
-import RegistrationForm from "./RegistrationForm";
 import { ConnectWalletModal } from "./components/modals";
 import TopNavBar, { RightPanelMode, GraphControls } from "./components/TopNavBar";
 import RightPanel from "./components/RightPanel";
@@ -131,17 +130,9 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   }, []);
 
   // ── Inscription ───────────────────────────────────────────────────────────────
-  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
-
   const handleCreatePlayer = useCallback(() => {
     if (onCreatePlayer) onCreatePlayer();
-    setIsRegistrationFormOpen(true);
   }, [onCreatePlayer]);
-
-  const handleCloseRegistrationForm = useCallback(() => {
-    setIsRegistrationFormOpen(false);
-    if (onClose) onClose();
-  }, [onClose]);
 
   const handleConnectWallet = useCallback(() => {
     if (onConnectWallet) onConnectWallet();
@@ -185,12 +176,13 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             walletAddress={walletAddress}
             wagmiConfig={wagmiConfig}
             walletHooks={walletHooks}
+            constants={constants}
             onCreatePlayer={handleCreatePlayer}
           />
         </div>
       )}
 
-      {/* ── Layout principal : navbar + graphe + panneau ─────────────────────── */}
+      {/* Layout principal : navbar + graphe + panneau ─────────────────────── */}
       {isWalletReady && hasConfirmedPlayer && (
         <div className={styles.mainLayout}>
           {/* Navbar fixe en haut */}
@@ -242,16 +234,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
         </div>
       )}
 
-      {/* Formulaire d'inscription */}
-      <RegistrationForm
-        isOpen={isRegistrationFormOpen}
-        onClose={handleCloseRegistrationForm}
-        walletConnected={walletConnected}
-        walletAddress={walletAddress}
-        wagmiConfig={wagmiConfig}
-        walletHooks={walletHooks}
-        constants={constants}
-      />
     </div>
   );
 };

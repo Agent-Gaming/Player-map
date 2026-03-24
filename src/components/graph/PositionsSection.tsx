@@ -72,17 +72,18 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
   };
 
   return (
-    <div>
+    <div className={styles.positionsSection}>
       {isReloading && (
         <p className={styles.stateMessageRefreshing}>Refreshing positions…</p>
       )}
-      {loading ? (
-        <p className={styles.stateMessage}>Loading…</p>
-      ) : positions.length === 0 ? (
-        <p className={styles.stateMessage}>No positions found.</p>
-      ) : (
-        <>
-          {positions.map((position, index) => (
+
+      <div className={styles.positionsList}>
+        {loading ? (
+          <p className={styles.stateMessage}>Loading…</p>
+        ) : positions.length === 0 ? (
+          <p className={styles.stateMessage}>No positions found.</p>
+        ) : (
+          positions.map((position, index) => (
             <PositionCard
               key={position.id || index}
               position={position}
@@ -92,19 +93,17 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
               redeemAmount={redeemAmounts[position.id]}
               publicClient={publicClient}
             />
-          ))}
+          ))
+        )}
+      </div>
 
-          {selectedPositions.size > 0 && (
-            <div className={styles.stickyFooter}>
-              <RedeemAllButton
-                selectedCount={selectedPositions.size}
-                onRedeemAll={onRedeemAllSelected}
-                isLoading={isLoading}
-              />
-            </div>
-          )}
-        </>
-      )}
+      <div className={styles.stickyFooter}>
+        <RedeemAllButton
+          selectedCount={selectedPositions.size}
+          onRedeemAll={onRedeemAllSelected}
+          isLoading={isLoading}
+        />
+      </div>
     </div>
   );
 };

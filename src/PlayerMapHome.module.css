@@ -4,9 +4,8 @@
   width: 75%;
   display: flex;
   flex-direction: column;
-  margin: auto;
   align-items: center;
-  text-align: center;
+  margin: auto;
   padding-top: 50px;
   position: relative;
   overflow: hidden;
@@ -55,6 +54,15 @@
   margin: 0 0 20px 0;
   color: var(--color-primary);
   font-weight: bold;
+}
+
+.title2 {
+  font-size: 18px;
+  margin: 0 0 4px 0;
+  color: var(--color-secondary);
+  font-weight: bold;
+  width: 80%;
+  text-align: left;
 }
 
 .textBlock {
@@ -134,4 +142,230 @@
 .networkLogo {
   height: 14px;
   width: auto;
+}
+
+/* ─── Inline registration form ─────────────────────────────────────────────── */
+
+.formWrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.formBlock {
+  width: 80%;
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  margin-bottom: 16px;
+}
+
+/* ── 2-column row ─────────────────────────────────────────────────────────── */
+
+.formRow {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 0;
+}
+
+.formRowLabel {
+  flex: 0 0 42%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 2px;
+}
+
+.formRowControl {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rowTitle {
+  display: block;
+  letter-spacing: 0.06em;
+}
+
+.rowDesc {
+  color: var(--color-primary);
+  display: block;
+}
+
+/* ── Field controls ─────────────────────────────────────────────────────────── */
+
+.input {
+  width: 100%;
+  padding: 12px 12px;
+  background-color: #171717;
+  border: 1px solid #3d3d3d;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 0.9em;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.input::placeholder {
+  color: #444;
+}
+
+.select {
+  width: 100%;
+  padding: 12px 12px;
+  background-color: #1b1b1b;
+  border: 1px solid #3c3c3c;
+  color: #fff;
+  border-radius: 5px;
+  font-size: 0.9em;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23FFD32A' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.select option {
+  background-color: #0d0d1a;
+  color: #fff;
+}
+
+/* ── Upload ──────────────────────────────────────────────────────────────────── */
+
+.uploadBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-primary);
+  color: #000;
+  border-radius: 5px;
+  font-weight: bold;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+  align-self: flex-start;
+  margin-top: 25%;
+}
+
+.uploadBtn:hover {
+  background-color: var(--color-primary);
+  color: #000;
+}
+
+.imagePreviewThumb {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #333;
+}
+
+/* ── Terms box ───────────────────────────────────────────────────────────────── */
+
+.termsBox {
+  margin: 16px 0;
+  font-size: 14px;
+}
+
+.termsBox p {
+  margin: 0 0 6px 0;
+}
+
+.termsBox p:last-child {
+  margin-bottom: 0;
+}
+
+.termsBox ul {
+  margin: 4px 0 6px 16px;
+  padding: 0;
+}
+
+.termsBox li {
+  margin-bottom: 2px;
+}
+
+/* ── Validate / back ────────────────────────────────────────────────────────── */
+
+.validateBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140px;
+  align-self: center;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: var(--color-primary);
+  color: #000;
+  border: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  text-transform: uppercase;
+  height: 42px;
+  padding: 12px 16px;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.validateBtn:hover:not(:disabled) {
+  transform: scale(1.02);
+  background-color: #ffed4e;
+}
+
+.validateBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.backLink {
+  background: none;
+  border: none;
+  color: #444;
+  font-size: 0.78em;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 8px;
+  text-align: left;
+  width: 80%;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: var(--color-primary);
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.radioLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82em;
+  color: #999;
+  cursor: pointer;
+}
+
+.radioLabel input[type="radio"] {
+  accent-color: var(--color-primary);
+  cursor: pointer;
 }

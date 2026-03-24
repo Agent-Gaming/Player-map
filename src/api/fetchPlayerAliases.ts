@@ -1,6 +1,51 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 
 /**
+ * Fetches the term_id of the account atom for a wallet address.
+ * The account atom is a string atom whose data field equals the wallet address.
+ * Created during Phase 1 registration via createStringAtom(walletAddress.toLowerCase()).
+ * Returns null if no account atom exists (user not yet registered).
+ */
+export const fetchAccountAtom = async (
+  walletAddress: string,
+  network: Network = Network.MAINNET
+): Promise<string | null> => {
+  try {
+    const apiUrl = API_URLS[network];
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query GetAccountAtom($address: String!) {
+            atoms(
+              where: { data: { _ilike: $address } }
+              order_by: { term_id: asc }
+              limit: 1
+            ) {
+              term_id
+            }
+          }
+        `,
+        variables: { address: walletAddress.toLowerCase() },
+      }),
+    });
+
+    const data = await response.json();
+    if (data.errors) {
+      console.error('GraphQL errors (fetchAccountAtom):', data.errors);
+      return null;
+    }
+
+    const atoms = data.data?.atoms || [];
+    return atoms.length > 0 ? atoms[0].term_id : null;
+  } catch (error) {
+    console.error('Error fetching account atom:', error);
+    return null;
+  }
+};
+
+/**
  * Fetches the term_id of the player's first (earliest) atom by their wallet address.
  * The player registration atom is always the first atom created by that address.
  * Returns null if the player has no atom (not yet registered).

@@ -12,8 +12,9 @@ export const usePlayerConstants = (config?: PlayerMapConfig): DefaultPlayerMapCo
     // Si des constantes personnalisées sont fournies, les utiliser
     if (config?.constants) {
       return {
-        ...config.constants,
-        UNIT_VALUE // Toujours depuis Player-map, jamais paramétrable
+        ...DEFAULT_CONSTANTS,  // base: all defaults (includes HAS_ALIAS_PREDICATE_ID)
+        ...config.constants,   // override with caller-supplied values
+        UNIT_VALUE             // always from library, never overridable
       };
     }
 

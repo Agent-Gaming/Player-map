@@ -6,7 +6,7 @@ export const COMMON_IDS = {
   FOLLOWS: "0x8f9b5dc2e7b8bd12f6762c839830672f1d13c08e72b5f09f194cafc153f2df8a", // prédicat --> follows
   IS: "0x2af261bce70c2fc3a1abf882e3e89b23066fcd150bfda27fab69f9f55ed2d9d0",  // prédicat --> is
   IS_PLAYER_OF: "0x05f1707d8cb50571d01021f09a664826aa1be2ff43504c0cca55eef87142f84f",  // prédicat --> is player of
-  HAS_ALIAS: '<HAS_ALIAS_PREDICATE_ID_PLACEHOLDER>', // predicate → has alias
+  HAS_ALIAS: '0x90b0a11a334ba1a7c3613ed8ea007f1f41b274892f0f05cc0b24d3ab34042d3c', // predicate → has alias
 };
 
 export const HAS_ALIAS_PREDICATE_ID = COMMON_IDS.HAS_ALIAS;
@@ -15,23 +15,27 @@ export const HAS_ALIAS_PREDICATE_ID = COMMON_IDS.HAS_ALIAS;
 export const PLAYER_TRIPLE_TYPES = {
   PLAYER_GAME: {
     predicateId: COMMON_IDS.IS_PLAYER_OF, // predicat --> is player of !!!
-    objectId: COMMON_IDS.GAMES_ID // object --> games (BossFighters)
+    objectId: COMMON_IDS.GAMES_ID, // object --> games (BossFighters)
+    label: 'is player of BossFighters',
   },
   PLAYER_QUALITY_1: {
-    predicateId: COMMON_IDS.IS, // predicat --> is 
-    objectId: "0xc9559c712c264e5f94ce450ed9473c451b6fd01ab6a436a726fbae767cd67b9c" // object --> fairplay !!!
+    predicateId: COMMON_IDS.IS, // predicat --> is
+    objectId: "0xc9559c712c264e5f94ce450ed9473c451b6fd01ab6a436a726fbae767cd67b9c", // object --> fairplay !!!
+    label: 'is fairplay',
   },
   PLAYER_QUALITY_2: {
-    predicateId: COMMON_IDS.IS, // predicat --> is 
-    objectId: "0x56d28a901a7f2617247f1663b0c25c77ba6403a8141bac43b1e94eb32a2de941" // object --> strong boss !!!
+    predicateId: COMMON_IDS.IS, // predicat --> is
+    objectId: "0x56d28a901a7f2617247f1663b0c25c77ba6403a8141bac43b1e94eb32a2de941", // object --> strong boss !!!
+    label: 'is strong boss',
   },
   PLAYER_QUALITY_3: {
-    predicateId: COMMON_IDS.IS, // predicat --> is 
-    objectId: "0xc8433466cda62c0e8bb4fc5433f3faa51949072d6c7b0df50a595c95fb97f1bb" // object --> strong fighter !!!
+    predicateId: COMMON_IDS.IS, // predicat --> is
+    objectId: "0xc8433466cda62c0e8bb4fc5433f3faa51949072d6c7b0df50a595c95fb97f1bb", // object --> strong fighter !!!
+    label: 'is strong fighter',
   },
   PLAYER_GUILD: {
     predicateId: COMMON_IDS.IS_PLAYER_OF, // predicat --> is player of !!!
-    objectId: null // Sera défini dynamiquement en fonction du choix de guilde
+    objectId: null, // dynamically set based on guild choice — excluded from Phase 2 auto-claims
   }
 };
 

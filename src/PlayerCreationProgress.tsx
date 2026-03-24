@@ -1,575 +1,395 @@
 import React from "react";
 import { DefaultPlayerMapConstants } from './types/PlayerMapConfig';
-import SafeImage from './components/SafeImage';
-import { isIpfsUrl, ipfsToHttpUrl } from './utils/pinata';
-import { PlayerAlias, AliasCreationStep } from './types/alias';
+import { PlayerAlias, RegistrationPhase, IdentityCreationStep, ClaimOption } from './types/alias';
 
 interface PlayerCreationProgressProps {
-  step: number;
-  isCreatingAtom: boolean;
-  isCreatingTriples: boolean;
-  creationSuccess: boolean;
-  atomId: string | null;
-  tripleCreated: boolean;
   walletAddress?: string;
-  hasExistingAtom: boolean;
-  formData: {
-    pseudo: string;
-    image: string;
-    guildId?: string;
-  };
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSelectChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  handleFileUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleSubmit: () => void;
-  isLoading: boolean;
-  isUploading: boolean;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  constants: DefaultPlayerMapConstants; // Constantes injectées
-  // Alias section — only rendered when hasExistingAtom is true
+  constants: DefaultPlayerMapConstants;
+
+  // Phase state machine
+  registrationPhase: RegistrationPhase;
+
+  // Phase 1 — identity creation
+  pseudoInput: string;
+  onPseudoInputChange: (val: string) => void;
+  onCreateIdentity: () => void;
+  identityStep: IdentityCreationStep;
+  isCreatingIdentity: boolean;
+  identityError?: string;
+  onRetryIdentity: () => void;
+  onResetIdentity: () => void;
+
+  // Context after Phase 1
+  pseudo: string;
   aliases?: PlayerAlias[];
   aliasesLoading?: boolean;
-  aliasInput?: string;
-  onAliasInputChange?: (val: string) => void;
-  onCreateAlias?: () => void;
-  // Callback wired in RegistrationForm to useDepositTriple — not called inside this component
-  onUseExistingAlias?: (tripleId: string) => void;
-  aliasStep?: AliasCreationStep;
-  isCreating?: boolean;
-  aliasError?: string;
-  // Deposit feedback (for "Utiliser" button)
-  isDepositing?: boolean;
-  depositError?: string;
-  // Called when the user cancels after an error — resets alias flow so they can try a different pseudo
-  onResetAlias?: () => void;
+
+  // Phase 2 — claims selection + creation
+  availableClaims: ClaimOption[];
+  selectedClaimIds: string[];
+  createdClaimIds: string[];
+  onToggleClaim: (id: string) => void;
+  onCreateSelectedClaims: () => void;
+  onSkipClaims: () => void;
+  isCreatingClaims: boolean;
+  currentClaimIndex: number;
+  claimError?: string;
 }
 
-const PreviewImage = ({ src }: { src: string }) => {
-  const [httpUrl, setHttpUrl] = React.useState<string>(src);
-  const [isLoading, setIsLoading] = React.useState(true);
+// Ordered steps for phase 1 progress logic
+const IDENTITY_STEPS: IdentityCreationStep[] = [
+  'idle',
+  'creating-pseudo-atom',
+  'fetching-account-atom',
+  'creating-account-atom',
+  'creating-alias-triple',
+  'success',
+];
 
-  React.useEffect(() => {
-    const loadImage = async () => {
-      setIsLoading(true);
-      try {
-        // Si c'est une URL IPFS, la convertir en URL HTTP
-        const url = isIpfsUrl(src) ? ipfsToHttpUrl(src) : src;
-        setHttpUrl(url);
-      } catch (error) {
-        console.error("Error converting IPFS URL:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+const IdentityProgressBar = ({ step }: { step: IdentityCreationStep }) => {
+  const current = IDENTITY_STEPS.indexOf(step);
 
-    loadImage();
-  }, [src]);
-
-  if (isLoading) {
-    return <div>Loading image...</div>;
-  }
+  const uiSteps = [
+    { label: 'Pseudo atom', doneAfter: IDENTITY_STEPS.indexOf('creating-pseudo-atom'), activeOn: ['creating-pseudo-atom'] },
+    { label: 'Account',     doneAfter: IDENTITY_STEPS.indexOf('creating-account-atom'), activeOn: ['fetching-account-atom', 'creating-account-atom'] },
+    { label: 'Alias triple',doneAfter: IDENTITY_STEPS.indexOf('creating-alias-triple'), activeOn: ['creating-alias-triple'] },
+  ];
 
   return (
-    <SafeImage
-      src={httpUrl}
-      alt="Preview"
-      style={{
-        maxWidth: "100%",
-        maxHeight: "150px",
-        borderRadius: "5px",
-      }}
-      placeholderText="?"
-      showPlaceholder={true}
-    />
+    <div style={{ marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+        {uiSteps.map((s, i) => {
+          const isActive = (s.activeOn as string[]).includes(step);
+          const isDone = current > s.doneAfter;
+          return (
+            <div key={i} style={{ textAlign: "center", flex: 1 }}>
+              <div style={{
+                width: "30px",
+                height: "30px",
+                borderRadius: "15px",
+                backgroundColor: isDone ? "#4CAF50" : isActive ? "#FFD32A" : "#2e2e40",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto",
+                color: isDone || isActive ? "#000" : "#fff",
+                fontWeight: "bold",
+              }}>
+                {isDone ? "✓" : i + 1}
+              </div>
+              <p style={{ fontSize: "0.78em", marginTop: "5px", color: "#aaa" }}>{s.label}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
+const statusLabel: Partial<Record<IdentityCreationStep, string>> = {
+  'creating-pseudo-atom':   "Création de l'atom pseudo…",
+  'fetching-account-atom':  "Vérification du compte…",
+  'creating-account-atom':  "Création de l'atom compte…",
+  'creating-alias-triple':  "Liaison has alias…",
+};
+
 const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
-  step,
-  isCreatingAtom,
-  isCreatingTriples,
-  creationSuccess,
-  atomId,
-  tripleCreated,
   walletAddress,
-  hasExistingAtom,
-  formData,
-  handleInputChange,
-  handleSelectChange,
-  handleFileUpload,
-  handleSubmit,
-  isLoading,
-  isUploading,
-  fileInputRef,
-  constants,
+  registrationPhase,
+  pseudoInput,
+  onPseudoInputChange,
+  onCreateIdentity,
+  identityStep,
+  isCreatingIdentity,
+  identityError,
+  onRetryIdentity,
+  onResetIdentity,
+  pseudo,
   aliases,
   aliasesLoading,
-  aliasInput,
-  onAliasInputChange,
-  onCreateAlias,
-  onUseExistingAlias,
-  aliasStep,
-  isCreating,
-  aliasError,
-  isDepositing,
-  depositError,
-  onResetAlias,
+  availableClaims,
+  selectedClaimIds,
+  createdClaimIds,
+  onToggleClaim,
+  onCreateSelectedClaims,
+  onSkipClaims,
+  isCreatingClaims,
+  currentClaimIndex,
+  claimError,
 }) => {
-  // Utiliser les constantes passées en paramètre
-  const { OFFICIAL_GUILDS } = constants;
-  return (
-    <>
-      {/* Progression du processus */}
-      <div style={{ marginBottom: "20px" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: "10px",
-          }}
-        >
-          <div style={{ textAlign: "center", flex: 1 }}>
-            <div
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "15px",
-                backgroundColor:
-                  isCreatingAtom || step > 1 ? "#FFD32A" : "#2e2e40",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto",
-                color: isCreatingAtom || step > 1 ? "#000" : "#fff",
-              }}
-            >
-              {step > 1 ? "✓" : "1"}
-            </div>
-            <p style={{ fontSize: "0.8em", marginTop: "5px" }}>
-              Atom Creation
-            </p>
-          </div>
-          <div style={{ textAlign: "center", flex: 1 }}>
-            <div
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "15px",
-                backgroundColor:
-                  isCreatingTriples || step > 2 ? "#FFD32A" : "#2e2e40",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto",
-                color: isCreatingTriples || step > 2 ? "#000" : "#fff",
-              }}
-            >
-              {step > 2 ? "✓" : "2"}
-            </div>
-            <p style={{ fontSize: "0.8em", marginTop: "5px" }}>
-              Triples Creation
-            </p>
-          </div>
-          <div style={{ textAlign: "center", flex: 1 }}>
-            <div
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "15px",
-                backgroundColor: step === 3 ? "#4CAF50" : "#2e2e40",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto",
-                color: step === 3 ? "#000" : "#fff",
-              }}
-            >
-              {step === 3 ? "✓" : "3"}
-            </div>
-            <p style={{ fontSize: "0.8em", marginTop: "5px" }}>Success</p>
-          </div>
-        </div>
-        <div
-          style={{
-            height: "4px",
-            backgroundColor: "#2e2e40",
-            position: "relative",
-            marginBottom: "20px",
-          }}
-        >
-          <div
+  if (!walletAddress) {
+    return (
+      <p style={{ textAlign: "center", color: "#ff4444" }}>
+        Please connect your wallet first
+      </p>
+    );
+  }
+
+  // ─── Phase: input ─────────────────────────────────────────────────────────
+  if (registrationPhase === 'input') {
+    return (
+      <div>
+        <div style={{ marginBottom: "15px" }}>
+          <label style={{ display: "block", marginBottom: "5px", fontSize: "0.9em", textAlign: "left" }}>
+            Ton pseudo
+          </label>
+          <input
+            type="text"
+            value={pseudoInput}
+            onChange={e => onPseudoInputChange(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && pseudoInput.trim()) onCreateIdentity(); }}
+            placeholder="DarkPlayer42"
             style={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              height: "100%",
-              width: `${(step - 1) * 50}%`,
-              backgroundColor: "#FFD32A",
-              transition: "width 0.3s ease",
+              width: "100%",
+              padding: "8px",
+              backgroundColor: "#1e1e30",
+              border: "1px solid #333",
+              color: "#fff",
+              borderRadius: "4px",
+              boxSizing: "border-box",
             }}
-          ></div>
+          />
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <button
+            onClick={onCreateIdentity}
+            disabled={!pseudoInput.trim()}
+            style={{
+              padding: "10px 24px",
+              backgroundColor: "#FFD32A",
+              color: "#000",
+              border: "none",
+              borderRadius: "5px",
+              cursor: !pseudoInput.trim() ? "not-allowed" : "pointer",
+              fontWeight: "bold",
+              opacity: !pseudoInput.trim() ? 0.6 : 1,
+              fontSize: "0.95em",
+            }}
+          >
+            Créer mon identité
+          </button>
         </div>
       </div>
+    );
+  }
 
-      {creationSuccess ? (
-        <div style={{ textAlign: "center", color: "#4CAF50" }}>
-          <h3 style={{ color: "#4CAF50", marginBottom: "10px" }}>Success!</h3>
-          <p>Your player has been created successfully.</p>
-          <p>Atom ID: {atomId}</p>
-          <p>Triples created: {tripleCreated ? "Yes" : "No"}</p>
-          <p>This window will close automatically...</p>
-        </div>
-      ) : !walletAddress ? (
-        <div>
-          <p style={{ textAlign: "center", color: "#ff4444" }}>
-            Please connect your wallet first
+  // ─── Phase: creating-identity ─────────────────────────────────────────────
+  if (registrationPhase === 'creating-identity') {
+    return (
+      <div>
+        <IdentityProgressBar step={identityStep} />
+
+        {identityStep !== 'error' ? (
+          <p style={{ textAlign: "center", color: "#aaa", fontSize: "0.9em", minHeight: "20px" }}>
+            {statusLabel[identityStep] ?? '…'}
           </p>
-        </div>
-      ) : hasExistingAtom ? (
-        <div>
-          <h3 style={{ color: "#FFD32A", marginBottom: "16px", textAlign: "center" }}>
-            Tes alias
-          </h3>
-
-          {aliasesLoading ? (
-            <p style={{ textAlign: "center", color: "#aaa" }}>Chargement des alias...</p>
-          ) : aliases && aliases.length > 0 ? (
-            <div style={{ marginBottom: "20px" }}>
-              <p style={{ fontSize: "0.85em", color: "#aaa", marginBottom: "8px" }}>
-                Alias existants :
-              </p>
-              {aliases.map(alias => (
-                <div
-                  key={alias.tripleId}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "8px 10px",
-                    marginBottom: "6px",
-                    backgroundColor: "#1e1e30",
-                    border: "1px solid #333",
-                    borderRadius: "4px",
-                  }}
-                >
-                  <span>
-                    {alias.isPrimary && (
-                      <span style={{ color: "#FFD32A", marginRight: "6px" }}>★</span>
-                    )}
-                    {alias.pseudo}
-                  </span>
-                  <button
-                    onClick={() => onUseExistingAlias?.(alias.tripleId)}
-                    disabled={isDepositing}
-                    style={{
-                      padding: "4px 10px",
-                      backgroundColor: "#2e2e40",
-                      color: "#fff",
-                      border: "1px solid #555",
-                      borderRadius: "4px",
-                      cursor: isDepositing ? "not-allowed" : "pointer",
-                      fontSize: "0.8em",
-                      opacity: isDepositing ? 0.7 : 1,
-                    }}
-                  >
-                    {isDepositing ? "..." : "Utiliser"}
-                  </button>
-                </div>
-              ))}
-              {depositError && (
-                <p style={{ color: "#ff4444", fontSize: "0.85em" }}>{depositError}</p>
-              )}
-            </div>
-          ) : (
-            <p style={{ color: "#aaa", fontSize: "0.85em", marginBottom: "16px" }}>
-              Tu n'as pas encore d'alias.
+        ) : (
+          <div style={{ textAlign: "center" }}>
+            <p style={{ color: "#ff4444", fontSize: "0.85em", marginBottom: "12px" }}>
+              {identityError}
             </p>
-          )}
-
-          <div style={{ marginBottom: "12px" }}>
-            <p style={{ fontSize: "0.85em", color: "#aaa", marginBottom: "8px" }}>
-              Créer un nouvel alias :
-            </p>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <input
-                type="text"
-                value={aliasInput ?? ""}
-                onChange={e => onAliasInputChange?.(e.target.value)}
-                placeholder="Ton pseudo"
-                // Disable during active creation AND on error (prevents atom/triple mismatch on retry)
-                disabled={isCreating || aliasStep === 'error'}
-                style={{
-                  flex: 1,
-                  padding: "8px",
-                  backgroundColor: "#1e1e30",
-                  border: "1px solid #333",
-                  color: "#fff",
-                  borderRadius: "4px",
-                }}
-              />
+            <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
               <button
-                onClick={onCreateAlias}
-                disabled={isCreating || !aliasInput?.trim()}
+                onClick={onRetryIdentity}
                 style={{
-                  padding: "8px 16px",
+                  padding: "6px 16px",
                   backgroundColor: "#FFD32A",
                   color: "#000",
                   border: "none",
                   borderRadius: "4px",
-                  cursor: isCreating || !aliasInput?.trim() ? "not-allowed" : "pointer",
+                  cursor: "pointer",
                   fontWeight: "bold",
-                  opacity: isCreating || !aliasInput?.trim() ? 0.7 : 1,
+                  fontSize: "0.85em",
                 }}
               >
-                {isCreating ? "..." : "Créer"}
+                Réessayer
+              </button>
+              <button
+                onClick={onResetIdentity}
+                style={{
+                  padding: "6px 14px",
+                  backgroundColor: "#2e2e40",
+                  color: "#ff8888",
+                  border: "1px solid #555",
+                  borderRadius: "4px",
+                  cursor: "pointer",
+                  fontSize: "0.85em",
+                }}
+              >
+                Annuler
               </button>
             </div>
           </div>
+        )}
+      </div>
+    );
+  }
 
-          {/* Progress bar — reused with alias-specific labels */}
-          {aliasStep && aliasStep !== 'idle' && (
-            <div style={{ marginTop: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                {(["creating-pseudo-atom", "creating-triple", "success"] as AliasCreationStep[]).map(
-                  (s, i) => {
-                    const labels = ["Pseudo atom", "Triple", "OK"];
-                    const isActive = aliasStep === s;
-                    const isDone =
-                      (aliasStep === "creating-triple" && i === 0) ||
-                      (aliasStep === "success" && i < 2);
-                    return (
-                      <div key={s} style={{ textAlign: "center", flex: 1 }}>
-                        <div
-                          style={{
-                            width: "30px",
-                            height: "30px",
-                            borderRadius: "15px",
-                            backgroundColor: isDone ? "#4CAF50" : isActive ? "#FFD32A" : "#2e2e40",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            margin: "0 auto",
-                            color: isActive || isDone ? "#000" : "#fff",
-                          }}
-                        >
-                          {isDone ? "✓" : i + 1}
-                        </div>
-                        <p style={{ fontSize: "0.8em", marginTop: "5px" }}>{labels[i]}</p>
-                      </div>
-                    );
-                  }
-                )}
-              </div>
-            </div>
-          )}
+  // ─── Phase: complete ──────────────────────────────────────────────────────
+  if (registrationPhase === 'complete') {
+    return (
+      <div style={{ textAlign: "center", paddingTop: "8px" }}>
+        <p style={{ fontSize: "2em", marginBottom: "8px" }}>✅</p>
+        <h3 style={{ color: "#4CAF50", marginBottom: "8px" }}>Profil complet !</h3>
+        {pseudo && (
+          <p style={{ color: "#aaa" }}>
+            Identité : <strong style={{ color: "#FFD32A" }}>{pseudo}</strong>
+          </p>
+        )}
+      </div>
+    );
+  }
 
-          {aliasStep === "error" && aliasError && (
-            <div style={{ marginTop: "8px" }}>
-              <p style={{ color: "#ff4444", fontSize: "0.85em" }}>{aliasError}</p>
-              {/* Réessayer calls onCreateAlias directly (preserves pseudoAtomId in hook state).
-                  The input is disabled during isCreating so the user cannot change the pseudo
-                  mid-flow. On error, the input stays enabled intentionally — if the user edits
-                  it before retrying, the hook's pseudoAtomId (from the first atom) is reset
-                  because createAlias() checks `pseudo.trim()` against the new value.
-                  To keep atom and triple consistent: disable the input on error too, or
-                  call reset() when the input changes after an error. The simplest safe approach:
-                  disable the input whenever aliasStep is not 'idle'. */}
-              <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
-                <button
-                  onClick={onCreateAlias}
-                  style={{
-                    padding: "6px 14px",
-                    backgroundColor: "#2e2e40",
-                    color: "#fff",
-                    border: "1px solid #555",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontSize: "0.85em",
-                  }}
-                >
-                  Réessayer
-                </button>
-                <button
-                  onClick={onResetAlias}
-                  style={{
-                    padding: "6px 14px",
-                    backgroundColor: "#2e2e40",
-                    color: "#ff8888",
-                    border: "1px solid #555",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    fontSize: "0.85em",
-                  }}
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          )}
+  // ─── Phases: identity-created + creating-claims ───────────────────────────
+  const pendingCount = selectedClaimIds.filter(id => !createdClaimIds.includes(id)).length;
+  const totalPending = selectedClaimIds.filter(id => !createdClaimIds.includes(id)).length;
 
-          {aliasStep === "success" && (
-            <p style={{ color: "#4CAF50", textAlign: "center", marginTop: "8px" }}>
-              Alias créé avec succès !
-            </p>
-          )}
+  return (
+    <div>
+      {/* Existing aliases (read-only context) */}
+      {aliasesLoading ? (
+        <p style={{ color: "#aaa", fontSize: "0.82em", marginBottom: "8px" }}>Chargement…</p>
+      ) : aliases && aliases.length > 0 ? (
+        <div style={{ marginBottom: "14px" }}>
+          <p style={{ fontSize: "0.78em", color: "#aaa", marginBottom: "5px" }}>Tes alias :</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+            {aliases.map(a => (
+              <span
+                key={a.tripleId}
+                style={{
+                  padding: "2px 10px",
+                  backgroundColor: "#1e1e30",
+                  border: `1px solid ${a.isPrimary ? "#FFD32A" : "#333"}`,
+                  borderRadius: "12px",
+                  fontSize: "0.82em",
+                  color: a.isPrimary ? "#FFD32A" : "#ccc",
+                }}
+              >
+                {a.isPrimary && "★ "}{a.pseudo}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Phase 2: claims creation in progress */}
+      {isCreatingClaims ? (
+        <div style={{ textAlign: "center", padding: "16px 0" }}>
+          <p style={{ color: "#FFD32A", marginBottom: "6px", fontWeight: "bold" }}>
+            Création des claims : {currentClaimIndex + 1} / {totalPending}
+          </p>
+          <p style={{ color: "#aaa", fontSize: "0.85em" }}>Transaction en cours…</p>
         </div>
       ) : (
         <>
-          <div style={{ marginBottom: "15px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontSize: "0.9em",
-                textAlign: "left",
-              }}
-            >
-              Username
-            </label>
-            <input
-              type="text"
-              name="pseudo"
-              value={formData.pseudo}
-              onChange={handleInputChange}
-              placeholder="Enter your username"
-              style={{
-                width: "100%",
-                padding: "8px",
-                backgroundColor: "#1e1e30",
-                border: "1px solid #333",
-                color: "#fff",
-                borderRadius: "4px",
-              }}
-            />
-          </div>
+          {/* Claims title */}
+          <h3 style={{ color: "#FFD32A", marginBottom: "12px", textAlign: "center", fontSize: "0.95em" }}>
+            {pseudo ? <><span style={{ color: "#fff" }}>{pseudo}</span> — </> : ''}
+            Ajoute des claims à ton profil
+          </h3>
 
-          <div style={{ marginBottom: "15px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontSize: "0.9em",
-                textAlign: "left",
-              }}
-            >
-              Guild (Optional)
-            </label>
-            <select
-              name="guildId"
-              value={formData.guildId || ""}
-              onChange={handleSelectChange}
-              style={{
-                width: "100%",
-                padding: "8px",
-                backgroundColor: "#1e1e30",
-                border: "1px solid #333",
-                color: "#fff",
-                borderRadius: "4px",
-              }}
-            >
-              <option value="">Select a guild</option>
-              {OFFICIAL_GUILDS.map((guild) => (
-                <option key={guild.id.toString()} value={guild.id.toString()}>
-                  {guild.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ marginBottom: "15px" }}>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontSize: "0.9em",
-                textAlign: "left",
-              }}
-            >
-              Player profile picture (optional)
-            </label>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-              }}
-            >
-              <div>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    padding: "8px 15px",
-                    backgroundColor: "#2e2e40",
-                    color: "#fff",
-                    border: "1px solid #333",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    marginRight: "10px",
-                  }}
-                  disabled={isUploading}
-                >
-                  {isUploading ? "Upload in progress..." : "Choose an image"}
-                </button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  style={{ display: "none" }}
-                />
-              </div>
-
-              <p
-                style={{ fontSize: "0.8em", color: "#aaa", marginTop: "0px" }}
-              >
-                This image will be used as your player's profile picture.
-              </p>
-
-              {formData.image && (
-                <div style={{ marginTop: "10px" }}>
-                  <p
+          {/* Claims list */}
+          {availableClaims.length > 0 ? (
+            <div style={{ marginBottom: "14px" }}>
+              {availableClaims.map(claim => {
+                const isSelected = selectedClaimIds.includes(claim.id);
+                const isDone = createdClaimIds.includes(claim.id);
+                return (
+                  <div
+                    key={claim.id}
+                    onClick={() => !isDone && onToggleClaim(claim.id)}
                     style={{
-                      fontSize: "0.8em",
-                      color: "#aaa",
-                      marginBottom: "5px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "8px 10px",
+                      marginBottom: "6px",
+                      backgroundColor: isDone ? "#152015" : isSelected ? "#1a1e35" : "#1e1e30",
+                      border: `1px solid ${isDone ? "#4CAF50" : isSelected ? "#FFD32A" : "#333"}`,
+                      borderRadius: "4px",
+                      cursor: isDone ? "default" : "pointer",
+                      transition: "background-color 0.15s, border-color 0.15s",
                     }}
                   >
-                    Image preview:
-                  </p>
-                  <PreviewImage src={formData.image} />
-                </div>
-              )}
+                    {/* Checkbox */}
+                    <div style={{
+                      width: "18px",
+                      height: "18px",
+                      borderRadius: "3px",
+                      border: `2px solid ${isDone ? "#4CAF50" : isSelected ? "#FFD32A" : "#555"}`,
+                      backgroundColor: isDone ? "#4CAF50" : isSelected ? "#FFD32A" : "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      fontSize: "0.72em",
+                      color: "#000",
+                      fontWeight: "bold",
+                    }}>
+                      {(isDone || isSelected) && "✓"}
+                    </div>
+                    {/* Label */}
+                    <span style={{ fontSize: "0.88em", color: isDone ? "#88cc88" : "#e0e0e0" }}>
+                      {pseudo && (
+                        <span style={{ color: isDone ? "#88cc88" : "#FFD32A" }}>{pseudo} </span>
+                      )}
+                      {claim.label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-          </div>
+          ) : (
+            <p style={{ color: "#aaa", fontSize: "0.85em", marginBottom: "14px" }}>
+              Aucun claim disponible.
+            </p>
+          )}
 
-          <div style={{ textAlign: "center" }}>
+          {/* Error */}
+          {claimError && (
+            <p style={{ color: "#ff4444", fontSize: "0.8em", marginBottom: "8px" }}>
+              Erreur : {claimError}
+            </p>
+          )}
+
+          {/* Actions */}
+          <div style={{ display: "flex", gap: "8px", justifyContent: "center", marginTop: "4px" }}>
             <button
-              onClick={handleSubmit}
-              disabled={isLoading || isUploading}
+              onClick={onCreateSelectedClaims}
+              disabled={pendingCount === 0}
               style={{
-                padding: "8px 20px",
+                padding: "8px 18px",
                 backgroundColor: "#FFD32A",
                 color: "#000",
                 border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
+                borderRadius: "4px",
+                cursor: pendingCount === 0 ? "not-allowed" : "pointer",
                 fontWeight: "bold",
-                opacity: isLoading || isUploading ? 0.7 : 1,
+                opacity: pendingCount === 0 ? 0.5 : 1,
+                fontSize: "0.88em",
               }}
             >
-              {isLoading
-                ? isCreatingAtom
-                  ? "Creating atom..."
-                  : isCreatingTriples
-                  ? "Creating triples..."
-                  : "Creating in progress..."
-                : "VALIDATE"}
+              {claimError ? 'Réessayer' : `Créer les claims${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
+            </button>
+            <button
+              onClick={onSkipClaims}
+              style={{
+                padding: "8px 16px",
+                backgroundColor: "#2e2e40",
+                color: "#bbb",
+                border: "1px solid #444",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "0.88em",
+              }}
+            >
+              Passer
             </button>
           </div>
         </>
       )}
-    </>
+    </div>
   );
 };
 
-export default PlayerCreationProgress; 
+export default PlayerCreationProgress;

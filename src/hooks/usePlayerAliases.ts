@@ -4,7 +4,7 @@ import { Network } from './useAtomData';
 import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 import { PlayerAlias } from '../types/alias';
 import {
-  fetchPlayerAtomByAddress,
+  fetchAccountAtom,
   fetchAliasTriplesWithPosition,
 } from '../api/fetchPlayerAliases';
 
@@ -21,17 +21,19 @@ export const usePlayerAliases = ({
 }: UsePlayerAliasesProps) => {
   const predicateId = constants.HAS_ALIAS_PREDICATE_ID;
 
-  // Query 1: resolve the player's atom term_id
+  // Query 1: find the account atom for this wallet address.
+  // The account atom is a string atom whose data field = walletAddress.toLowerCase(),
+  // created during Phase 1 registration via createStringAtom(walletAddress.toLowerCase()).
   const { data: playerAtomId, isLoading: isLoadingAtom } = useQuery({
-    queryKey: ['playerAtom', walletAddress, network],
-    queryFn: () => fetchPlayerAtomByAddress(walletAddress!, network),
+    queryKey: ['accountAtom', walletAddress, network],
+    queryFn: () => fetchAccountAtom(walletAddress!, network),
     enabled: Boolean(walletAddress),
-    staleTime: 10 * 60 * 1000, // 10 min — player atom rarely changes
+    staleTime: 10 * 60 * 1000, // 10 min — account atom never changes once created
     gcTime: 30 * 60 * 1000,
     retry: 1,
   });
 
-  // Query 2: fetch alias triples — only runs once playerAtomId is resolved
+  // Query 2: fetch [accountAtom] [has alias] [...] triples — runs once accountAtomId is resolved
   const { data: rawAliases, isLoading: isLoadingAliases, error } = useQuery({
     queryKey: ['playerAliases', playerAtomId, walletAddress, predicateId, network],
     queryFn: () =>
@@ -54,9 +56,9 @@ export const usePlayerAliases = ({
   return {
     aliases,
     primaryAlias: aliases.find(a => a.isPrimary) ?? null,
-    // playerAtomId is the term_id (hex string) of the player's existing atom
+    // playerAtomId is the term_id of the account atom (wallet address as string atom)
     playerAtomId: playerAtomId ?? null,
-    // isLoading covers both queries: player atom fetch AND alias triples fetch
+    // isLoading covers both queries: account atom fetch AND alias triples fetch
     isLoading: isLoadingAtom || isLoadingAliases,
     error: error as Error | null,
   };

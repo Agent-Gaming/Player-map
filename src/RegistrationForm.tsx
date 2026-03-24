@@ -1,48 +1,28 @@
-import React, { useState, useEffect, useRef } from "react";
-import { getEventSelector, toHex, getAddress } from "viem";
+import React, { useState, useEffect, useMemo } from "react";
 import IntuitionLogo from "./assets/img/logo.svg";
-import {
-  ATOM_CONTRACT_ADDRESS,
-  VALUE_PER_ATOM,
-  atomABI,
-  ATOM_CONTRACT_CHAIN_ID,
-} from "./abi";
-import { ipfsToHttpUrl, isIpfsUrl, uploadToPinata } from "./utils/pinata";
 import PlayerCreationProgress from "./PlayerCreationProgress";
-import { usePlayerCreationService } from "./services/playerCreationService";
 import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "./shared/components/NetworkSwitchMessage";
 import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
 import styles from "./RegistrationForm.module.css";
 import { usePlayerAliases } from './hooks/usePlayerAliases';
-import { useCreateAlias } from './hooks/useCreateAlias';
-import { useDepositTriple } from './hooks/useDepositTriple';
-import { VoteDirection } from './types/vote';
+import { useRegisterPlayer } from './hooks/useRegisterPlayer';
+import { useBatchCreateTriple } from './hooks/useBatchCreateTriple';
+import { RegistrationPhase, ClaimOption } from './types/alias';
 
 interface RegistrationFormProps {
   isOpen: boolean;
   onClose: () => void;
-  walletConnected?: any; // Renamed from walletClient to walletConnected
-  walletAddress?: string; // Renamed from address to walletAddress
-  wagmiConfig?: any; // Wagmi configuration provided by the main app
+  walletConnected?: any;
+  walletAddress?: string;
+  wagmiConfig?: any;
   walletHooks?: {
     useAccount?: any;
     useConnect?: any;
     useWalletClient?: any;
     usePublicClient?: any;
   };
-  constants: DefaultPlayerMapConstants; // Constantes injectées
-}
-
-// Utility function to correctly encode in bytes
-function stringToHex(str: string): `0x${string}` {
-  let hex = "";
-  for (let i = 0; i < str.length; i++) {
-    const charCode = str.charCodeAt(i);
-    const hexValue = charCode.toString(16);
-    hex += hexValue.padStart(2, "0");
-  }
-  return `0x${hex}` as `0x${string}`;
+  constants: DefaultPlayerMapConstants;
 }
 
 const RegistrationForm: React.FC<RegistrationFormProps> = ({
@@ -51,219 +31,154 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
   walletConnected,
   walletAddress,
   wagmiConfig,
-  walletHooks,
   constants,
 }) => {
-  const [formData, setFormData] = useState({
-    pseudo: "",
-    image: "",
-    guildId: "",
-  });
-  const [hasExistingAtom, setHasExistingAtom] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [creationSuccess, setCreationSuccess] = useState(false);
-  const [atomId, setAtomId] = useState<string | null>(null);
   const publicClient = wagmiConfig?.publicClient;
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // State variables for tracking creation steps
-  const [step, setStep] = useState(1);
-  const [isCreatingAtom, setIsCreatingAtom] = useState(false);
-  const [isCreatingTriples, setIsCreatingTriples] = useState(false);
-  const [tripleCreated, setTripleCreated] = useState(false);
+  // ─── Phase 1 state ──────────────────────────────────────────────────────────
+  const [registrationPhase, setRegistrationPhase] = useState<RegistrationPhase>('input');
+  const [pseudoInput, setPseudoInput] = useState('');
+  const [pseudo, setPseudo] = useState('');
+  const [pseudoAtomId, setPseudoAtomId] = useState<string | undefined>(undefined);
 
-  // Use the complete player creation service that handles both atoms and triples
-  const { createPlayer } = usePlayerCreationService(
-    walletConnected,
-    walletAddress || "",
-    constants, // Passer les constantes personnalisées !
-    publicClient
-  );
+  // ─── Phase 2 state ──────────────────────────────────────────────────────────
+  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
+  const [createdClaimIds, setCreatedClaimIds] = useState<string[]>([]);
+  const [isCreatingClaims, setIsCreatingClaims] = useState(false);
+  const [currentClaimIndex, setCurrentClaimIndex] = useState(0);
+  const [claimError, setClaimError] = useState<string | undefined>(undefined);
 
-  const [aliasInput, setAliasInput] = useState('');
-  const [depositError, setDepositError] = useState<string | undefined>(undefined);
-
+  // ─── Hooks ──────────────────────────────────────────────────────────────────
   const { aliases, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases({
     walletAddress,
     constants,
   });
 
   const {
-    createAlias,
-    reset: resetAlias,
-    step: aliasStep,
-    isCreating,
-    error: aliasError,
-  } = useCreateAlias({
+    register,
+    reset: resetIdentity,
+    step: identityStep,
+    isRegistering,
+    error: identityError,
+    pseudoAtomId: reg_pseudoAtomId,
+  } = useRegisterPlayer({
     walletConnected,
     walletAddress,
     constants,
     publicClient,
-    playerAtomId,
   });
 
-  const { depositTriple, isLoading: isDepositing } = useDepositTriple({
+  const { batchCreateTriple } = useBatchCreateTriple({
     walletConnected,
     walletAddress,
     publicClient,
+    constants,
   });
 
-  const handleUseExistingAlias = async (tripleId: string) => {
-    setDepositError(undefined);
-    const result = await depositTriple([
-      { claimId: tripleId, units: 1, direction: VoteDirection.For },
-    ]);
-    if (!result.success) {
-      setDepositError(result.error ?? 'Deposit failed');
-    }
-  };
+  const { isCorrectNetwork, currentChainId, targetChainId } = useNetworkCheck({
+    walletConnected,
+    publicClient: wagmiConfig?.publicClient,
+  });
 
-  const { isCorrectNetwork, currentChainId, targetChainId, allowedChainIds } =
-    useNetworkCheck({
-      walletConnected,
-      publicClient: wagmiConfig?.publicClient,
-    });
-
-  useEffect(() => {
-    const checkExistingAtom = async () => {
-      if (!walletAddress || !publicClient) return;
-
-      try {
-        // Utiliser getEventSelector pour calculer la signature de l'événement AtomCreated
-        const eventHash = getEventSelector(
-          "AtomCreated(address,bytes32,bytes,address)"
-        );
-
-        // Utiliser fetch directement pour contourner le bug viem
-        const response = await fetch(import.meta.env.VITE_INTUITION_RPC_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            method: "eth_getLogs",
-            params: [
-              {
-                address: ATOM_CONTRACT_ADDRESS,
-                topics: [eventHash, walletAddress],
-                fromBlock: "0x0",
-                toBlock: "latest",
-              },
-            ],
-            id: 1,
-          }),
-        });
-
-        const data = await response.json();
-        const logs = data.result || [];
-
-        setHasExistingAtom(logs.length > 0);
-      } catch (error) {
-        console.error("Error checking atom ownership:", error);
-        setHasExistingAtom(false);
-      }
-    };
-
-    checkExistingAtom();
-  }, [walletAddress, publicClient]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      return;
-    }
-
-    const file = e.target.files[0];
-    try {
-      setIsUploading(true);
-      const ipfsUrl = await uploadToPinata(file);
-      setFormData((prev) => ({
-        ...prev,
-        image: ipfsUrl,
+  // ─── Available claims from constants (exclude entries with null objectId or no label) ──
+  const availableClaims: ClaimOption[] = useMemo(() => {
+    return Object.entries(constants.PLAYER_TRIPLE_TYPES)
+      .filter(([, v]) => v.objectId !== null && v.label)
+      .map(([id, v]) => ({
+        id,
+        label: v.label as string,
+        predicateAtomId: v.predicateId as string,
+        objectAtomId: v.objectId as string,
       }));
-      setIsUploading(false);
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Error uploading image. Please try again.");
-      setIsUploading(false);
+  }, [constants.PLAYER_TRIPLE_TYPES]);
+
+  // ─── Auto-transition: returning user already has account atom ────────────────
+  useEffect(() => {
+    if (!aliasesLoading && playerAtomId && registrationPhase === 'input') {
+      setRegistrationPhase('identity-created');
+      const primary = aliases.find(a => a.isPrimary);
+      if (primary) {
+        setPseudo(primary.pseudo);
+        setPseudoAtomId(primary.atomId);
+      }
     }
+  }, [playerAtomId, aliasesLoading, aliases, registrationPhase]);
+
+  // ─── Transition after Phase 1 success ────────────────────────────────────────
+  useEffect(() => {
+    if (identityStep === 'success' && registrationPhase === 'creating-identity') {
+      if (reg_pseudoAtomId) setPseudoAtomId(reg_pseudoAtomId);
+      setRegistrationPhase('identity-created');
+    }
+  }, [identityStep, registrationPhase, reg_pseudoAtomId]);
+
+  // ─── Phase 1 handlers ────────────────────────────────────────────────────────
+  const handleCreateIdentity = () => {
+    if (!pseudoInput.trim()) return;
+    const p = pseudoInput.trim();
+    setPseudo(p);
+    setRegistrationPhase('creating-identity');
+    register(p);
   };
 
-  const handleSubmit = async () => {
-    if (!walletAddress || !walletConnected) {
-      alert("Please connect your wallet first");
-      return;
-    }
+  // Retry: call register again with same pseudo — preserves pseudoAtomId in hook state
+  const handleRetryIdentity = () => { register(pseudo); };
 
-    if (hasExistingAtom) {
-      alert("You already have an atom!");
-      return;
-    }
-
-    if (!formData.pseudo) {
-      alert("Please fill in all fields");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setIsCreatingAtom(true);
-      setStep(1);
-
-      // Use the complete service to create a player (atom + triples)
-      const result = await createPlayer({
-        pseudo: formData.pseudo,
-        image: formData.image || undefined,
-        guildId: formData.guildId ? BigInt(formData.guildId) : undefined,
-      });
-
-      setAtomId(result.atomId.toString());
-      setIsCreatingAtom(false);
-
-      // Update the step
-      setStep(2);
-      setIsCreatingTriples(true);
-
-      // Wait a bit for the display of triples creation
-      // (they are already being created via createPlayer)
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      setIsCreatingTriples(false);
-      setTripleCreated(result.tripleCreated);
-      setStep(3);
-      setCreationSuccess(true);
-      setIsLoading(false);
-
-      // Close the form after 3 seconds
-      setTimeout(() => {
-        onClose();
-        window.location.reload();
-      }, 3000);
-    } catch (error) {
-      console.error("Error creating player:", error);
-      alert("Error creating player. Please try again.");
-      setIsLoading(false);
-      setIsCreatingAtom(false);
-      setIsCreatingTriples(false);
-    }
+  // Cancel: clear everything and go back to input
+  const handleResetIdentity = () => {
+    resetIdentity();
+    setRegistrationPhase('input');
+    setPseudo('');
+    setPseudoInput('');
+    setPseudoAtomId(undefined);
   };
+
+  // ─── Phase 2 handlers ────────────────────────────────────────────────────────
+  const handleToggleClaim = (id: string) => {
+    setSelectedClaimIds(prev =>
+      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleCreateSelectedClaims = async () => {
+    if (!pseudoAtomId) return;
+
+    // Only create claims that haven't been successfully created yet
+    const pending = availableClaims.filter(
+      c => selectedClaimIds.includes(c.id) && !createdClaimIds.includes(c.id)
+    );
+    if (pending.length === 0) {
+      setRegistrationPhase('complete');
+      return;
+    }
+
+    setIsCreatingClaims(true);
+    setClaimError(undefined);
+    setRegistrationPhase('creating-claims');
+
+    for (let i = 0; i < pending.length; i++) {
+      setCurrentClaimIndex(i);
+      const claim = pending[i];
+      try {
+        await batchCreateTriple([{
+          subjectId: BigInt(pseudoAtomId),
+          predicateId: BigInt(claim.predicateAtomId),
+          objectId: BigInt(claim.objectAtomId),
+        }]);
+        setCreatedClaimIds(prev => [...prev, claim.id]);
+      } catch (err) {
+        setClaimError(err instanceof Error ? err.message : String(err));
+        setIsCreatingClaims(false);
+        setRegistrationPhase('identity-created');
+        return;
+      }
+    }
+
+    setIsCreatingClaims(false);
+    setRegistrationPhase('complete');
+  };
+
+  const handleSkipClaims = () => { setRegistrationPhase('complete'); };
 
   if (!isOpen) return null;
 
@@ -279,58 +194,41 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
           </div>
         </div>
 
-        <button
-          onClick={onClose}
-          className={styles.closeBtn}
-        >
-          ×
-        </button>
+        <button onClick={onClose} className={styles.closeBtn}>×</button>
 
-        <img
-          src={IntuitionLogo}
-          alt="Intuition Logo"
-          className={styles.logo}
-        />
-        <h2 className={styles.title}>
-          Create Your Player
-        </h2>
+        <img src={IntuitionLogo} alt="Intuition Logo" className={styles.logo} />
+        <h2 className={styles.title}>Create Your Player</h2>
 
         {!isCorrectNetwork ? (
           <NetworkSwitchMessage
             currentChainId={currentChainId}
             targetChainId={targetChainId}
           />
-        ) : ( 
+        ) : (
           <PlayerCreationProgress
-            step={step}
-            isCreatingAtom={isCreatingAtom}
-            isCreatingTriples={isCreatingTriples}
-            creationSuccess={creationSuccess}
-            atomId={atomId}
-            tripleCreated={tripleCreated}
             walletAddress={walletAddress}
-            hasExistingAtom={hasExistingAtom && playerAtomId !== null}
-            formData={formData}
-            handleInputChange={handleInputChange}
-            handleSelectChange={handleSelectChange}
-            handleFileUpload={handleFileUpload}
-            handleSubmit={handleSubmit}
-            isLoading={isLoading}
-            isUploading={isUploading}
-            fileInputRef={fileInputRef}
-            constants={constants} // Passer les constantes personnalisées !
+            constants={constants}
+            registrationPhase={registrationPhase}
+            pseudoInput={pseudoInput}
+            onPseudoInputChange={setPseudoInput}
+            onCreateIdentity={handleCreateIdentity}
+            identityStep={identityStep}
+            isCreatingIdentity={isRegistering}
+            identityError={identityError}
+            onRetryIdentity={handleRetryIdentity}
+            onResetIdentity={handleResetIdentity}
+            pseudo={pseudo}
             aliases={aliases}
             aliasesLoading={aliasesLoading}
-            aliasInput={aliasInput}
-            onAliasInputChange={setAliasInput}
-            onCreateAlias={() => createAlias(aliasInput)}
-            onResetAlias={resetAlias}
-            onUseExistingAlias={handleUseExistingAlias}
-            aliasStep={aliasStep}
-            isCreating={isCreating}
-            aliasError={aliasError}
-            isDepositing={isDepositing}
-            depositError={depositError}
+            availableClaims={availableClaims}
+            selectedClaimIds={selectedClaimIds}
+            createdClaimIds={createdClaimIds}
+            onToggleClaim={handleToggleClaim}
+            onCreateSelectedClaims={handleCreateSelectedClaims}
+            onSkipClaims={handleSkipClaims}
+            isCreatingClaims={isCreatingClaims}
+            currentClaimIndex={currentClaimIndex}
+            claimError={claimError}
           />
         )}
       </div>

@@ -68,11 +68,12 @@ import { setPinataConstants } from "./utils/globalConstants";
 // Exporter setPinataConstants pour les apps
 export { setPinataConstants };
 
-// Exporter les hooks et types pour les alias
+// Exporter les hooks et types pour les alias et l'enregistrement
 export { usePlayerAliases } from './hooks/usePlayerAliases';
 export { useCreateAlias } from './hooks/useCreateAlias';
-export type { PlayerAlias, AliasCreationStep } from './types/alias';
-// AliasCreationState is internal to useCreateAlias — not exported publicly
+export { useRegisterPlayer } from './hooks/useRegisterPlayer';
+export type { PlayerAlias, AliasCreationStep, RegistrationPhase, IdentityCreationStep, ClaimOption } from './types/alias';
+// AliasCreationState and IdentityCreationState are internal — not exported publicly
 
 // Exporter un composant par défaut
 export default PlayerMapHome;

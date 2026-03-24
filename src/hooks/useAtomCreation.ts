@@ -97,30 +97,30 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       // 3. Upload to IPFS for reference (optional)
       const { ipfsHash } = await hashDataToIPFS(atomData);
 
-      // 4. Fetch the minimum required amount from the contract.
-      // VALUE_PER_ATOM (from env) is used as fallback when publicClient is unavailable.
-      let requiredAmount = VALUE_PER_ATOM;
+      // 4. Fetch deposit + protocol fee from contract.
+      // totalValue = atomDeposit + atomCreationProtocolFee
+      let atomDeposit = VALUE_PER_ATOM;
+      let creationFee = 0n;
       if (publicClient?.readContract) {
-        let contractMin: bigint | undefined;
         try {
-          contractMin = await publicClient.readContract({
-            address: ATOM_CONTRACT_ADDRESS, abi: atomABI, functionName: 'getAtomCreationCost',
-          }) as bigint;
-        } catch { /* not available on this deployment */ }
-        if (contractMin === undefined) {
-          try {
-            contractMin = await publicClient.readContract({
-              address: ATOM_CONTRACT_ADDRESS, abi: atomABI, functionName: 'getAtomCost',
-            }) as bigint;
-          } catch { /* not available either */ }
-        }
-        if (contractMin !== undefined) {
-          console.log('[createAtom] contract minimum atom cost:', contractMin.toString());
-          if (contractMin > requiredAmount) requiredAmount = contractMin;
-        } else {
-          console.warn('[createAtom] could not read atom cost from contract, using env value:', VALUE_PER_ATOM?.toString());
+          const config = await publicClient.readContract({
+            address: ATOM_CONTRACT_ADDRESS, abi: atomABI, functionName: 'atomConfig',
+          }) as [bigint, bigint];
+          creationFee = config[0];
+          console.log('[createAtom] atomConfig:', {
+            atomCreationProtocolFee: config[0]?.toString(),
+            atomWalletDepositFee: config[1]?.toString(),
+          });
+        } catch {
+          console.warn('[createAtom] could not read atomConfig, using env value:', VALUE_PER_ATOM?.toString());
         }
       }
+      const requiredAmount = atomDeposit + creationFee;
+      console.log('[createAtom] costs:', {
+        atomDeposit: atomDeposit?.toString(),
+        creationFee: creationFee?.toString(),
+        requiredAmount: requiredAmount?.toString(),
+      });
 
       // 5. Simulate first to surface the actual revert reason, then write
       if (publicClient?.simulateContract) {
@@ -135,13 +135,10 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
           });
         } catch (simErr: any) {
           console.error('[createAtom] simulation raw error:', simErr);
-          console.error('[createAtom] cause:', simErr?.cause);
-          console.error('[createAtom] cause.data:', simErr?.cause?.data);
           console.error('[createAtom] args used:', {
             contract: ATOM_CONTRACT_ADDRESS,
             dataBytes,
             requiredAmount: requiredAmount?.toString(),
-            value: requiredAmount?.toString(),
             account: walletAddress,
           });
           const reason = simErr?.cause?.data?.errorName
@@ -179,31 +176,72 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
 
   // Creates a simple string atom (raw bytes, no JSON-LD or IPFS).
   // Used for alias pseudonyms and other raw-string atoms.
-  const createStringAtom = async (str: string): Promise<{ atomId: bigint }> => {
+  const createStringAtom = async (str: string, rawHex = false): Promise<{ atomId: bigint }> => {
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
     try {
-      // Encode string as raw UTF-8 bytes (no JSON-LD wrapper)
-      const dataBytes = toHex(str);
-      // Fetch minimum from contract; fall back to env value if unavailable
-      let atomCost = VALUE_PER_ATOM;
+      // rawHex=true: str is already a 0x-prefixed hex (e.g. wallet address bytes) — use directly.
+      // rawHex=false: encode the string as UTF-8 bytes (for pseudonyms, plain text atoms).
+      const dataBytes = rawHex ? str as `0x${string}` : toHex(str);
+      // Fetch deposit amount and protocol creation fee from contract
+      let atomDeposit = VALUE_PER_ATOM;
+      let creationFee = 0n;
       if (publicClient?.readContract) {
         try {
-          const contractMin = await publicClient.readContract({
+          const config = await publicClient.readContract({
             address: ATOM_CONTRACT_ADDRESS,
             abi: atomABI,
-            functionName: 'getAtomCreationCost',
-          }) as bigint;
-          if (contractMin > atomCost) atomCost = contractMin;
-        } catch { /* fall back to env value */ }
+            functionName: 'atomConfig',
+          }) as [bigint, bigint];
+          creationFee = config[0]; // atomCreationProtocolFee
+          console.log('[createStringAtom] atomConfig:', {
+            atomCreationProtocolFee: config[0]?.toString(),
+            atomWalletDepositFee: config[1]?.toString(),
+          });
+        } catch { /* fall back */ }
       }
+      // totalValue = deposit + protocol creation fee
+      const totalValue = atomDeposit + creationFee;
+      console.log('[createStringAtom] costs:', {
+        atomDeposit: atomDeposit?.toString(),
+        creationFee: creationFee?.toString(),
+        totalValue: totalValue?.toString(),
+      });
+      // Simulate first to surface the actual revert reason
+      if (publicClient?.simulateContract) {
+        try {
+          await publicClient.simulateContract({
+            address: ATOM_CONTRACT_ADDRESS,
+            abi: atomABI,
+            functionName: 'createAtoms',
+            args: [[dataBytes], [totalValue]],
+            value: totalValue,
+            account: walletAddress as `0x${string}`,
+          });
+        } catch (simErr: any) {
+          console.error('[createStringAtom] simulation raw error:', simErr);
+          console.error('[createStringAtom] args used:', {
+            contract: ATOM_CONTRACT_ADDRESS,
+            dataBytes,
+            totalValue: totalValue?.toString(),
+            account: walletAddress,
+          });
+          const reason = simErr?.cause?.data?.errorName
+            || simErr?.cause?.reason
+            || simErr?.shortMessage
+            || simErr?.message
+            || String(simErr);
+          throw new Error(`createStringAtom simulation failed: ${reason}`);
+        }
+      }
+
       const txHash = await walletConnected.writeContract({
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
         functionName: 'createAtoms',
-        args: [[dataBytes], [atomCost]],
-        value: atomCost,
+        args: [[dataBytes], [totalValue]],
+        value: totalValue,
         gas: 2000000n,
       });
       const realAtomId = await waitForAtomId(txHash, walletConnected, publicClient);

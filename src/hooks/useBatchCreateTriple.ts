@@ -76,18 +76,43 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
     }
 
     try {
-      // Fetch minimum triple cost from contract; fall back to env value
-      let costPerTriple = VALUE_PER_TRIPLE;
+      // Fetch deposit + protocol fee from contract for triples
+      let tripleDeposit = VALUE_PER_TRIPLE;
+      let tripleCreationFee = 0n;
       if (publicClient?.readContract) {
         try {
-          const contractMin = await publicClient.readContract({
+          const config = await publicClient.readContract({
             address: ATOM_CONTRACT_ADDRESS,
             abi: atomABI,
-            functionName: 'getTripleCost',
-          }) as bigint;
-          if (contractMin > costPerTriple) costPerTriple = contractMin;
-        } catch { /* fall back to env value */ }
+            functionName: 'tripleConfig',
+          }) as [bigint, bigint, bigint];
+          tripleCreationFee = config[0]; // tripleCreationProtocolFee
+          console.log('[batchCreateTriple] tripleConfig:', {
+            tripleCreationProtocolFee: config[0]?.toString(),
+            totalAtomDepositsOnTripleCreation: config[1]?.toString(),
+          });
+        } catch {
+          // tripleConfig not available — try atomConfig as fallback (same fee structure)
+          try {
+            const atomCfg = await publicClient.readContract({
+              address: ATOM_CONTRACT_ADDRESS,
+              abi: atomABI,
+              functionName: 'atomConfig',
+            }) as [bigint, bigint];
+            tripleCreationFee = atomCfg[0];
+            console.log('[batchCreateTriple] tripleConfig failed, using atomConfig fee:', tripleCreationFee?.toString());
+          } catch {
+            console.warn('[batchCreateTriple] could not read any fee config, using env value:', VALUE_PER_TRIPLE?.toString());
+          }
+        }
       }
+      // assets[i] = deposit + protocol fee (fee deducted internally by contract)
+      const costPerTriple = tripleDeposit + tripleCreationFee;
+      console.log('[batchCreateTriple] costs:', {
+        tripleDeposit: tripleDeposit?.toString(),
+        tripleCreationFee: tripleCreationFee?.toString(),
+        costPerTriple: costPerTriple?.toString(),
+      });
 
       const assets: bigint[] = [];
       let totalValue = 0n;
@@ -101,6 +126,37 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
       const subjectIds = triples.map((t) => `0x${t.subjectId.toString(16).padStart(64, '0')}` as `0x${string}`);
       const predicateIds = triples.map((t) => `0x${t.predicateId.toString(16).padStart(64, '0')}` as `0x${string}`);
       const objectIds = triples.map((t) => `0x${t.objectId.toString(16).padStart(64, '0')}` as `0x${string}`);
+
+      // Simulate first to surface the actual revert reason
+      if (publicClient?.simulateContract) {
+        try {
+          await publicClient.simulateContract({
+            address: ATOM_CONTRACT_ADDRESS,
+            abi: atomABI,
+            functionName: 'createTriples',
+            args: [subjectIds, predicateIds, objectIds, assets],
+            value: totalValue,
+            account: walletAddress as `0x${string}`,
+          });
+        } catch (simErr: any) {
+          console.error('[batchCreateTriple] simulation raw error:', simErr);
+          console.error('[batchCreateTriple] args used:', {
+            contract: ATOM_CONTRACT_ADDRESS,
+            subjectIds,
+            predicateIds,
+            objectIds,
+            assets: assets.map(a => a?.toString()),
+            totalValue: totalValue?.toString(),
+            account: walletAddress,
+          });
+          const reason = simErr?.cause?.data?.errorName
+            || simErr?.cause?.reason
+            || simErr?.shortMessage
+            || simErr?.message
+            || String(simErr);
+          throw new Error(`createTriples simulation failed: ${reason}`);
+        }
+      }
 
       // Call the contract
       const txHash = await walletConnected.writeContract({

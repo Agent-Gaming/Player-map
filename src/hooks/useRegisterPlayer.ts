@@ -8,6 +8,9 @@ import { useBatchCreateTriple } from './useBatchCreateTriple';
 import { fetchAccountAtom } from '../api/fetchPlayerAliases';
 import { uploadToPinata } from '../utils/pinata';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
+import { calculateAtomId } from '@0xintuition/sdk';
+import { toHex, getAddress } from 'viem';
+import type { Hex } from 'viem';
 
 interface UseRegisterPlayerProps {
   walletConnected?: any;
@@ -85,36 +88,35 @@ export const useRegisterPlayer = ({
         const fetchedAccountAtomId = await fetchAccountAtom(walletAddress, network);
         if (fetchedAccountAtomId) accountAtomId = fetchedAccountAtomId;
 
-        // On-chain fallback: calculateAtomId → isAtom
-        // Handles the case where the atom exists on-chain but GraphQL doesn't find it
-        // (data encoding mismatch between stored bytes and indexed string)
+        // On-chain fallback: pure calculateAtomId (SDK) + isAtom (readContract)
+        // Checks both legacy rawHex format and new SDK format (createAtomFromEthereumAccount)
         if (!accountAtomId && publicClient?.readContract) {
-          try {
-            const rawAddressBytes = walletAddress.toLowerCase() as `0x${string}`;
-            const computedId = await publicClient.readContract({
-              address: ATOM_CONTRACT_ADDRESS,
-              abi: atomABI,
-              functionName: 'calculateAtomId',
-              args: [rawAddressBytes],
-            }) as `0x${string}`;
-            const exists = await publicClient.readContract({
-              address: ATOM_CONTRACT_ADDRESS,
-              abi: atomABI,
-              functionName: 'isAtom',
-              args: [computedId],
-            }) as boolean;
-            if (exists) {
-              console.log('[useRegisterPlayer] account atom found on-chain:', computedId);
-              accountAtomId = computedId;
+          const checkOnChain = async (atomData: Hex): Promise<string | null> => {
+            try {
+              const computedId = calculateAtomId(atomData);
+              const exists = await publicClient.readContract({
+                address: ATOM_CONTRACT_ADDRESS,
+                abi: atomABI,
+                functionName: 'isAtom',
+                args: [computedId],
+              }) as boolean;
+              return exists ? `0x${BigInt(computedId).toString(16)}` : null;
+            } catch {
+              return null;
             }
-          } catch (e) {
-            console.warn('[useRegisterPlayer] on-chain atom lookup failed:', e);
+          };
+          // Check raw 20-byte format (legacy createStringAtom rawHex=true)
+          const fromRaw = await checkOnChain(walletAddress.toLowerCase() as Hex);
+          // Check SDK format: toHex(getAddress(address))
+          const fromSdk = fromRaw ?? await checkOnChain(toHex(getAddress(walletAddress)) as Hex);
+          if (fromSdk) {
+            console.log('[useRegisterPlayer] account atom found on-chain:', fromSdk);
+            accountAtomId = fromSdk;
           }
         }
 
         if (!accountAtomId) {
           setState(s => ({ ...s, step: 'creating-account-atom' }));
-          // rawHex=true: store raw address bytes so fetchAccountAtom(_ilike address) finds it
           const result = await createEthereumAccountAtom(walletAddress);
           accountAtomId = `0x${result.atomId.toString(16)}`;
         }

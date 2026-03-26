@@ -59,23 +59,37 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
 
   /**
    * Create one or more triples in a single transaction.
-   * NOTE: The SDK currently fetches cost for one triple only. All current callers
-   * pass exactly one triple. Passing N > 1 may cause under-payment and on-chain revert.
-   * assets[i] = 0n (no extra per-triple vault deposit).
+   * assets[i] = getTripleCost() per triple — mirrors createAtomFromEthereumAccount
+   * where assets[0] = getAtomCost(). Sending assets[i] = 0 causes
+   * MultiVault_InsufficientBalance because the vault requires a minimum initial deposit.
    */
   const batchCreateTriple = async (triples: TripleToCreate[]): Promise<any> => {
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
 
+    // Fetch the required vault deposit per triple (minimum = getTripleCost()).
+    const tripleVaultDeposit: bigint = publicClient
+      ? (await publicClient.readContract({
+          address: ATOM_CONTRACT_ADDRESS,
+          abi: atomABI,
+          functionName: 'getTripleCost',
+        }) as bigint)
+      : BigInt(import.meta.env.VITE_VALUE_PER_TRIPLE || '10000000000000000');
+
     const subjectIds   = triples.map(t => toHex(t.subjectId,   { size: 32 }) as Hex);
     const predicateIds = triples.map(t => toHex(t.predicateId, { size: 32 }) as Hex);
     const objectIds    = triples.map(t => toHex(t.objectId,    { size: 32 }) as Hex);
-    const assets       = triples.map(() => 0n);
+    const assets       = triples.map(() => tripleVaultDeposit);
+
+    // SDK sends value = getTripleCost() (1x). For N > 1 triples, pass extra
+    // depositAmount so that total value = N * tripleVaultDeposit.
+    const extraDeposit = tripleVaultDeposit * BigInt(triples.length - 1);
 
     const result = await batchCreateTripleStatements(
       writeConfig,
       [subjectIds, predicateIds, objectIds, assets] as any,
+      extraDeposit > 0n ? (extraDeposit as any) : undefined,
     );
 
     return { hash: result.transactionHash, state: result.state };

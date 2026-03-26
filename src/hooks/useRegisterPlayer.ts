@@ -100,18 +100,19 @@ export const useRegisterPlayer = ({
                 functionName: 'isAtom',
                 args: [computedId],
               }) as boolean;
-              return exists ? `0x${BigInt(computedId).toString(16)}` : null;
-            } catch {
+              return exists ? computedId : null;
+            } catch (e) {
+              console.warn('[useRegisterPlayer] on-chain atom lookup failed:', e);
               return null;
             }
           };
           // Check raw 20-byte format (legacy address bytes, pre-SDK)
           const fromRaw = await checkOnChain(walletAddress.toLowerCase() as Hex);
           // Check SDK format: toHex(getAddress(address))
-          const fromSdk = fromRaw ?? await checkOnChain(toHex(getAddress(walletAddress)) as Hex);
-          if (fromSdk) {
-            console.log('[useRegisterPlayer] account atom found on-chain:', fromSdk);
-            accountAtomId = fromSdk;
+          const resolvedId = fromRaw ?? await checkOnChain(toHex(getAddress(walletAddress)));
+          if (resolvedId) {
+            console.log('[useRegisterPlayer] account atom found on-chain:', resolvedId);
+            accountAtomId = resolvedId;
           }
         }
 

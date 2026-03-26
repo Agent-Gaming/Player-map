@@ -83,23 +83,31 @@ export const useRegisterPlayer = ({
 
       // Step 2 — account atom: use known ID (returning user) → fetch → create
       let accountAtomId = state.accountAtomId ?? existingAccountAtomId;
+      console.log('[useRegisterPlayer] Step 2 — account atom | walletAddress:', walletAddress);
+      console.log('[useRegisterPlayer] existingAccountAtomId (prop):', existingAccountAtomId ?? '(none)');
+      console.log('[useRegisterPlayer] state.accountAtomId (retry cache):', state.accountAtomId ?? '(none)');
       if (!accountAtomId) {
         setState(s => ({ ...s, step: 'fetching-account-atom' }));
+        console.log('[useRegisterPlayer] → fetching account atom from indexer...');
         const fetchedAccountAtomId = await fetchAccountAtom(walletAddress, network);
+        console.log('[useRegisterPlayer] fetchAccountAtom result:', fetchedAccountAtomId ?? '(not found)');
         if (fetchedAccountAtomId) accountAtomId = fetchedAccountAtomId;
 
         // On-chain fallback: pure calculateAtomId (SDK) + isAtom (readContract)
         // Checks both legacy rawHex format and new SDK format (createAtomFromEthereumAccount)
         if (!accountAtomId && publicClient?.readContract) {
+          console.log('[useRegisterPlayer] → on-chain fallback (indexer miss)');
           const checkOnChain = async (atomData: Hex): Promise<string | null> => {
             try {
               const computedId = calculateAtomId(atomData);
+              console.log(`[useRegisterPlayer]   checkOnChain atomData="${atomData}" → computedId=${computedId}`);
               const exists = await publicClient.readContract({
                 address: ATOM_CONTRACT_ADDRESS,
                 abi: atomABI,
                 functionName: 'isAtom',
                 args: [computedId],
               }) as boolean;
+              console.log(`[useRegisterPlayer]   isAtom(${computedId}):`, exists);
               return exists ? computedId : null;
             } catch (e) {
               console.warn('[useRegisterPlayer] on-chain atom lookup failed:', e);
@@ -111,17 +119,23 @@ export const useRegisterPlayer = ({
           // Check SDK format: toHex(getAddress(address))
           const resolvedId = fromRaw ?? await checkOnChain(toHex(getAddress(walletAddress)));
           if (resolvedId) {
-            console.log('[useRegisterPlayer] account atom found on-chain:', resolvedId);
+            console.log('[useRegisterPlayer] ✓ account atom found on-chain:', resolvedId);
             accountAtomId = resolvedId;
+          } else {
+            console.log('[useRegisterPlayer] on-chain fallback: no atom found for either format');
           }
         }
 
         if (!accountAtomId) {
+          console.log('[useRegisterPlayer] → creating new account atom for:', walletAddress);
           setState(s => ({ ...s, step: 'creating-account-atom' }));
           const result = await createEthereumAccountAtom(walletAddress);
           accountAtomId = `0x${result.atomId.toString(16)}`;
+          console.log('[useRegisterPlayer] ✓ account atom created, id:', accountAtomId);
         }
         setState(s => ({ ...s, accountAtomId }));
+      } else {
+        console.log('[useRegisterPlayer] ✓ account atom already known, skipping fetch/create:', accountAtomId);
       }
 
       // Step 3 — [accountAtom] [has alias] [pseudoAtom] triple

@@ -38,11 +38,13 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       ? ipfsToHttpUrl(input.image)
       : input.image;
 
+    console.log('[createAtom] ▶ name:', input.name, '| image:', imageUrl ?? '(none)');
     const result = await createAtomFromThing(writeConfig, {
       name: input.name,
       image: imageUrl,
       description: input.description,
     });
+    console.log('[createAtom] ✓ atomId:', result.state.termId, '| ipfsHash:', result.uri);
     return {
       atomId: BigInt(result.state.termId),
       ipfsHash: result.uri ?? '',
@@ -56,7 +58,9 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
+    console.log('[createStringAtom] ▶ str:', str);
     const result = await createAtomFromString(writeConfig, str);
+    console.log('[createStringAtom] ✓ atomId:', result.state.termId);
     return { atomId: BigInt(result.state.termId) };
   };
 
@@ -73,7 +77,14 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
+    console.log('[createEthereumAccountAtom] ▶ address to register:', address);
+    console.log('[createEthereumAccountAtom] signer walletAddress:', walletAddress);
+    console.log('[createEthereumAccountAtom] contract:', ATOM_CONTRACT_ADDRESS);
+    console.log('[createEthereumAccountAtom] publicClient available:', !!publicClient);
+
     const envAtomCost = BigInt(import.meta.env.VITE_VALUE_PER_ATOM || '10000000000000000');
+    console.log('[createEthereumAccountAtom] envAtomCost (VITE_VALUE_PER_ATOM):', envAtomCost.toString(), `(${Number(envAtomCost) / 1e18} ETH)`);
+
     const atomBaseCost: bigint = publicClient
       ? (await publicClient.readContract({
           address: ATOM_CONTRACT_ADDRESS as Address,
@@ -81,8 +92,15 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
           functionName: 'getAtomCost',
         }) as bigint)
       : 0n;
+    console.log('[createEthereumAccountAtom] contract getAtomCost():', atomBaseCost.toString(), `(${Number(atomBaseCost) / 1e18} ETH)`);
+
     const depositAmount = envAtomCost > atomBaseCost ? envAtomCost - atomBaseCost : 0n;
+    console.log('[createEthereumAccountAtom] depositAmount (extra passed to SDK):', depositAmount.toString(), `(${Number(depositAmount) / 1e18} ETH)`);
+    console.log('[createEthereumAccountAtom] total assets = getAtomCost + deposit =', (atomBaseCost + depositAmount).toString());
+
     const result = await createAtomFromEthereumAccount(writeConfig, address as Address, depositAmount as any);
+    console.log('[createEthereumAccountAtom] ✓ full result:', result);
+    console.log('[createEthereumAccountAtom] ✓ atomId:', result.state.termId);
     return { atomId: BigInt(result.state.termId) };
   };
 

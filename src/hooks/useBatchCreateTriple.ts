@@ -59,7 +59,8 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
 
   /**
    * Create one or more triples in a single transaction.
-   * The SDK fetches getTripleCost() automatically.
+   * NOTE: The SDK currently fetches cost for one triple only. All current callers
+   * pass exactly one triple. Passing N > 1 may cause under-payment and on-chain revert.
    * assets[i] = 0n (no extra per-triple vault deposit).
    */
   const batchCreateTriple = async (triples: TripleToCreate[]): Promise<any> => {

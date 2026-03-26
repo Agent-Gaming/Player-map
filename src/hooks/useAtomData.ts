@@ -1,4 +1,4 @@
-import { createServerClient, configureClient, API_URL_DEV } from '@0xintuition/graphql';
+import { createServerClient, configureClient } from '@0xintuition/graphql';
 
 // Enum pour les différents réseaux disponibles
 export enum Network {

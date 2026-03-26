@@ -10,7 +10,6 @@ import { uploadToPinata } from '../utils/pinata';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
 import { calculateAtomId } from '@0xintuition/sdk';
 import { toHex, getAddress } from 'viem';
-import type { Hex } from 'viem';
 
 interface UseRegisterPlayerProps {
   walletConnected?: any;
@@ -93,36 +92,30 @@ export const useRegisterPlayer = ({
         console.log('[useRegisterPlayer] fetchAccountAtom result:', fetchedAccountAtomId ?? '(not found)');
         if (fetchedAccountAtomId) accountAtomId = fetchedAccountAtomId;
 
-        // On-chain fallback: pure calculateAtomId (SDK) + isAtom (readContract)
-        // Checks both legacy rawHex format and new SDK format (createAtomFromEthereumAccount)
+        // On-chain fallback: only check SDK format (checksummed address via createAtomFromEthereumAccount).
+        // The legacy lowercase format is intentionally excluded — it incorrectly matches old string atoms
+        // that have the same computed ID but are not proper Ethereum Account type atoms.
         if (!accountAtomId && publicClient?.readContract) {
-          console.log('[useRegisterPlayer] → on-chain fallback (indexer miss)');
-          const checkOnChain = async (atomData: Hex): Promise<string | null> => {
-            try {
-              const computedId = calculateAtomId(atomData);
-              console.log(`[useRegisterPlayer]   checkOnChain atomData="${atomData}" → computedId=${computedId}`);
-              const exists = await publicClient.readContract({
-                address: ATOM_CONTRACT_ADDRESS,
-                abi: atomABI,
-                functionName: 'isAtom',
-                args: [computedId],
-              }) as boolean;
-              console.log(`[useRegisterPlayer]   isAtom(${computedId}):`, exists);
-              return exists ? computedId : null;
-            } catch (e) {
-              console.warn('[useRegisterPlayer] on-chain atom lookup failed:', e);
-              return null;
+          console.log('[useRegisterPlayer] → on-chain fallback (indexer miss), SDK format only');
+          try {
+            const sdkAtomData = toHex(getAddress(walletAddress));
+            const computedId = calculateAtomId(sdkAtomData);
+            console.log(`[useRegisterPlayer]   sdkAtomData="${sdkAtomData}" → computedId=${computedId}`);
+            const exists = await publicClient.readContract({
+              address: ATOM_CONTRACT_ADDRESS,
+              abi: atomABI,
+              functionName: 'isAtom',
+              args: [computedId],
+            }) as boolean;
+            console.log(`[useRegisterPlayer]   isAtom(${computedId}):`, exists);
+            if (exists) {
+              console.log('[useRegisterPlayer] ✓ account atom found on-chain (SDK format):', computedId);
+              accountAtomId = computedId;
+            } else {
+              console.log('[useRegisterPlayer] on-chain fallback: no SDK-format atom found → will create');
             }
-          };
-          // Check raw 20-byte format (legacy address bytes, pre-SDK)
-          const fromRaw = await checkOnChain(walletAddress.toLowerCase() as Hex);
-          // Check SDK format: toHex(getAddress(address))
-          const resolvedId = fromRaw ?? await checkOnChain(toHex(getAddress(walletAddress)));
-          if (resolvedId) {
-            console.log('[useRegisterPlayer] ✓ account atom found on-chain:', resolvedId);
-            accountAtomId = resolvedId;
-          } else {
-            console.log('[useRegisterPlayer] on-chain fallback: no atom found for either format');
+          } catch (e) {
+            console.warn('[useRegisterPlayer] on-chain atom lookup failed:', e);
           }
         }
 

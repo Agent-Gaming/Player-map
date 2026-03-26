@@ -22,7 +22,7 @@
     "test": ""
   },
   "dependencies": {
-    "@0xintuition/graphql": "1.0.0-alpha.1",
+    "@0xintuition/sdk": "^2.0.2",
     "@tanstack/react-query": "^5.87.1",
     "axios": "^1.9.0",
     "playermap_graph": "0.2.6",

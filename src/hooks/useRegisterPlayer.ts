@@ -45,7 +45,7 @@ export const useRegisterPlayer = ({
   const [state, setState] = useState<IdentityCreationState>({ step: 'idle' });
   const queryClient = useQueryClient();
 
-  const { createAtom, createStringAtom } = useAtomCreation({ walletConnected, walletAddress, publicClient });
+  const { createAtom, createStringAtom, createEthereumAccountAtom } = useAtomCreation({ walletConnected, walletAddress, publicClient });
   const { batchCreateTriple, computeTripleId } = useBatchCreateTriple({
     walletConnected,
     walletAddress,
@@ -115,7 +115,7 @@ export const useRegisterPlayer = ({
         if (!accountAtomId) {
           setState(s => ({ ...s, step: 'creating-account-atom' }));
           // rawHex=true: store raw address bytes so fetchAccountAtom(_ilike address) finds it
-          const result = await createStringAtom(walletAddress.toLowerCase() as `0x${string}`, true);
+          const result = await createEthereumAccountAtom(walletAddress);
           accountAtomId = `0x${result.atomId.toString(16)}`;
         }
         setState(s => ({ ...s, accountAtomId }));

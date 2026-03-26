@@ -9,7 +9,6 @@ import { TransactionStatusDisplay } from "./TransactionStatus";
 import { ConnectWalletModal, CreatePlayerModal } from "../modals";
 import { useTripleByCreator } from "../../hooks/useTripleByCreator";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
-import RegistrationForm from "../../RegistrationForm";
 import { useNetworkCheck } from '../../shared/hooks/useNetworkCheck';
 import { NetworkSwitchMessage } from '../../shared/components/NetworkSwitchMessage';
 import styles from "./ClaimVoting.module.css";
@@ -39,8 +38,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   walletHooks,
   constants,
 }) => {
-  // État pour gérer l'ouverture du formulaire d'inscription
-  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
   // État pour gérer l'affichage de la modale CreatePlayerModal
   const [showCreatePlayerModal, setShowCreatePlayerModal] = useState(false);
 
@@ -125,15 +122,9 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   // Fonction pour gérer le clic sur le bouton "Create Player"
   const handleCreatePlayer = () => {
     setShowCreatePlayerModal(false);
-    setIsRegistrationFormOpen(true);
     if (onCreatePlayer) {
       onCreatePlayer();
     }
-  };
-
-  // Fonction pour fermer le formulaire d'inscription
-  const handleCloseRegistrationForm = () => {
-    setIsRegistrationFormOpen(false);
   };
 
   // Fonction pour fermer la modale CreatePlayerModal et tout le composant de vote
@@ -171,17 +162,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
           isOpen={true}
           onCreatePlayer={handleCreatePlayer}
           onClose={handleCloseCreatePlayerModal}
-        />
-        
-        {/* Formulaire d'inscription */}
-        <RegistrationForm
-          isOpen={isRegistrationFormOpen}
-          onClose={handleCloseRegistrationForm}
-          walletConnected={walletConnected}
-          walletAddress={walletAddress}
-          wagmiConfig={wagmiConfig}
-          walletHooks={walletHooks}
-          constants={constants}
         />
       </div>
     );

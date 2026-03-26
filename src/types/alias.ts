@@ -27,11 +27,12 @@ export interface AliasCreationState {
 // --- Two-phase registration flow ---
 
 export type RegistrationPhase =
-  | 'input'              // user enters their pseudo
-  | 'creating-identity'  // Phase 1 in progress (atom + account + alias triple)
-  | 'identity-created'   // Phase 1 done → show available claims
-  | 'creating-claims'    // Phase 2 in progress (user-selected triples)
-  | 'complete'           // everything done
+  | 'input'                  // user enters pseudo + guild choice
+  | 'creating-identity'      // Phase 1 in progress (atom + account + alias triple + optional nested guild)
+  | 'loading-existing'       // Phase 1 done; querying existing profile elements
+  | 'ready-to-initialize'    // Existing items loaded; showing Player Initialization screen
+  | 'creating-claims'        // Phase 2 in progress (creating to-create items)
+  | 'complete'               // everything done
   | 'error'
 
 export type IdentityCreationStep =
@@ -40,6 +41,7 @@ export type IdentityCreationStep =
   | 'fetching-account-atom'
   | 'creating-account-atom'
   | 'creating-alias-triple'
+  | 'creating-guild-membership'  // Step 1.4 — nested triple (aliasTriple → IS_MEMBER_OF → guild)
   | 'success'
   | 'error'
 
@@ -48,11 +50,17 @@ export interface IdentityCreationState {
   error?: string
   pseudoAtomId?: string    // preserved on error so retry skips atom creation
   accountAtomId?: string   // preserved on error so retry skips account atom creation
+  aliasTripleId?: string   // vault ID of the has-alias triple (computed via calculateTripleId)
 }
 
-export interface ClaimOption {
-  id: string              // key from PLAYER_TRIPLE_TYPES (e.g. "PLAYER_QUALITY_1")
-  label: string           // human-readable label (e.g. "is fairplay")
-  predicateAtomId: string // hex term_id of the predicate atom
-  objectAtomId: string    // hex term_id of the object atom
+export interface InitItem {
+  id: string
+  type: 'atom' | 'triple' | 'nested-triple'
+  label: string
+  description: string
+  status: 'existing' | 'to-create' | 'creating' | 'created' | 'error'
+  subjectId?: string       // hex string, used at creation time
+  predicateId?: string
+  objectId?: string
+  resultTripleId?: string  // set after creation (or reused for existing items)
 }

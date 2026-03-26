@@ -12,8 +12,14 @@ export const usePlayerConstants = (config?: PlayerMapConfig): DefaultPlayerMapCo
     // Si des constantes personnalisées sont fournies, les utiliser
     if (config?.constants) {
       return {
-        ...DEFAULT_CONSTANTS,  // base: all defaults (includes HAS_ALIAS_PREDICATE_ID)
+        ...DEFAULT_CONSTANTS,  // base: all defaults
         ...config.constants,   // override with caller-supplied values
+        // Deep-merge COMMON_IDS so default keys (IN, IS_MEMBER_OF, …) survive
+        // even when caller only partially provides COMMON_IDS.
+        COMMON_IDS: {
+          ...DEFAULT_CONSTANTS.COMMON_IDS,
+          ...(config.constants?.COMMON_IDS ?? {}),
+        },
         UNIT_VALUE             // always from library, never overridable
       };
     }

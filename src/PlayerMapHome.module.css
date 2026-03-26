@@ -59,7 +59,7 @@
 .title2 {
   font-size: 18px;
   margin: 0 0 4px 0;
-  color: var(--color-secondary);
+  color: var(--color-primary);
   font-weight: bold;
   width: 80%;
   text-align: left;
@@ -341,7 +341,9 @@
   padding: 4px 0;
   margin-bottom: 8px;
   text-align: left;
-  width: 80%;
+  width: fit-content;
+  display: block;
+  align-self: flex-start;
   transition: color 0.2s;
 }
 

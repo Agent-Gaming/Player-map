@@ -1,6 +1,5 @@
 import React from "react";
 import PlayerMapHome from "./PlayerMapHome";
-import RegistrationForm from "./RegistrationForm";
 import PlayerMapGraph from "./PlayerMapGraph";
 import GraphComponent from "./GraphComponent";
 import { ClaimVoting } from "./components/vote/ClaimVoting";
@@ -22,7 +21,6 @@ export interface PlayerMapConfigType {
 // Export des composants principaux
 export {
   PlayerMapHome,
-  RegistrationForm,
   PlayerMapGraph,
   GraphComponent,
   ClaimVoting,
@@ -72,7 +70,7 @@ export { setPinataConstants };
 export { usePlayerAliases } from './hooks/usePlayerAliases';
 export { useCreateAlias } from './hooks/useCreateAlias';
 export { useRegisterPlayer } from './hooks/useRegisterPlayer';
-export type { PlayerAlias, AliasCreationStep, RegistrationPhase, IdentityCreationStep, ClaimOption } from './types/alias';
+export type { PlayerAlias, AliasCreationStep, RegistrationPhase, IdentityCreationStep, InitItem } from './types/alias';
 // AliasCreationState and IdentityCreationState are internal — not exported publicly
 
 // Exporter un composant par défaut

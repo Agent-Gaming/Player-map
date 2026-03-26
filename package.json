@@ -17,6 +17,8 @@
   ],
   "scripts": {
     "build": "vite build",
+    "sync": "STORE=$(ls -d ../playermap.box/examples/test-player-map/node_modules/.pnpm/player-map@file*/node_modules/player-map 2>/dev/null | head -1) && cp dist/* $STORE/dist/ && rm -rf ../playermap.box/examples/test-player-map/node_modules/.vite/deps && echo 'Synced to consuming app (Vite cache cleared)'",
+    "build:sync": "vite build && pnpm sync",
     "test": ""
   },
   "dependencies": {

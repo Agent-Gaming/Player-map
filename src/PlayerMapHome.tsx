@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import AgentLogo from "./assets/img/agent.svg";
 import IntuitionSmallLogo from "./assets/img/Intuition-logo.svg";
 import LogoAgentBg from "./assets/img/logo-agent.svg";
@@ -11,7 +11,7 @@ import { useBatchCreateTriple } from "./hooks/useBatchCreateTriple";
 import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "./shared/components/NetworkSwitchMessage";
 import PlayerCreationProgress from "./PlayerCreationProgress";
-import { RegistrationPhase, ClaimOption } from "./types/alias";
+import { RegistrationPhase, InitItem } from "./types/alias";
 
 interface PlayerMapHomeProps {
   walletConnected?: any;
@@ -41,6 +41,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   const [registrationPhase, setRegistrationPhase] = useState<RegistrationPhase>('input');
   const [pseudo, setPseudo] = useState('');
   const [pseudoAtomId, setPseudoAtomId] = useState<string | undefined>(undefined);
+  const [accountAtomId, setAccountAtomId] = useState<string | undefined>(undefined);
+  const [aliasTripleId, setAliasTripleId] = useState<string | undefined>(undefined);
 
   // ─── Form fields ─────────────────────────────────────────────────────────────
   const [pseudoInput, setPseudoInput] = useState('');
@@ -52,11 +54,12 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // ─── Phase 2 state ──────────────────────────────────────────────────────────
-  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
-  const [createdClaimIds, setCreatedClaimIds] = useState<string[]>([]);
-  const [isCreatingClaims, setIsCreatingClaims] = useState(false);
-  const [currentClaimIndex, setCurrentClaimIndex] = useState(0);
-  const [claimError, setClaimError] = useState<string | undefined>(undefined);
+  const [existingItems, setExistingItems] = useState<InitItem[]>([]);
+  const [toCreateItems, setToCreateItems] = useState<InitItem[]>([]);
+  const [fairplayTripleId, setFairplayTripleId] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [currentInitIndex, setCurrentInitIndex] = useState(0);
+  const [initError, setInitError] = useState<string | undefined>(undefined);
 
   // ─── Hooks ──────────────────────────────────────────────────────────────────
   const { aliases, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases(
@@ -70,13 +73,16 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     isRegistering,
     error: identityError,
     pseudoAtomId: reg_pseudoAtomId,
+    accountAtomId: reg_accountAtomId,
+    aliasTripleId: reg_aliasTripleId,
   } = useRegisterPlayer(
     constants
-      ? { walletConnected, walletAddress, constants, publicClient }
+      ? { walletConnected, walletAddress, constants, publicClient, guildId: selectedGuild,
+          existingAccountAtomId: accountAtomId }
       : ({} as any)
   );
 
-  const { batchCreateTriple } = useBatchCreateTriple({
+  const { batchCreateTriple, checkTripleExists, computeTripleId } = useBatchCreateTriple({
     walletConnected,
     walletAddress,
     publicClient,
@@ -88,41 +94,185 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     publicClient: wagmiConfig?.publicClient,
   });
 
-  // ─── Available claims (excludes null objectId and entries without label) ─────
-  const availableClaims: ClaimOption[] = useMemo(() => {
-    if (!constants) return [];
-    return Object.entries(constants.PLAYER_TRIPLE_TYPES)
-      .filter(([, v]) => v.objectId !== null && v.label)
-      .map(([id, v]) => ({
-        id,
-        label: v.label as string,
-        predicateAtomId: v.predicateId as string,
-        objectAtomId: v.objectId as string,
-      }));
-  }, [constants]);
-
   const guilds = constants?.OFFICIAL_GUILDS ?? [];
   const hasExistingAliases = !aliasesLoading && aliases && aliases.length > 0;
 
   // ─── Auto-transition: returning user already has account atom ────────────────
   useEffect(() => {
     if (!aliasesLoading && playerAtomId && showForm && registrationPhase === 'input') {
-      setRegistrationPhase('identity-created');
       const primary = aliases.find(a => a.isPrimary);
       if (primary) {
         setPseudo(primary.pseudo);
         setPseudoAtomId(primary.atomId);
+        setAliasTripleId(primary.tripleId);
+        setAccountAtomId(playerAtomId);
       }
+      setRegistrationPhase('loading-existing');
     }
   }, [playerAtomId, aliasesLoading, showForm]);
+  // Note: registrationPhase intentionally NOT in deps (avoid re-trigger)
 
-  // ─── Transition after Phase 1 success ────────────────────────────────────────
+  // ─── Transition after Phase 1 success → loading-existing ─────────────────────
   useEffect(() => {
     if (identityStep === 'success' && registrationPhase === 'creating-identity') {
       if (reg_pseudoAtomId) setPseudoAtomId(reg_pseudoAtomId);
-      setRegistrationPhase('identity-created');
+      if (reg_accountAtomId) setAccountAtomId(reg_accountAtomId);
+      if (reg_aliasTripleId) setAliasTripleId(reg_aliasTripleId);
+      setRegistrationPhase('loading-existing');
     }
-  }, [identityStep, registrationPhase, reg_pseudoAtomId]);
+  }, [identityStep, registrationPhase, reg_pseudoAtomId, reg_accountAtomId, reg_aliasTripleId]);
+
+  // ─── Check existing items — defined before the useEffect that calls it ────────
+  const checkExistingItems = useCallback(async () => {
+    if (!accountAtomId || !aliasTripleId || !pseudoAtomId || !constants) return;
+
+    const fairplayAtomId = constants.PLAYER_TRIPLE_TYPES.PLAYER_QUALITY_1.objectId as string;
+    const gamesId = constants.COMMON_IDS.GAMES_ID;
+    const isId = constants.COMMON_IDS.IS;
+    const isPlayerOfId = constants.COMMON_IDS.IS_PLAYER_OF;
+    const inId = constants.COMMON_IDS.IN;
+
+    // Check Item B: [accountAtomId] → IS → [fairplayAtomId]
+    const fairplayExists = await checkTripleExists(
+      BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId)
+    );
+    let knownFairplayTripleId: string | null = null;
+    if (fairplayExists) {
+      const id = await computeTripleId(BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId));
+      knownFairplayTripleId = `0x${id.toString(16)}`;
+      setFairplayTripleId(knownFairplayTripleId);
+    }
+
+    // Check Item A: [aliasTripleId] → IS_PLAYER_OF → [gamesId]
+    const gameExists = await checkTripleExists(
+      BigInt(aliasTripleId), BigInt(isPlayerOfId), BigInt(gamesId)
+    );
+
+    // Check Item C: [fairplayTripleId] → IN → [gamesId]
+    let contextExists = false;
+    if (knownFairplayTripleId) {
+      contextExists = await checkTripleExists(
+        BigInt(knownFairplayTripleId), BigInt(inId), BigInt(gamesId)
+      );
+    }
+
+    // Build existing items (Phase 1 always created these)
+    const guildName = selectedGuild
+      ? constants.OFFICIAL_GUILDS.find(g => g.id === selectedGuild)?.name ?? selectedGuild
+      : null;
+
+    const phase1Items: InitItem[] = [
+      {
+        id: 'pseudo-atom', type: 'atom',
+        label: `Atom: "${pseudo}"`,
+        description: 'Username atom',
+        status: 'existing',
+      },
+      {
+        id: 'account-atom', type: 'atom',
+        label: `Account: ${accountAtomId.slice(0, 8)}...`,
+        description: 'Wallet address atom',
+        status: 'existing',
+      },
+      {
+        id: 'alias-triple', type: 'triple',
+        label: `Account has alias ${pseudo}`,
+        description: `[Account] — [has alias] — [${pseudo}]`,
+        status: 'existing',
+      },
+    ];
+    if (guildName) {
+      phase1Items.push({
+        id: 'guild-nested', type: 'nested-triple',
+        label: `(has alias) is member of ${guildName}`,
+        description: `Nested: (alias triple) — [is member of] — [${guildName}]`,
+        status: 'existing',
+      });
+    }
+
+    const existing: InitItem[] = [...phase1Items];
+    const toCreate: InitItem[] = [];
+
+    // Item B
+    if (fairplayExists && knownFairplayTripleId) {
+      existing.push({
+        id: 'fairplay', type: 'triple',
+        label: 'Account is fairplay',
+        description: '[Account] — [is] — [fairplay]',
+        status: 'existing',
+        resultTripleId: knownFairplayTripleId,
+      });
+    } else {
+      toCreate.push({
+        id: 'fairplay', type: 'triple',
+        label: 'Account is fairplay',
+        description: '[Account] — [is] — [fairplay]',
+        status: 'to-create',
+        subjectId: accountAtomId,
+        predicateId: isId,
+        objectId: fairplayAtomId,
+      });
+    }
+
+    // Item A
+    if (gameExists) {
+      existing.push({
+        id: 'game-nested', type: 'nested-triple',
+        label: '(has alias) is player of Bossfighter',
+        description: 'Nested: (alias triple) — [is player of] — [Bossfighter]',
+        status: 'existing',
+      });
+    } else {
+      toCreate.push({
+        id: 'game-nested', type: 'nested-triple',
+        label: '(has alias) is player of Bossfighter',
+        description: 'Nested: (alias triple) — [is player of] — [Bossfighter]',
+        status: 'to-create',
+        subjectId: aliasTripleId,
+        predicateId: isPlayerOfId,
+        objectId: gamesId,
+      });
+    }
+
+    // Item C (only checkable if fairplay triple exists; otherwise it cannot exist)
+    if (contextExists && knownFairplayTripleId) {
+      existing.push({
+        id: 'context-nested', type: 'nested-triple',
+        label: '(is fairplay) in Bossfighter',
+        description: 'Nested: (fairplay triple) — [in] — [Bossfighter]',
+        status: 'existing',
+      });
+    } else {
+      toCreate.push({
+        id: 'context-nested', type: 'nested-triple',
+        label: '(is fairplay) in Bossfighter',
+        description: 'Nested: (fairplay triple) — [in] — [Bossfighter]',
+        status: 'to-create',
+        // Note: no subjectId — depends on fairplayTripleId resolved at creation time
+      });
+    }
+
+    setExistingItems(existing);
+    setToCreateItems(toCreate);
+    setRegistrationPhase('ready-to-initialize');
+  }, [accountAtomId, aliasTripleId, pseudoAtomId, pseudo, selectedGuild, constants,
+      checkTripleExists, computeTripleId]);
+
+  // ─── Trigger existence checks when entering loading-existing ──────────────────
+  useEffect(() => {
+    if (
+      registrationPhase === 'loading-existing' &&
+      accountAtomId &&
+      aliasTripleId &&
+      pseudoAtomId &&
+      constants
+    ) {
+      checkExistingItems().catch(err => {
+        console.error('Phase 2 check error:', err);
+        setRegistrationPhase('error');
+      });
+    }
+  }, [registrationPhase, accountAtomId, aliasTripleId, pseudoAtomId, checkExistingItems]);
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
   const handleOpenForm = () => {
@@ -137,14 +287,19 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setPseudoInput('');
     setPseudo('');
     setPseudoAtomId(undefined);
+    setAccountAtomId(undefined);
+    setAliasTripleId(undefined);
     setSelectedGuild('');
     setImageFile(null);
     setImagePreview(null);
     setUseExistingAlias(false);
     setSelectedExistingAlias('');
-    setSelectedClaimIds([]);
-    setCreatedClaimIds([]);
-    setClaimError(undefined);
+    setExistingItems([]);
+    setToCreateItems([]);
+    setFairplayTripleId(null);
+    setIsInitializing(false);
+    setCurrentInitIndex(0);
+    setInitError(undefined);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,87 +316,100 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (!username || !constants) return;
     setPseudo(username);
     setRegistrationPhase('creating-identity');
-    register(username);
+    register(username, imageFile ?? undefined);
   };
 
-  const handleRetryIdentity = () => { register(pseudo); };
+  const handleRetryIdentity = () => { register(pseudo, imageFile ?? undefined); };
 
   const handleResetIdentity = () => {
     resetIdentity();
     setRegistrationPhase('input');
     setPseudo('');
     setPseudoAtomId(undefined);
+    setAccountAtomId(undefined);
+    setAliasTripleId(undefined);
   };
 
-  const handleToggleClaim = (id: string) => {
-    setSelectedClaimIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-    );
-  };
+  const handleInitialize = useCallback(async () => {
+    if (!accountAtomId || !aliasTripleId || !constants) return;
 
-  const handleCreateSelectedClaims = async () => {
-    if (!pseudoAtomId) return;
-    const pending = availableClaims.filter(
-      c => selectedClaimIds.includes(c.id) && !createdClaimIds.includes(c.id)
-    );
-
-    // Also create guild triple if selected
-    const guildPredicateEntry = constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GUILD;
-    const guildPending = selectedGuild && guildPredicateEntry?.predicateId && !createdClaimIds.includes('PLAYER_GUILD');
-
-    if (pending.length === 0 && !guildPending) {
+    const pending = toCreateItems.filter(i => i.status === 'to-create');
+    if (pending.length === 0) {
       setRegistrationPhase('complete');
       return;
     }
 
-    setIsCreatingClaims(true);
-    setClaimError(undefined);
+    setIsInitializing(true);
+    setInitError(undefined);
     setRegistrationPhase('creating-claims');
 
+    const fairplayAtomId = constants.PLAYER_TRIPLE_TYPES.PLAYER_QUALITY_1.objectId as string;
+    const gamesId = constants.COMMON_IDS.GAMES_ID;
+    const isId = constants.COMMON_IDS.IS;
+    const isPlayerOfId = constants.COMMON_IDS.IS_PLAYER_OF;
+    const inId = constants.COMMON_IDS.IN;
+
+    let currentFairplayTripleId = fairplayTripleId;
     let idx = 0;
 
-    // Guild triple first
-    if (guildPending) {
-      setCurrentClaimIndex(idx++);
-      try {
-        await batchCreateTriple([{
-          subjectId: BigInt(pseudoAtomId),
-          predicateId: BigInt(guildPredicateEntry.predicateId),
-          objectId: BigInt(selectedGuild),
-        }]);
-        setCreatedClaimIds(prev => [...prev, 'PLAYER_GUILD']);
-      } catch (err) {
-        setClaimError(err instanceof Error ? err.message : String(err));
-        setIsCreatingClaims(false);
-        setRegistrationPhase('identity-created');
-        return;
-      }
-    }
+    const tryCreate = async (id: string): Promise<boolean> => {
+      const item = toCreateItems.find(i => i.id === id && i.status === 'to-create');
+      if (!item) return true; // already exists or not to create
 
-    // Claims triples
-    for (let i = 0; i < pending.length; i++) {
-      setCurrentClaimIndex(idx++);
-      const claim = pending[i];
-      try {
-        await batchCreateTriple([{
-          subjectId: BigInt(pseudoAtomId),
-          predicateId: BigInt(claim.predicateAtomId),
-          objectId: BigInt(claim.objectAtomId),
-        }]);
-        setCreatedClaimIds(prev => [...prev, claim.id]);
-      } catch (err) {
-        setClaimError(err instanceof Error ? err.message : String(err));
-        setIsCreatingClaims(false);
-        setRegistrationPhase('identity-created');
-        return;
-      }
-    }
+      setCurrentInitIndex(idx++);
+      setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'creating' } : i));
 
-    setIsCreatingClaims(false);
+      try {
+        if (id === 'fairplay') {
+          await batchCreateTriple([{
+            subjectId: BigInt(accountAtomId),
+            predicateId: BigInt(isId),
+            objectId: BigInt(fairplayAtomId),
+          }]);
+          const newId = await computeTripleId(BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId));
+          currentFairplayTripleId = `0x${newId.toString(16)}`;
+          setFairplayTripleId(currentFairplayTripleId);
+          setToCreateItems(prev => prev.map(i =>
+            i.id === id ? { ...i, status: 'created', resultTripleId: currentFairplayTripleId ?? undefined } : i
+          ));
+        } else if (id === 'game-nested') {
+          await batchCreateTriple([{
+            subjectId: BigInt(aliasTripleId),
+            predicateId: BigInt(isPlayerOfId),
+            objectId: BigInt(gamesId),
+          }]);
+          setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'created' } : i));
+        } else if (id === 'context-nested') {
+          if (!currentFairplayTripleId) throw new Error('Fairplay triple ID not available for nested context');
+          await batchCreateTriple([{
+            subjectId: BigInt(currentFairplayTripleId),
+            predicateId: BigInt(inId),
+            objectId: BigInt(gamesId),
+          }]);
+          setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'created' } : i));
+        }
+        return true;
+      } catch (err) {
+        setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'error' } : i));
+        setInitError(err instanceof Error ? err.message : String(err));
+        return false;
+      }
+    };
+
+    // Ordered: B first (fairplay), then A (game-nested), then C (context-nested)
+    const success1 = await tryCreate('fairplay');
+    if (!success1) { setIsInitializing(false); setRegistrationPhase('ready-to-initialize'); return; }
+
+    const success2 = await tryCreate('game-nested');
+    if (!success2) { setIsInitializing(false); setRegistrationPhase('ready-to-initialize'); return; }
+
+    const success3 = await tryCreate('context-nested');
+    if (!success3) { setIsInitializing(false); setRegistrationPhase('ready-to-initialize'); return; }
+
+    setIsInitializing(false);
     setRegistrationPhase('complete');
-  };
-
-  const handleSkipClaims = () => { setRegistrationPhase('complete'); };
+  }, [accountAtomId, aliasTripleId, fairplayTripleId, toCreateItems, constants,
+      batchCreateTriple, computeTripleId]);
 
   const isValidateDisabled = useExistingAlias ? !selectedExistingAlias : !pseudoInput.trim();
 
@@ -309,10 +477,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         /* ── Form View ──────────────────────────────────────────────────────── */
         <>
           <div className={styles.formWrapper}>
-            <button className={styles.backLink} onClick={handleBack}>
-              ← Back
-            </button>
-            <p className={styles.title2}>CREATE YOUR PLAYER</p>
             {!isCorrectNetwork ? (
               <NetworkSwitchMessage
                 currentChainId={currentChainId}
@@ -321,9 +485,15 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
             ) : registrationPhase === 'input' ? (
               /* ── Input Form ─────────────────────────────────────────────────── */
               <div className={styles.formBlock}>
+                <button className={styles.backLink} onClick={handleBack}>
+                  ← Back
+                </button>
+
+                <p className={styles.title2}>CREATE YOUR PLAYER</p>
 
                 {/* Username row — with alias select when user has existing aliases */}
                 <div className={styles.formRow}>
+
                   <div className={styles.formRowLabel}>
                     <span className={styles.rowTitle}>Username</span>
                   </div>
@@ -466,11 +636,9 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
             ) : (
               /* ── Progress / Phase 2 / Complete ─────────────────────────────── */
               <div className={styles.formBlock}>
-                {registrationPhase === 'complete' && (
-                  <button className={styles.backLink} onClick={handleBack}>
-                    ← Back to home
-                  </button>
-                )}
+                <button className={styles.backLink} onClick={handleBack}>
+                  ← Back
+                </button>
                 <PlayerCreationProgress
                   walletAddress={walletAddress}
                   constants={constants!}
@@ -486,15 +654,16 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                   pseudo={pseudo}
                   aliases={aliases}
                   aliasesLoading={aliasesLoading}
-                  availableClaims={availableClaims}
-                  selectedClaimIds={selectedClaimIds}
-                  createdClaimIds={createdClaimIds}
-                  onToggleClaim={handleToggleClaim}
-                  onCreateSelectedClaims={handleCreateSelectedClaims}
-                  onSkipClaims={handleSkipClaims}
-                  isCreatingClaims={isCreatingClaims}
-                  currentClaimIndex={currentClaimIndex}
-                  claimError={claimError}
+                  hasGuild={Boolean(selectedGuild)}
+                  guildName={selectedGuild
+                    ? constants?.OFFICIAL_GUILDS?.find(g => g.id === selectedGuild)?.name
+                    : undefined}
+                  existingItems={existingItems}
+                  toCreateItems={toCreateItems}
+                  onInitialize={handleInitialize}
+                  isInitializing={isInitializing}
+                  currentInitIndex={currentInitIndex}
+                  initError={initError}
                 />
 
               </div>

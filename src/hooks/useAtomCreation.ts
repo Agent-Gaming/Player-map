@@ -1,7 +1,8 @@
-import { ATOM_CONTRACT_ADDRESS, VALUE_PER_ATOM, atomABI } from '../abi';
 import { toHex, parseEventLogs } from 'viem';
+import { ATOM_CONTRACT_ADDRESS, VALUE_PER_ATOM, atomABI } from '../abi';
 import { hashDataToIPFS } from '../utils/ipfsUtils'; // Importer depuis ipfsUtils
 import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
+import { contractWrite } from '../utils/walletUtils';
 
 export type IpfsAtom = {
   '@context': string;
@@ -150,7 +151,7 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
         }
       }
 
-      const txHash = await walletConnected.writeContract({
+      const txHash = await contractWrite(walletConnected, {
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
         functionName: 'createAtoms',
@@ -236,7 +237,7 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
         }
       }
 
-      const txHash = await walletConnected.writeContract({
+      const txHash = await contractWrite(walletConnected, {
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
         functionName: 'createAtoms',

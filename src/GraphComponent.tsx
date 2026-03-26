@@ -26,7 +26,7 @@ import IntuitionLogo from "./assets/img/Intuition-logo.svg";
 import styles from "./GraphComponent.module.css";
 
 interface GraphComponentProps {
-  walletConnected?: boolean;
+  walletConnected?: any;
   walletAddress?: string;
   wagmiConfig?: any;
   walletHooks?: any;
@@ -172,7 +172,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
       {(!isWalletReady || (isWalletReady && !hasConfirmedPlayer)) && (
         <div className={!isWalletReady ? styles.homeBlurred : styles.homeVisible}>
           <PlayerMapHome
-            walletConnected={isWalletReady}
+            walletConnected={walletConnected}
             walletAddress={walletAddress}
             wagmiConfig={wagmiConfig}
             walletHooks={walletHooks}

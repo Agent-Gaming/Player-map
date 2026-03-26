@@ -7,6 +7,8 @@ export const COMMON_IDS = {
   IS: "0x2af261bce70c2fc3a1abf882e3e89b23066fcd150bfda27fab69f9f55ed2d9d0",  // prédicat --> is
   IS_PLAYER_OF: "0x05f1707d8cb50571d01021f09a664826aa1be2ff43504c0cca55eef87142f84f",  // prédicat --> is player of
   HAS_ALIAS: '0x90b0a11a334ba1a7c3613ed8ea007f1f41b274892f0f05cc0b24d3ab34042d3c', // predicate → has alias
+  IS_MEMBER_OF: '0xe489948c4bd4fa6f50f402434996b90942ab67585a71c71d81dff8e624f661d4', // predicate → is member of
+  IN: '0xb0d3de9abeebc79e74504814f69d38eae809410c9759678855f79d1b4c7405cb', // predicate → in
 };
 
 export const HAS_ALIAS_PREDICATE_ID = COMMON_IDS.HAS_ALIAS;

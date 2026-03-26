@@ -1,10 +1,12 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
+import { toHex } from 'viem';
 
 /**
  * Fetches the term_id of the account atom for a wallet address.
- * The account atom is a string atom whose data field equals the wallet address.
- * Created during Phase 1 registration via createStringAtom(walletAddress.toLowerCase()).
- * Returns null if no account atom exists (user not yet registered).
+ * Tries two storage formats:
+ *   - raw bytes: data == walletAddress (new format, rawHex=true in createStringAtom)
+ *   - toHex() : data == toHex(walletAddress) (old UTF-8 encoded format)
+ * Returns the lowest term_id match, or null if not found.
  */
 export const fetchAccountAtom = async (
   walletAddress: string,
@@ -12,14 +14,19 @@ export const fetchAccountAtom = async (
 ): Promise<string | null> => {
   try {
     const apiUrl = API_URLS[network];
+    const address = walletAddress.toLowerCase();
+    const encoded = toHex(address); // old format: UTF-8 encoding of address string
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
-          query GetAccountAtom($address: String!) {
+          query GetAccountAtom($address: String!, $encoded: String!) {
             atoms(
-              where: { data: { _ilike: $address } }
+              where: { _or: [
+                { data: { _ilike: $address } }
+                { data: { _ilike: $encoded } }
+              ]}
               order_by: { term_id: asc }
               limit: 1
             ) {
@@ -27,7 +34,7 @@ export const fetchAccountAtom = async (
             }
           }
         `,
-        variables: { address: walletAddress.toLowerCase() },
+        variables: { address, encoded },
       }),
     });
 
@@ -124,7 +131,7 @@ export const fetchAliasTriplesWithPosition = async (
                 term_id
                 data
               }
-              vault {
+              term {
                 positions(where: { account_id: { _eq: $userAddress } }) {
                   shares
                 }
@@ -152,8 +159,8 @@ export const fetchAliasTriplesWithPosition = async (
       pseudo: t.object?.data ?? '',
       atomId: t.object?.term_id ?? '',
       // positions array may be empty if user has no stake; default to 0n
-      userPosition: t.vault?.positions?.[0]?.shares
-        ? BigInt(t.vault.positions[0].shares)
+      userPosition: t.term?.positions?.[0]?.shares
+        ? BigInt(t.term.positions[0].shares)
         : 0n,
     }));
   } catch (error) {

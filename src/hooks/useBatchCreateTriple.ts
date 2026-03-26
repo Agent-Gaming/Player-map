@@ -1,5 +1,6 @@
 import { ATOM_CONTRACT_ADDRESS, VALUE_PER_TRIPLE, atomABI } from "../abi";
 import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
+import { contractWrite, waitForReceipt } from "../utils/walletUtils";
 
 // Structure pour les triples à créer
 export interface TripleToCreate {
@@ -15,56 +16,39 @@ interface UseBatchCreateTripleProps {
   constants: DefaultPlayerMapConstants; // Constantes injectées
 }
 
-export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicClient, constants }: UseBatchCreateTripleProps) => {
-  // Utiliser les constantes passées en paramètre
-  const { PLAYER_TRIPLE_TYPES } = constants;
-  // Fonction pour vérifier si un triple existe déjà
+export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicClient }: UseBatchCreateTripleProps) => {
   const checkTripleExists = async (
     subjectId: bigint,
     predicateId: bigint,
     objectId: bigint
   ): Promise<boolean> => {
-    if (!walletConnected || !walletAddress) {
-      throw new Error("Wallet not connected");
-    }
-
     try {
-      // Choisir le client approprié pour la lecture
       const readClient = publicClient || walletConnected;
+      if (!readClient?.readContract) return false;
 
-      // Vérifier que le client a bien la méthode readContract
-      if (!readClient || typeof readClient.readContract !== 'function') {
-        console.warn('No valid read client available to check if triple exists');
-        return false;
-      }
+      // isTriple(bytes32 termId) takes ONE arg — the pre-computed vault ID.
+      // We must call calculateTripleId first to get that termId.
+      const sub32  = `0x${subjectId.toString(16).padStart(64, '0')}` as `0x${string}`;
+      const pred32 = `0x${predicateId.toString(16).padStart(64, '0')}` as `0x${string}`;
+      const obj32  = `0x${objectId.toString(16).padStart(64, '0')}` as `0x${string}`;
 
-      // Vérifier si le triple existe déjà
+      const termId = await readClient.readContract({
+        address: ATOM_CONTRACT_ADDRESS,
+        abi: atomABI,
+        functionName: 'calculateTripleId',
+        args: [sub32, pred32, obj32],
+      }) as `0x${string}`;
+
       const exists = await readClient.readContract({
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
-        functionName: "isTriple",
-        args: [subjectId, predicateId, objectId],
+        functionName: 'isTriple',
+        args: [termId],
       });
 
-      return exists;
+      return Boolean(exists);
     } catch (error) {
       console.error("Error checking if triple exists:", error);
-
-      // Si la première tentative échoue et que nous avons un publicClient différent, réessayer
-      if (publicClient && publicClient !== walletConnected && typeof publicClient.readContract === 'function') {
-        try {
-          const exists = await publicClient.readContract({
-            address: ATOM_CONTRACT_ADDRESS,
-            abi: atomABI,
-            functionName: "isTriple",
-            args: [subjectId, predicateId, objectId],
-          });
-          return exists;
-        } catch (e) {
-          console.error("Second attempt failed when checking if triple exists:", e);
-        }
-      }
-
       return false;
     }
   };
@@ -159,30 +143,19 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
       }
 
       // Call the contract
-      const txHash = await walletConnected.writeContract({
+      const txHash = await contractWrite(walletConnected, {
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
-        functionName: "createTriples",
+        functionName: 'createTriples',
         args: [subjectIds, predicateIds, objectIds, assets],
         value: totalValue,
-        gas: 5000000n, // Limit gas to 5M to prevent MetaMask from using excessive values
+        gas: 5000000n,
       });
 
-      // Wait for confirmation using a compatible method
-      let receipt;
-      if (walletConnected.waitForTransactionReceipt) {
-        // New approach (Viem)
-        receipt = await walletConnected.waitForTransactionReceipt({ hash: txHash });
-      } else if (txHash.wait) {
-        // Old approach (ethers.js)
-        receipt = await txHash.wait();
-      } else {
-        // Passive wait if no method is available
-        await new Promise(resolve => setTimeout(resolve, 3000));
-      }
+      const receipt = await waitForReceipt(txHash, walletConnected, publicClient);
 
       return {
-        hash: typeof txHash === 'string' ? txHash : txHash.hash,
+        hash: txHash,
         receipt
       };
     } catch (error) {
@@ -191,23 +164,32 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
     }
   };
 
-  // Fonction spécifique pour créer les triples de joueur
-  const createPlayerTriples = async (playerAtomId: bigint): Promise<any> => {
-    // Création dynamique des triples basée sur PLAYER_TRIPLE_TYPES
-    const triplesToCreate: TripleToCreate[] = Object.entries(PLAYER_TRIPLE_TYPES)
-      .filter(([key, value]) => 'objectId' in value && value.objectId !== null) // Exclure les triples avec objectId null (comme PLAYER_GUILD)
-      .map(([key, value]) => ({
-        subjectId: playerAtomId,
-        predicateId: BigInt(value.predicateId),
-        objectId: BigInt((value as any).objectId),
-      }));
-
-    return batchCreateTriple(triplesToCreate);
+  // Compute the vault ID (term_id) of a triple deterministically using the contract's
+  // pure calculateTripleId function. No gas required.
+  const computeTripleId = async (
+    subjectId: bigint,
+    predicateId: bigint,
+    objectId: bigint,
+  ): Promise<bigint> => {
+    const readClient = publicClient || walletConnected;
+    if (!readClient?.readContract) {
+      throw new Error('No read client available to compute triple ID');
+    }
+    const sub32 = `0x${subjectId.toString(16).padStart(64, '0')}` as `0x${string}`;
+    const pred32 = `0x${predicateId.toString(16).padStart(64, '0')}` as `0x${string}`;
+    const obj32 = `0x${objectId.toString(16).padStart(64, '0')}` as `0x${string}`;
+    const result = await readClient.readContract({
+      address: ATOM_CONTRACT_ADDRESS,
+      abi: atomABI,
+      functionName: 'calculateTripleId',
+      args: [sub32, pred32, obj32],
+    }) as `0x${string}`;
+    return BigInt(result);
   };
 
   return {
     checkTripleExists,
     batchCreateTriple,
-    createPlayerTriples,
+    computeTripleId,
   };
 }; 

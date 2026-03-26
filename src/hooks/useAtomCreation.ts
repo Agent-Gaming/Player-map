@@ -3,7 +3,7 @@ import {
   createAtomFromThing,
   createAtomFromEthereumAccount,
 } from '@0xintuition/sdk';
-import { ATOM_CONTRACT_ADDRESS } from '../abi';
+import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
 import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
 import type { Address } from 'viem';
 
@@ -64,12 +64,25 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
    * Creates an Ethereum account atom for a wallet address.
    * The SDK encodes the address as toHex(getAddress(address)) — 20 bytes checksummed.
    * Replaces the rawHex=true path previously in createStringAtom.
+   *
+   * SDK signature: createAtomFromEthereumAccount(config, address, deposit?)
+   * where deposit is ADDED to getAtomCost(). We fetch getAtomCost() ourselves so
+   * total assets = max(getAtomCost(), VITE_VALUE_PER_ATOM), matching the contract minimum.
    */
   const createEthereumAccountAtom = async (address: string): Promise<{ atomId: bigint }> => {
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
-    const result = await createAtomFromEthereumAccount(writeConfig, address as Address);
+    const envAtomCost = BigInt(import.meta.env.VITE_VALUE_PER_ATOM || '10000000000000000');
+    const atomBaseCost: bigint = publicClient
+      ? (await publicClient.readContract({
+          address: ATOM_CONTRACT_ADDRESS as Address,
+          abi: atomABI,
+          functionName: 'getAtomCost',
+        }) as bigint)
+      : 0n;
+    const depositAmount = envAtomCost > atomBaseCost ? envAtomCost - atomBaseCost : 0n;
+    const result = await createAtomFromEthereumAccount(writeConfig, address as Address, depositAmount as any);
     return { atomId: BigInt(result.state.termId) };
   };
 

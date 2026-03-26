@@ -1,11 +1,12 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
-import { toHex } from 'viem';
+import { toHex, getAddress } from 'viem';
 
 /**
  * Fetches the term_id of the account atom for a wallet address.
- * Tries two storage formats:
- *   - raw bytes: data == walletAddress (new format, rawHex=true in createStringAtom)
- *   - toHex() : data == toHex(walletAddress) (old UTF-8 encoded format)
+ * Tries three storage formats:
+ *   - raw bytes    : data == walletAddress (rawHex=true createStringAtom, legacy)
+ *   - lowercase UTF-8: data == toHex(walletAddress) (old format)
+ *   - SDK format   : data == toHex(getAddress(walletAddress)) (createAtomFromEthereumAccount)
  * Returns the lowest term_id match, or null if not found.
  */
 export const fetchAccountAtom = async (
@@ -14,18 +15,20 @@ export const fetchAccountAtom = async (
 ): Promise<string | null> => {
   try {
     const apiUrl = API_URLS[network];
-    const address = walletAddress.toLowerCase();
-    const encoded = toHex(address); // old format: UTF-8 encoding of address string
+    const address   = walletAddress.toLowerCase();
+    const encoded   = toHex(address);               // old lowercase UTF-8 format
+    const sdkEncoded = toHex(getAddress(walletAddress)); // SDK format: toHex(checksummed)
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
-          query GetAccountAtom($address: String!, $encoded: String!) {
+          query GetAccountAtom($address: String!, $encoded: String!, $sdkEncoded: String!) {
             atoms(
               where: { _or: [
                 { data: { _ilike: $address } }
                 { data: { _ilike: $encoded } }
+                { data: { _ilike: $sdkEncoded } }
               ]}
               order_by: { term_id: asc }
               limit: 1
@@ -34,7 +37,7 @@ export const fetchAccountAtom = async (
             }
           }
         `,
-        variables: { address, encoded },
+        variables: { address, encoded, sdkEncoded },
       }),
     });
 

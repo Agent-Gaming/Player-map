@@ -1,16 +1,11 @@
-import { toHex, parseEventLogs } from 'viem';
-import { ATOM_CONTRACT_ADDRESS, VALUE_PER_ATOM, atomABI } from '../abi';
-import { hashDataToIPFS } from '../utils/ipfsUtils'; // Importer depuis ipfsUtils
+import {
+  createAtomFromString,
+  createAtomFromThing,
+  createAtomFromEthereumAccount,
+} from '@0xintuition/sdk';
+import { ATOM_CONTRACT_ADDRESS } from '../abi';
 import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
-import { contractWrite } from '../utils/walletUtils';
-
-export type IpfsAtom = {
-  '@context': string;
-  '@type': string;
-  name: string;
-  description?: string;
-  image?: string;
-};
+import type { Address } from 'viem';
 
 export type IpfsAtomInput = {
   name: string;
@@ -24,237 +19,63 @@ export interface UseAtomCreationProps {
   publicClient?: any;
 }
 
-async function waitForAtomId(
-  txHash: any,
-  walletConnected: any,
-  publicClient: any
-): Promise<bigint> {
-  // Normalize txHash
-  const normalizedTxHash = typeof txHash === 'string' ? txHash : txHash.hash || txHash;
-
-  let receipt: any;
-  if (publicClient && publicClient.waitForTransactionReceipt) {
-    receipt = await publicClient.waitForTransactionReceipt({ hash: normalizedTxHash });
-  } else if (walletConnected.waitForTransactionReceipt) {
-    receipt = await walletConnected.waitForTransactionReceipt({ hash: normalizedTxHash });
-  } else if (txHash.wait) {
-    receipt = await txHash.wait();
-  } else if (publicClient && publicClient.getTransactionReceipt) {
-    const maxAttempts = 30;
-    const delay = 2000;
-    for (let i = 0; i < maxAttempts; i++) {
-      try {
-        receipt = await publicClient.getTransactionReceipt({ hash: normalizedTxHash });
-        if (receipt) break;
-      } catch (_) { /* not yet confirmed */ }
-      await new Promise(resolve => setTimeout(resolve, delay));
-    }
-    if (!receipt) throw new Error('Transaction receipt not found after waiting');
-  } else {
-    throw new Error('No method available to wait for transaction receipt. publicClient is required.');
-  }
-
-  if (!receipt) throw new Error('Transaction receipt not found');
-  if (receipt.status === 'reverted' || receipt.status === 0) {
-    throw new Error('Transaction reverted. Check gas or contract error.');
-  }
-  if (!receipt.logs || receipt.logs.length === 0) {
-    throw new Error('Transaction receipt contains no logs. Transaction may have been reverted.');
-  }
-
-  const events = parseEventLogs({ abi: atomABI, logs: receipt.logs });
-  const atomCreatedEvent = events.find((e: any) => e.eventName === 'AtomCreated') as any;
-  if (!atomCreatedEvent?.args?.termId) {
-    throw new Error('AtomCreated event not found in transaction receipt');
-  }
-  return BigInt(atomCreatedEvent.args.termId);
-}
-
 export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }: UseAtomCreationProps) => {
-  // Fonction pour créer un atome à partir des données utilisateur
+  const writeConfig = {
+    address: ATOM_CONTRACT_ADDRESS as Address,
+    walletClient: walletConnected as any,
+    publicClient,
+  };
+
+  /**
+   * Creates a rich JSON-LD atom (name + optional image).
+   * Converts IPFS image URLs to HTTP gateway URLs before storing.
+   */
   const createAtom = async (input: IpfsAtomInput): Promise<{ atomId: bigint; ipfsHash: string }> => {
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
+    const imageUrl = input.image && isIpfsUrl(input.image)
+      ? ipfsToHttpUrl(input.image)
+      : input.image;
 
-    try {
-      // 1. Formater les données selon le schéma (comme dans buildproof)
-      const atomData: IpfsAtom = {
-        '@context': 'https://schema.org/',
-        '@type': 'Thing',
-        ...input,
-      };
-
-      // Transformer les URL IPFS en URL HTTP pour les images
-      if (atomData.image && isIpfsUrl(atomData.image)) {
-        // Convertir l'URL IPFS en URL HTTP de façon asynchrone
-        atomData.image = await ipfsToHttpUrl(atomData.image);
-      }
-
-      // 2. Convert JSON data to bytes for the contract (like the original backend)
-      const jsonString = JSON.stringify(atomData);
-      const dataBytes = toHex(jsonString);
-
-      // 3. Upload to IPFS for reference (optional)
-      const { ipfsHash } = await hashDataToIPFS(atomData);
-
-      // 4. Fetch deposit + protocol fee from contract.
-      // totalValue = atomDeposit + atomCreationProtocolFee
-      let atomDeposit = VALUE_PER_ATOM;
-      let creationFee = 0n;
-      if (publicClient?.readContract) {
-        try {
-          const config = await publicClient.readContract({
-            address: ATOM_CONTRACT_ADDRESS, abi: atomABI, functionName: 'atomConfig',
-          }) as [bigint, bigint];
-          creationFee = config[0];
-          console.log('[createAtom] atomConfig:', {
-            atomCreationProtocolFee: config[0]?.toString(),
-            atomWalletDepositFee: config[1]?.toString(),
-          });
-        } catch {
-          console.warn('[createAtom] could not read atomConfig, using env value:', VALUE_PER_ATOM?.toString());
-        }
-      }
-      const requiredAmount = atomDeposit + creationFee;
-      console.log('[createAtom] costs:', {
-        atomDeposit: atomDeposit?.toString(),
-        creationFee: creationFee?.toString(),
-        requiredAmount: requiredAmount?.toString(),
-      });
-
-      // 5. Simulate first to surface the actual revert reason, then write
-      if (publicClient?.simulateContract) {
-        try {
-          await publicClient.simulateContract({
-            address: ATOM_CONTRACT_ADDRESS,
-            abi: atomABI,
-            functionName: 'createAtoms',
-            args: [[dataBytes], [requiredAmount]],
-            value: requiredAmount,
-            account: walletAddress as `0x${string}`,
-          });
-        } catch (simErr: any) {
-          console.error('[createAtom] simulation raw error:', simErr);
-          console.error('[createAtom] args used:', {
-            contract: ATOM_CONTRACT_ADDRESS,
-            dataBytes,
-            requiredAmount: requiredAmount?.toString(),
-            account: walletAddress,
-          });
-          const reason = simErr?.cause?.data?.errorName
-            || simErr?.cause?.reason
-            || simErr?.shortMessage
-            || simErr?.message
-            || String(simErr);
-          throw new Error(`createAtoms simulation failed: ${reason}`);
-        }
-      }
-
-      const txHash = await contractWrite(walletConnected, {
-        address: ATOM_CONTRACT_ADDRESS,
-        abi: atomABI,
-        functionName: 'createAtoms',
-        args: [
-          [dataBytes],
-          [requiredAmount]
-        ],
-        value: requiredAmount,
-        gas: 2000000n,
-      });
-
-      const realAtomId = await waitForAtomId(txHash, walletConnected, publicClient);
-
-      return {
-        atomId: BigInt(realAtomId),
-        ipfsHash
-      };
-    } catch (error) {
-      console.error('Error creating atom:', error);
-      throw error;
-    }
+    const result = await createAtomFromThing(writeConfig, {
+      name: input.name,
+      image: imageUrl,
+      description: input.description,
+    });
+    return {
+      atomId: BigInt(result.state.termId),
+      ipfsHash: result.uri ?? '',
+    };
   };
 
-  // Creates a simple string atom (raw bytes, no JSON-LD or IPFS).
-  // Used for alias pseudonyms and other raw-string atoms.
-  const createStringAtom = async (str: string, rawHex = false): Promise<{ atomId: bigint }> => {
+  /**
+   * Creates a plain UTF-8 string atom (pseudonym / username atoms without image).
+   */
+  const createStringAtom = async (str: string): Promise<{ atomId: bigint }> => {
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
-    try {
-      // rawHex=true: str is already a 0x-prefixed hex (e.g. wallet address bytes) — use directly.
-      // rawHex=false: encode the string as UTF-8 bytes (for pseudonyms, plain text atoms).
-      const dataBytes = rawHex ? str as `0x${string}` : toHex(str);
-      // Fetch deposit amount and protocol creation fee from contract
-      let atomDeposit = VALUE_PER_ATOM;
-      let creationFee = 0n;
-      if (publicClient?.readContract) {
-        try {
-          const config = await publicClient.readContract({
-            address: ATOM_CONTRACT_ADDRESS,
-            abi: atomABI,
-            functionName: 'atomConfig',
-          }) as [bigint, bigint];
-          creationFee = config[0]; // atomCreationProtocolFee
-          console.log('[createStringAtom] atomConfig:', {
-            atomCreationProtocolFee: config[0]?.toString(),
-            atomWalletDepositFee: config[1]?.toString(),
-          });
-        } catch { /* fall back */ }
-      }
-      // totalValue = deposit + protocol creation fee
-      const totalValue = atomDeposit + creationFee;
-      console.log('[createStringAtom] costs:', {
-        atomDeposit: atomDeposit?.toString(),
-        creationFee: creationFee?.toString(),
-        totalValue: totalValue?.toString(),
-      });
-      // Simulate first to surface the actual revert reason
-      if (publicClient?.simulateContract) {
-        try {
-          await publicClient.simulateContract({
-            address: ATOM_CONTRACT_ADDRESS,
-            abi: atomABI,
-            functionName: 'createAtoms',
-            args: [[dataBytes], [totalValue]],
-            value: totalValue,
-            account: walletAddress as `0x${string}`,
-          });
-        } catch (simErr: any) {
-          console.error('[createStringAtom] simulation raw error:', simErr);
-          console.error('[createStringAtom] args used:', {
-            contract: ATOM_CONTRACT_ADDRESS,
-            dataBytes,
-            totalValue: totalValue?.toString(),
-            account: walletAddress,
-          });
-          const reason = simErr?.cause?.data?.errorName
-            || simErr?.cause?.reason
-            || simErr?.shortMessage
-            || simErr?.message
-            || String(simErr);
-          throw new Error(`createStringAtom simulation failed: ${reason}`);
-        }
-      }
+    const result = await createAtomFromString(writeConfig, str);
+    return { atomId: BigInt(result.state.termId) };
+  };
 
-      const txHash = await contractWrite(walletConnected, {
-        address: ATOM_CONTRACT_ADDRESS,
-        abi: atomABI,
-        functionName: 'createAtoms',
-        args: [[dataBytes], [totalValue]],
-        value: totalValue,
-        gas: 2000000n,
-      });
-      const realAtomId = await waitForAtomId(txHash, walletConnected, publicClient);
-      return { atomId: realAtomId };
-    } catch (error) {
-      console.error('Error creating string atom:', error);
-      throw error;
+  /**
+   * Creates an Ethereum account atom for a wallet address.
+   * The SDK encodes the address as toHex(getAddress(address)) — 20 bytes checksummed.
+   * Replaces the rawHex=true path previously in createStringAtom.
+   */
+  const createEthereumAccountAtom = async (address: string): Promise<{ atomId: bigint }> => {
+    if (!walletConnected || !walletAddress) {
+      throw new Error('Wallet not connected');
     }
+    const result = await createAtomFromEthereumAccount(writeConfig, address as Address);
+    return { atomId: BigInt(result.state.termId) };
   };
 
   return {
     createAtom,
     createStringAtom,
+    createEthereumAccountAtom,
   };
 };

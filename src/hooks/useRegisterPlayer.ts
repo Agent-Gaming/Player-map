@@ -105,7 +105,7 @@ export const useRegisterPlayer = ({
               return null;
             }
           };
-          // Check raw 20-byte format (legacy createStringAtom rawHex=true)
+          // Check raw 20-byte format (legacy address bytes, pre-SDK)
           const fromRaw = await checkOnChain(walletAddress.toLowerCase() as Hex);
           // Check SDK format: toHex(getAddress(address))
           const fromSdk = fromRaw ?? await checkOnChain(toHex(getAddress(walletAddress)) as Hex);

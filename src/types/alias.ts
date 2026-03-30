@@ -4,6 +4,7 @@ export interface PlayerAlias {
   tripleId: string      // term_id of the triple (hex string, e.g. "0x5dc0a2...")
   pseudo: string        // data of the object atom (the pseudonym string)
   atomId: string        // term_id of the pseudo atom
+  image?: string        // optional profile image URL (HTTP, already converted from IPFS)
   userPosition: bigint  // shares held by the user in the triple vault
   isPrimary: boolean    // true for the alias with the highest userPosition
 }
@@ -70,4 +71,5 @@ export interface InitItem {
   predicateId?: string
   objectId?: string
   resultTripleId?: string  // set after creation (or reused for existing items)
+  image?: string           // optional profile image URL for atoms
 }

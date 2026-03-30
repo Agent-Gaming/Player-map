@@ -90,7 +90,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
           guildId: selectedGuild,
           existingAccountAtomId: accountAtomId,
           consentAlreadyAccepted,
-          chainId: wagmiConfig?.chainId,
+          chainId: publicClient?.chain?.id,
         }
       : ({} as any)
   );
@@ -188,6 +188,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         label: `Atom: "${pseudo}"`,
         description: 'Username atom',
         status: 'existing',
+        image: aliases?.find(a => a.pseudo === pseudo)?.image,
       },
       {
         id: 'account-atom', type: 'atom',
@@ -200,6 +201,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         label: `Account has alias ${pseudo}`,
         description: `[Account] — [has alias] — [${pseudo}]`,
         status: 'existing',
+        image: aliases?.find(a => a.pseudo === pseudo)?.image,
       },
     ];
     if (guildName) {
@@ -276,7 +278,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setExistingItems(existing);
     setToCreateItems(toCreate);
     setRegistrationPhase('ready-to-initialize');
-  }, [accountAtomId, aliasTripleId, pseudoAtomId, pseudo, selectedGuild, constants,
+  }, [accountAtomId, aliasTripleId, pseudoAtomId, pseudo, selectedGuild, aliases, constants,
       checkTripleExists, computeTripleId]);
 
   // ─── Trigger existence checks when entering loading-existing ──────────────────
@@ -652,14 +654,23 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                       onChange={e => setRgpdChecked(e.target.checked)}
                     />
                     <label htmlFor="rgpd-checkbox" className={styles.consentLabel}>
-                      I confirm that I have read, consent and agree to Agent{' '}
+                      I confirm that I have read, consent and agree to the Player Map{' '}
                       <a
-                        href="https://agent.game/terms"
+                        href="https://playermap.box/terms-of-service/"
                         target="_blank"
                         rel="noopener noreferrer"
                         className={styles.consentLink}
                       >
-                        Terms of Services and Privacy Policy
+                        Terms of Service
+                      </a>
+                      {' '}and{' '}
+                      <a
+                        href="https://playermap.box/privacy-policy/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.consentLink}
+                      >
+                        Privacy Policy
                       </a>
                       .
                     </label>

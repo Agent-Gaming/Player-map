@@ -77,7 +77,7 @@ export const useRegisterPlayer = ({
       if (!consentAlreadyAccepted && !signature) {
         setState(s => ({ ...s, step: 'signing-consent' }));
 
-        const activeChainId = chainId ?? publicClient?.chain?.id ?? 1;
+        const activeChainId = walletConnected?.chain?.id ?? chainId ?? publicClient?.chain?.id ?? 1;
         const domain = { name: 'Player Map', version: '1', chainId: activeChainId };
         const types = {
           TermsAcceptance: [
@@ -93,8 +93,8 @@ export const useRegisterPlayer = ({
         const message = {
           wallet: walletAddress as `0x${string}`,
           termsVersion: 'v1.0',
-          termsURI: 'ipfs://bafy.../terms-v1.0.pdf',    // TODO: replace with real CID
-          privacyURI: 'ipfs://bafy.../privacy-v1.0.pdf', // TODO: replace with real CID
+          termsURI: 'https://playermap.box/terms-of-service/',
+          privacyURI: 'https://playermap.box/privacy-policy/',
           timestamp: new Date().toISOString(),
           statement: 'I confirm that I have read and agree to the Terms of Service and Privacy Policy. I understand that blockchain records are permanent and that I am solely responsible for content I publish through this interface.',
         };

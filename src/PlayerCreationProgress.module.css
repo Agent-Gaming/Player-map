@@ -435,6 +435,15 @@
   flex-shrink: 0;
 }
 
+/* Profile image for alias atoms */
+.atomChipImage {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 /* Predicate text between chips */
 .predicateLabel {
   padding: 0 2px;

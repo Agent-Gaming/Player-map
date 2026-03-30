@@ -1,5 +1,6 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
 import { toHex, getAddress } from 'viem';
+import { isIpfsUrl, ipfsToHttpUrl } from '../utils/pinata';
 
 /**
  * Fetches the term_id of the account atom for a wallet address.
@@ -96,6 +97,7 @@ export interface RawAliasTriple {
   tripleId: string
   pseudo: string
   atomId: string
+  image?: string
   userPosition: bigint
 }
 
@@ -126,6 +128,7 @@ export const fetchAliasTriplesWithPosition = async (
               object {
                 term_id
                 data
+                image
               }
               term {
                 positions(where: { account_id: { _eq: $userAddress } }) {
@@ -150,15 +153,21 @@ export const fetchAliasTriplesWithPosition = async (
     }
 
     const triples = data.data?.triples || [];
-    return triples.map((t: any): RawAliasTriple => ({
-      tripleId: t.term_id,
-      pseudo: t.object?.data ?? '',
-      atomId: t.object?.term_id ?? '',
-      // positions array may be empty if user has no stake; default to 0n
-      userPosition: t.term?.positions?.[0]?.shares
-        ? BigInt(t.term.positions[0].shares)
-        : 0n,
-    }));
+    return triples.map((t: any): RawAliasTriple => {
+      const rawImage: string | undefined = t.object?.image ?? undefined;
+      const image = rawImage
+        ? (isIpfsUrl(rawImage) ? ipfsToHttpUrl(rawImage) : rawImage)
+        : undefined;
+      return {
+        tripleId: t.term_id,
+        pseudo: t.object?.data ?? '',
+        atomId: t.object?.term_id ?? '',
+        image,
+        userPosition: t.term?.positions?.[0]?.shares
+          ? BigInt(t.term.positions[0].shares)
+          : 0n,
+      };
+    });
   } catch (error) {
     console.error('Error fetching alias triples:', error);
     return [];

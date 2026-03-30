@@ -42,32 +42,32 @@ interface PlayerCreationProgressProps {
 
 // ─── Triple chip helpers ──────────────────────────────────────────────────────
 
-type ChunkAtom      = { kind: 'atom';      circle: boolean; label: string }
+type ChunkAtom      = { kind: 'atom';      circle: boolean; label: string; image?: string }
 type ChunkPredicate = { kind: 'predicate'; label: string }
 type Chunk          = ChunkAtom | ChunkPredicate
 
 const profil: ChunkAtom = { kind: 'atom', circle: true, label: 'Profil_ID' }
 const pred  = (label: string): ChunkPredicate => ({ kind: 'predicate', label })
-const atom  = (label: string): ChunkAtom      => ({ kind: 'atom', circle: false, label })
+const atom  = (label: string, image?: string): ChunkAtom      => ({ kind: 'atom', circle: false, label, image })
 
 function getItemChunks(item: InitItem, pseudo: string, guildName?: string): Chunk[] {
   switch (item.id) {
     case 'pseudo-atom':
-      return [atom(pseudo || item.label)]
+      return [atom(pseudo || item.label, item.image)]
     case 'account-atom':
       return [profil]
     case 'alias-triple':
-      return [profil, pred('has alias'), atom(pseudo)]
+      return [profil, pred('has alias'), atom(pseudo, item.image)]
     case 'guild-nested':
-      return [profil, pred('has alias'), atom(pseudo), pred('is member of'), atom(guildName ?? '…')]
+      return [profil, pred('has alias'), atom(pseudo, item.image), pred('is member of'), atom(guildName ?? '…')]
     case 'fairplay':
       return [profil, pred('is'), atom('Fairplay')]
     case 'game-nested':
-      return [profil, pred('has alias'), atom(pseudo), pred('is player of'), atom('Bossfighter')]
+      return [profil, pred('has alias'), atom(pseudo, item.image), pred('is player of'), atom('Bossfighter')]
     case 'context-nested':
       return [profil, pred('is'), atom('Fairplay'), pred('in'), atom('Bossfighter')]
     default:
-      return [atom(item.label)]
+      return [atom(item.label, item.image)]
   }
 }
 
@@ -268,7 +268,9 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
                     {getItemChunks(item, pseudo, guildName).map((chunk, i) =>
                       chunk.kind === 'atom' ? (
                         <span key={i} className={styles.atomChip}>
-                          {chunk.circle
+                          {chunk.image
+                            ? <img src={chunk.image} alt={chunk.label} className={styles.atomChipImage} />
+                            : chunk.circle
                             ? <span className={styles.atomChipCircle} />
                             : <span className={styles.atomChipSquare} />
                           }

@@ -37,11 +37,14 @@ export type RegistrationPhase =
 
 export type IdentityCreationStep =
   | 'idle'
+  | 'signing-consent'           // EIP-712 off-chain, popup 1 (gratuit)
+  | 'creating-consent-atom'     // createAtomFromIpfsUpload — popup 2 débute ici
   | 'creating-pseudo-atom'
   | 'fetching-account-atom'
   | 'creating-account-atom'
   | 'creating-alias-triple'
-  | 'creating-guild-membership'  // Step 1.4 — nested triple (aliasTriple → IS_MEMBER_OF → guild)
+  | 'creating-accepted-triple'  // [Account] — [accepted] — [ConsentAtom]
+  | 'creating-guild-membership'
   | 'success'
   | 'error'
 
@@ -51,6 +54,10 @@ export interface IdentityCreationState {
   pseudoAtomId?: string    // preserved on error so retry skips atom creation
   accountAtomId?: string   // preserved on error so retry skips account atom creation
   aliasTripleId?: string   // vault ID of the has-alias triple (computed via calculateTripleId)
+  // Preserved on error for targeted retry
+  signature?: string        // set after popup 1 — not re-requested on retry
+  consentAtomId?: string    // set after consent atom created — not re-created on retry
+  _consentMessage?: Record<string, string>  // internal — message payload preserved for atom creation retry
 }
 
 export interface InitItem {

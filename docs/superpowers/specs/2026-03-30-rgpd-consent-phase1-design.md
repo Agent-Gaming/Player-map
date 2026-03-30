@@ -50,6 +50,8 @@ Ajouter `ACCEPTED` à `COMMON_IDS` :
 ACCEPTED: '<ACCEPTED_PREDICATE_ID>',  // TODO: remplacer par le vrai term_id une fois l'atom créé on-chain
 ```
 
+`COMMON_IDS` est typé `Record<string, string>` dans `PlayerMapConfig.ts` — aucune modification de type nécessaire.
+
 ### 2. `types/alias.ts`
 
 **`IdentityCreationStep`** — étendre avec les étapes consent insérées avant les étapes existantes :
@@ -80,8 +82,8 @@ interface IdentityCreationState {
   accountAtomId?: string
   aliasTripleId?: string
   // Nouveaux — préservés sur erreur pour retry ciblé
-  signature?: string
-  consentAtomId?: string
+  signature?: string        // préservé si popup 1 déjà complétée
+  consentAtomId?: string    // préservé si atom déjà créé
 }
 ```
 
@@ -99,19 +101,24 @@ export const fetchAccountConsent = async (
 
 Query GraphQL : triples où `subject_id = accountAtomId` ET `predicate_id = acceptedPredicateId`. Retourne `exists: true` + `consentAtomId` (object atom id) si un triple est trouvé.
 
-Appelée depuis `PlayerMapHome` au chargement du formulaire, après résolution de `playerAtomId`.
+**Appelée depuis `PlayerMapHome`** dans le `useEffect` qui résout `playerAtomId`, uniquement si `playerAtomId` est défini (utilisateur existant). Pour un nouvel utilisateur (`playerAtomId` undefined), `consentAlreadyAccepted` reste `false` par défaut — la query n'est pas déclenchée.
 
 ### 4. `hooks/useAtomCreation.ts`
 
-Ajouter `createConsentAtom` :
+Ajouter `createConsentAtom` comme méthode interne retournée par le hook (accès à `writeConfig` nécessaire) :
 
 ```typescript
+// Dans useAtomCreation, aux côtés de createAtom, createStringAtom, createEthereumAccountAtom
 const createConsentAtom = async (consentJson: object): Promise<{ atomId: bigint }> => {
+  if (!walletConnected || !walletAddress) throw new Error('Wallet not connected')
   const { PINATA_CONFIG } = getPinataConstants()
   const config = { ...writeConfig, pinataApiJWT: PINATA_CONFIG.JWT_KEY }
   const result = await createAtomFromIpfsUpload(config, consentJson)
   return { atomId: BigInt(result.state.termId) }
 }
+
+// Retourné dans l'objet du hook :
+return { createAtom, createStringAtom, createEthereumAccountAtom, createConsentAtom }
 ```
 
 ### 5. `hooks/useRegisterPlayer.ts`
@@ -121,13 +128,15 @@ const createConsentAtom = async (consentJson: object): Promise<{ atomId: bigint 
 ```typescript
 interface UseRegisterPlayerProps {
   // ... existant inchangé ...
-  consentAlreadyAccepted?: boolean  // skip étapes signing-consent et creating-consent-atom/accepted-triple
-  walletClient?: any                 // pour signTypedData EIP-712
+  consentAlreadyAccepted?: boolean  // skip étapes signing-consent, creating-consent-atom, creating-accepted-triple
   chainId?: number                   // pour le domain EIP-712
+  // Note: walletConnected existant est réutilisé pour signTypedData — pas de prop walletClient supplémentaire
 }
 ```
 
 **Payload EIP-712 :**
+
+`domain` et `types` utilisent `as const` (valeurs statiques, correct pour l'inférence EIP-712). `message` **ne doit pas** utiliser `as const` car il contient `timestamp` computé dynamiquement.
 
 ```typescript
 const domain = {
@@ -138,36 +147,53 @@ const domain = {
 
 const types = {
   TermsAcceptance: [
-    { name: 'wallet',      type: 'address' },
+    { name: 'wallet',       type: 'address' },
     { name: 'termsVersion', type: 'string' },
-    { name: 'termsURI',    type: 'string' },
-    { name: 'privacyURI',  type: 'string' },
-    { name: 'timestamp',   type: 'string' },
-    { name: 'statement',   type: 'string' },
+    { name: 'termsURI',     type: 'string' },
+    { name: 'privacyURI',   type: 'string' },
+    { name: 'timestamp',    type: 'string' },
+    { name: 'statement',    type: 'string' },
   ],
 } as const
 
+// Pas de `as const` — timestamp est dynamique
 const message = {
-  wallet: userAddress,
+  wallet: walletAddress as `0x${string}`,
   termsVersion: 'v1.0',
   termsURI: 'ipfs://bafy.../terms-v1.0.pdf',    // TODO: CID réel
   privacyURI: 'ipfs://bafy.../privacy-v1.0.pdf', // TODO: CID réel
   timestamp: new Date().toISOString(),
   statement: 'I confirm that I have read and agree to the Terms of Service and Privacy Policy. I understand that blockchain records are permanent and that I am solely responsible for content I publish through this interface.',
-} as const
+}
 ```
+
+**Signature :**
+
+```typescript
+const signature = await walletConnected.signTypedData({
+  domain,
+  types,
+  primaryType: 'TermsAcceptance',
+  message,
+})
+```
+
+**Hash du message pour le JSON IPFS :**
+
+Sérialisation déterministe : `keccak256(toBytes(JSON.stringify(message)))` (viem `keccak256` + `toBytes`).
 
 **Nouveau flow dans `register()` :**
 
 ```
 Étape 0 — signing-consent
   Skip si: consentAlreadyAccepted OU state.signature déjà présent
-  → walletClient.signTypedData({ domain, types, primaryType: 'TermsAcceptance', message })
+  → walletConnected.signTypedData(...)
   → state.signature préservé
 
 Étape 1 — creating-consent-atom
   Skip si: consentAlreadyAccepted OU state.consentAtomId déjà présent
-  → buildConsentJson(message, keccak256(message), signature) → createConsentAtom(json)
+  → buildConsentJson(message, keccak256(toBytes(JSON.stringify(message))), signature)
+  → createConsentAtom(json)
   → state.consentAtomId préservé
 
 Étapes 2-5 — existantes, inchangées
@@ -175,7 +201,9 @@ const message = {
 
 Étape 6 — creating-accepted-triple
   Skip si: consentAlreadyAccepted
-  → createTripleStatement([accountAtomId, ACCEPTED, consentAtomId])
+  → checkTripleExists(accountAtomId, ACCEPTED, consentAtomId)
+     Si existe déjà → skip silencieux (idempotent)
+     Sinon → createTripleStatement(...)
 
 Étape 7 — creating-guild-membership (optionnel, inchangé)
 ```
@@ -190,7 +218,7 @@ const message = {
   "terms_version": "v1.0",
   "terms_uri": "<termsURI>",
   "privacy_uri": "<privacyURI>",
-  "message_hash": "<keccak256 du message signé>",
+  "message_hash": "<keccak256(toBytes(JSON.stringify(message)))>",
   "signature": "<signature EIP-712>"
 }
 ```
@@ -206,38 +234,51 @@ const [consentAlreadyAccepted, setConsentAlreadyAccepted] = useState(false)
 const [rgpdChecked, setRgpdChecked] = useState(false)
 ```
 
-**Au chargement du formulaire** (dans le `useEffect` qui résout `playerAtomId`) : appel `fetchAccountConsent(playerAtomId, ACCEPTED_PREDICATE_ID)` → `setConsentAlreadyAccepted`.
+**Au chargement du formulaire** : dans le `useEffect` existant qui résout `playerAtomId`, ajouter l'appel `fetchAccountConsent` uniquement si `playerAtomId` est défini :
+
+```typescript
+if (playerAtomId && constants?.COMMON_IDS?.ACCEPTED) {
+  fetchAccountConsent(playerAtomId, constants.COMMON_IDS.ACCEPTED)
+    .then(({ exists }) => setConsentAlreadyAccepted(exists))
+}
+```
+
+Pour un nouvel utilisateur (`playerAtomId` undefined) : `consentAlreadyAccepted` reste `false`, la query n'est pas déclenchée.
 
 **Bouton VALIDATE désactivé si :** `isValidateDisabled || (!rgpdChecked && !consentAlreadyAccepted)`
 
-**Dans le form, au-dessus du bouton :**
-- Si `consentAlreadyAccepted` : `✅ Terms already accepted (v1.0)`
-- Sinon : checkbox avec liens cliquables "Terms of Service" et "Privacy Policy"
+**Dans le form, au-dessus du bouton VALIDATE :**
+- Si `consentAlreadyAccepted` : afficher `✅ Terms already accepted (v1.0)`
+- Sinon : checkbox obligatoire avec liens cliquables "Terms of Service" et "Privacy Policy" (nouvel onglet)
 
-**`handleValidate`** passe `consentAlreadyAccepted`, `walletClient`, `chainId` à `register()`.
+**`handleValidate`** passe `consentAlreadyAccepted` et `chainId` à `register()`. `walletConnected` est déjà dans le hook — pas de prop supplémentaire.
+
+**`PlayerCreationProgress`** reçoit `consentAlreadyAccepted: boolean` en prop pour conditionner l'affichage des étapes.
 
 ### 7. `PlayerCreationProgress.tsx`
 
 **`IDENTITY_STEPS`** étendu avec les nouvelles étapes dans le bon ordre.
 
-**`IdentityProgressBar`** — étapes UI :
+**`IdentityProgressBar`** reçoit `consentAlreadyAccepted: boolean` en plus de `hasGuild`.
 
-| # | Label | Affiché si |
-|---|-------|-----------|
-| 1 | Signature des conditions | toujours (sauf consent déjà accepté) |
-| 2 | Preuve légale | toujours (sauf consent déjà accepté) |
+Étapes UI construites dynamiquement :
+
+| # | Label | Condition d'affichage |
+|---|-------|----------------------|
+| 1 | Signature des conditions | `!consentAlreadyAccepted` |
+| 2 | Preuve légale | `!consentAlreadyAccepted` |
 | 3 | Username atom | toujours |
 | 4 | Account | toujours |
 | 5 | Alias link | toujours |
-| 6 | Consentement lié | toujours (sauf consent déjà accepté) |
-| 7 | Guild membership | si guild sélectionnée |
+| 6 | Consentement lié | `!consentAlreadyAccepted` |
+| 7 | Guild membership | `hasGuild` |
 
-Si `consentAlreadyAccepted` : étapes 1, 2, 6 masquées (pas de barre réduite côté UX — ces étapes sont simplement absentes).
+La prop `consentAlreadyAccepted` vient de `PlayerMapHome` — pas inférée de `identityStep` (pour éviter toute ambiguïté pendant un retry).
 
 **`statusLabel`** mis à jour :
 ```typescript
-'signing-consent':        'Signature des conditions (sans frais)...',
-'creating-consent-atom':  'Enregistrement de la preuve légale...',
+'signing-consent':          'Signature des conditions (sans frais)...',
+'creating-consent-atom':    'Enregistrement de la preuve légale...',
 'creating-accepted-triple': 'Liaison du consentement...',
 ```
 
@@ -248,21 +289,22 @@ Si `consentAlreadyAccepted` : étapes 1, 2, 6 masquées (pas de barre réduite c
 | Cas | Comportement |
 |-----|-------------|
 | Checkbox non cochée | Bouton désactivé, aucun message d'erreur |
-| Signature refusée | `step: 'error'`, message "Signature annulée. Vous devez accepter les conditions pour continuer." Retry relance depuis `signing-consent` (state.signature undefined → popup re-déclenchée) |
+| Signature refusée (popup 1) | `step: 'error'`, message "Signature annulée. Vous devez accepter les conditions pour continuer." Retry relance depuis `signing-consent` (`state.signature` undefined → popup re-déclenchée) |
 | Transaction échouée après signature | Retry depuis l'étape échouée. `state.signature` préservé → popup 1 non redemandée |
 | Consent atom déjà existant | `createAtomFromIpfsUpload` retourne l'existant — ID utilisé sans erreur |
+| Triple accepted déjà existant | `checkTripleExists` détecte l'existant → skip silencieux |
 | Account atom existant | Comportement existant inchangé |
 
 ---
 
 ## Checklist de livraison
 
-- [ ] `ACCEPTED` ajouté à `COMMON_IDS` (placeholder `<ACCEPTED_PREDICATE_ID>`)
-- [ ] `IdentityCreationStep` étendu avec les étapes consent
+- [ ] `ACCEPTED` ajouté à `COMMON_IDS` dans `utils/constants.ts` (placeholder)
+- [ ] `IdentityCreationStep` étendu avec les étapes consent dans `types/alias.ts`
 - [ ] `IdentityCreationState` étendu avec `signature` et `consentAtomId`
-- [ ] `fetchAccountConsent` ajouté dans `api/fetchPlayerAliases.ts`
-- [ ] `createConsentAtom` ajouté dans `hooks/useAtomCreation.ts`
-- [ ] `useRegisterPlayer` : nouvelles props + étapes consent + retry-safe
-- [ ] `PlayerMapHome` : checkbox RGPD, vérification au chargement, bouton conditionnel
-- [ ] `PlayerCreationProgress` : barre de progression mise à jour 6-7 étapes
+- [ ] `fetchAccountConsent` ajouté dans `api/fetchPlayerAliases.ts` (skip si playerAtomId undefined)
+- [ ] `createConsentAtom` ajouté comme méthode retournée par `hooks/useAtomCreation.ts`
+- [ ] `useRegisterPlayer` : nouvelles props + étapes consent + retry-safe + `as const` retiré du message
+- [ ] `PlayerMapHome` : checkbox RGPD, vérification au chargement conditionnelle, bouton conditionnel
+- [ ] `PlayerCreationProgress` : prop `consentAlreadyAccepted` + barre de progression 6-7 étapes
 - [ ] Aucun code mort

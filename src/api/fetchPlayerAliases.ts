@@ -3,11 +3,10 @@ import { toHex, getAddress } from 'viem';
 
 /**
  * Fetches the term_id of the account atom for a wallet address.
- * Tries three storage formats:
- *   - raw bytes    : data == walletAddress (rawHex=true createStringAtom, legacy)
- *   - lowercase UTF-8: data == toHex(walletAddress) (old format)
- *   - SDK format   : data == toHex(getAddress(walletAddress)) (createAtomFromEthereumAccount)
- * Returns the lowest term_id match, or null if not found.
+ * Only looks for SDK format: data == toHex(getAddress(walletAddress))
+ * (createAtomFromEthereumAccount — the canonical format).
+ * Legacy formats (raw bytes, UTF-8 string) are intentionally ignored.
+ * Returns the term_id if found, or null.
  */
 export const fetchAccountAtom = async (
   walletAddress: string,
@@ -15,21 +14,15 @@ export const fetchAccountAtom = async (
 ): Promise<string | null> => {
   try {
     const apiUrl = API_URLS[network];
-    const address   = walletAddress.toLowerCase();
-    const encoded   = toHex(address);               // old lowercase UTF-8 format
-    const sdkEncoded = toHex(getAddress(walletAddress)); // SDK format: toHex(checksummed)
+    const sdkEncoded = toHex(getAddress(walletAddress)); // SDK format: toHex(checksummed address)
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
-          query GetAccountAtom($address: String!, $encoded: String!, $sdkEncoded: String!) {
+          query GetAccountAtom($sdkEncoded: String!) {
             atoms(
-              where: { _or: [
-                { data: { _ilike: $address } }
-                { data: { _ilike: $encoded } }
-                { data: { _ilike: $sdkEncoded } }
-              ]}
+              where: { data: { _ilike: $sdkEncoded } }
               order_by: { term_id: asc }
               limit: 1
             ) {
@@ -37,7 +30,7 @@ export const fetchAccountAtom = async (
             }
           }
         `,
-        variables: { address, encoded, sdkEncoded },
+        variables: { sdkEncoded },
       }),
     });
 
@@ -169,5 +162,62 @@ export const fetchAliasTriplesWithPosition = async (
   } catch (error) {
     console.error('Error fetching alias triples:', error);
     return [];
+  }
+};
+
+/**
+ * Queries whether an account atom has an [accepted] triple pointing to any consent atom.
+ * Used at form load to skip consent steps for users who already accepted terms v1.0.
+ * Returns exists: false (not called) when accountAtomId is undefined (new user).
+ */
+export const fetchAccountConsent = async (
+  accountAtomId: string,
+  acceptedPredicateId: string,
+  network: Network = Network.MAINNET
+): Promise<{ exists: boolean; consentAtomId?: string }> => {
+  try {
+    const apiUrl = API_URLS[network];
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query GetAccountConsent($subjectId: String!, $predicateId: String!) {
+            triples(
+              where: {
+                subject_id: { _eq: $subjectId }
+                predicate_id: { _eq: $predicateId }
+              }
+              limit: 1
+            ) {
+              term_id
+              object {
+                term_id
+              }
+            }
+          }
+        `,
+        variables: {
+          subjectId: accountAtomId,
+          predicateId: acceptedPredicateId,
+        },
+      }),
+    });
+
+    const data = await response.json();
+    if (data.errors) {
+      console.error('GraphQL errors (fetchAccountConsent):', data.errors);
+      return { exists: false };
+    }
+
+    const triples = data.data?.triples || [];
+    if (triples.length === 0) return { exists: false };
+    return {
+      exists: true,
+      consentAtomId: triples[0].object?.term_id,
+    };
+  } catch (error) {
+    console.error('Error fetching account consent:', error);
+    return { exists: false };
   }
 };

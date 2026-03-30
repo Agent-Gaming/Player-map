@@ -2,9 +2,11 @@ import {
   createAtomFromString,
   createAtomFromThing,
   createAtomFromEthereumAccount,
+  createAtomFromIpfsUpload,
 } from '@0xintuition/sdk';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
 import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
+import { getPinataConstants } from '../utils/globalConstants';
 import type { Address } from 'viem';
 
 export type IpfsAtomInput = {
@@ -104,9 +106,33 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     return { atomId: BigInt(result.state.termId) };
   };
 
+  /**
+   * Creates a consent atom by uploading a JSON object to IPFS via Pinata,
+   * then creating an on-chain atom pointing to that IPFS URI.
+   * Requires PINATA_CONFIG.JWT_KEY to be set via setPinataConstants().
+   */
+  const createConsentAtom = async (consentJson: object): Promise<{ atomId: bigint }> => {
+    if (!walletConnected || !walletAddress) {
+      throw new Error('Wallet not connected');
+    }
+    const pinataConstants = getPinataConstants();
+    if (!pinataConstants?.PINATA_CONFIG?.JWT_KEY) {
+      throw new Error('Pinata JWT not configured — call setPinataConstants() with PINATA_CONFIG');
+    }
+    const config = {
+      ...writeConfig,
+      pinataApiJWT: pinataConstants.PINATA_CONFIG.JWT_KEY as string,
+    };
+    console.log('[createConsentAtom] ▶ uploading consent JSON to IPFS');
+    const result = await createAtomFromIpfsUpload(config, consentJson);
+    console.log('[createConsentAtom] ✓ atomId:', result.state.termId, '| uri:', result.uri);
+    return { atomId: BigInt(result.state.termId) };
+  };
+
   return {
     createAtom,
     createStringAtom,
     createEthereumAccountAtom,
+    createConsentAtom,
   };
 };

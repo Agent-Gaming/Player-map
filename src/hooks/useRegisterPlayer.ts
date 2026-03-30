@@ -8,7 +8,7 @@ import { useBatchCreateTriple } from './useBatchCreateTriple';
 import { fetchAccountAtom } from '../api/fetchPlayerAliases';
 import { uploadToPinata } from '../utils/pinata';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
-import { calculateAtomId, createTripleStatement } from '@0xintuition/sdk';
+import { calculateAtomId } from '@0xintuition/sdk';
 import { toHex, getAddress, keccak256, toBytes } from 'viem';
 
 interface UseRegisterPlayerProps {
@@ -228,15 +228,11 @@ export const useRegisterPlayer = ({
           BigInt(consentAtomId),
         );
         if (!alreadyExists) {
-          const tripleWriteConfig = {
-            address: ATOM_CONTRACT_ADDRESS as any,
-            walletClient: walletConnected as any,
-            publicClient,
-          };
-          await createTripleStatement(tripleWriteConfig, {
-            args: [[BigInt(accountAtomId), BigInt(acceptedPredicateId), BigInt(consentAtomId)]] as any,
-            value: 0n,
-          });
+          await batchCreateTriple([{
+            subjectId: BigInt(accountAtomId),
+            predicateId: BigInt(acceptedPredicateId),
+            objectId: BigInt(consentAtomId),
+          }]);
         }
       }
 

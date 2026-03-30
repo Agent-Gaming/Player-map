@@ -77,7 +77,8 @@ export const useRegisterPlayer = ({
       if (!consentAlreadyAccepted && !signature) {
         setState(s => ({ ...s, step: 'signing-consent' }));
 
-        const domain = { name: 'Player Map', version: '1', chainId: chainId ?? 1 } as const;
+        const activeChainId = chainId ?? publicClient?.chain?.id ?? 1;
+        const domain = { name: 'Player Map', version: '1', chainId: activeChainId };
         const types = {
           TermsAcceptance: [
             { name: 'wallet',       type: 'address' },

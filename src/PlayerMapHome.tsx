@@ -6,6 +6,7 @@ import Atom from "./assets/img/atom.svg";
 import styles from "./PlayerMapHome.module.css";
 import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
 import { usePlayerAliases } from "./hooks/usePlayerAliases";
+import { fetchAccountConsent } from './api/fetchPlayerAliases';
 import { useRegisterPlayer } from "./hooks/useRegisterPlayer";
 import { useBatchCreateTriple } from "./hooks/useBatchCreateTriple";
 import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
@@ -53,6 +54,10 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
+  // ─── Consent state ───────────────────────────────────────────────────────────
+  const [consentAlreadyAccepted, setConsentAlreadyAccepted] = useState(false);
+  const [rgpdChecked, setRgpdChecked] = useState(false);
+
   // ─── Phase 2 state ──────────────────────────────────────────────────────────
   const [existingItems, setExistingItems] = useState<InitItem[]>([]);
   const [toCreateItems, setToCreateItems] = useState<InitItem[]>([]);
@@ -77,8 +82,16 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     aliasTripleId: reg_aliasTripleId,
   } = useRegisterPlayer(
     constants
-      ? { walletConnected, walletAddress, constants, publicClient, guildId: selectedGuild,
-          existingAccountAtomId: accountAtomId }
+      ? {
+          walletConnected,
+          walletAddress,
+          constants,
+          publicClient,
+          guildId: selectedGuild,
+          existingAccountAtomId: accountAtomId,
+          consentAlreadyAccepted,
+          chainId: wagmiConfig?.chainId,
+        }
       : ({} as any)
   );
 
@@ -108,6 +121,14 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         setAccountAtomId(playerAtomId);
       }
       setRegistrationPhase('loading-existing');
+
+      // Check if consent was already accepted on-chain
+      const acceptedId = constants?.COMMON_IDS?.ACCEPTED;
+      if (playerAtomId && !playerAtomId.startsWith('<') && acceptedId && !acceptedId.startsWith('<')) {
+        fetchAccountConsent(playerAtomId, acceptedId).then(result => {
+          if (result.exists) setConsentAlreadyAccepted(true);
+        }).catch(() => {/* silently ignore */});
+      }
     }
   }, [playerAtomId, aliasesLoading, showForm]);
   // Note: registrationPhase intentionally NOT in deps (avoid re-trigger)
@@ -300,6 +321,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setIsInitializing(false);
     setCurrentInitIndex(0);
     setInitError(undefined);
+    setConsentAlreadyAccepted(false);
+    setRgpdChecked(false);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -411,7 +434,9 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   }, [accountAtomId, aliasTripleId, fairplayTripleId, toCreateItems, constants,
       batchCreateTriple, computeTripleId]);
 
-  const isValidateDisabled = useExistingAlias ? !selectedExistingAlias : !pseudoInput.trim();
+  const isValidateDisabled =
+    (useExistingAlias ? !selectedExistingAlias : !pseudoInput.trim()) ||
+    (!rgpdChecked && !consentAlreadyAccepted);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -608,16 +633,38 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 {/* Terms */}
                 <div className={styles.termsBox}>
                   <p>Users are solely responsible for any information, data, or content they record on the blockchain through the Service.</p>
-                  <p>Users agree not to create or publish profiles that :</p>
-                  <ul>
-                    <li>Impersonate another person</li>
-                    <li>Contain defamatory information</li>
-                    <li>Violate privacy rights</li>
-                    <li>Infringe intellectual property rights</li>
-                    <li>Violate applicable laws.</li>
-                  </ul>
+                  <p>Users agree not to create or publish profiles that : impersonate another person, contain defamatory information, violate privacy rights, infringe intellectual property rights or violate applicable laws.</p>
+
                   <p>The Company does not review, approve, or moderate all information recorded on the blockchain through the Service.</p>
                 </div>
+
+                {consentAlreadyAccepted ? (
+                  <div className={styles.consentAccepted}>
+                    <span>✓ You have already accepted the Terms of Services and Privacy Policy.</span>
+                  </div>
+                ) : (
+                  <div className={styles.consentRow}>
+                    <input
+                      id="rgpd-checkbox"
+                      type="checkbox"
+                      className={styles.consentCheckbox}
+                      checked={rgpdChecked}
+                      onChange={e => setRgpdChecked(e.target.checked)}
+                    />
+                    <label htmlFor="rgpd-checkbox" className={styles.consentLabel}>
+                      I confirm that I have read, consent and agree to Agent{' '}
+                      <a
+                        href="https://agent.game/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.consentLink}
+                      >
+                        Terms of Services and Privacy Policy
+                      </a>
+                      .
+                    </label>
+                  </div>
+                )}
 
                 {/* Validate */}
                 <button
@@ -627,11 +674,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 >
                   VALIDATE
                 </button>
-                <div className={styles.networkBadge}>
-                  ON{" "}
-                  <img src={IntuitionSmallLogo} alt="Intuition" className={styles.networkLogo} />{" "}
-                  MAINNET
-                </div>
               </div>
             ) : (
               /* ── Progress / Phase 2 / Complete ─────────────────────────────── */
@@ -664,6 +706,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                   isInitializing={isInitializing}
                   currentInitIndex={currentInitIndex}
                   initError={initError}
+                  consentAlreadyAccepted={consentAlreadyAccepted}
                 />
 
               </div>

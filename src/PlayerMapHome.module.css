@@ -371,3 +371,37 @@
   accent-color: var(--color-primary);
   cursor: pointer;
 }
+
+.consentAccepted {
+  font-size: 0.875rem;
+  color: #4ade80;
+  margin-bottom: 0.75rem;
+}
+
+.consentRow {
+  margin-bottom: 0.75rem;
+}
+
+.consentLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.consentCheckbox {
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.consentLink {
+  color: #818cf8;
+  text-decoration: underline;
+}
+
+.consentLink:hover {
+  color: #a5b4fc;
+}

@@ -35,6 +35,9 @@ interface PlayerCreationProgressProps {
   isInitializing: boolean;
   currentInitIndex: number;
   initError?: string;
+
+  // Consent
+  consentAlreadyAccepted?: boolean;
 }
 
 // ─── Triple chip helpers ──────────────────────────────────────────────────────
@@ -71,26 +74,47 @@ function getItemChunks(item: InitItem, pseudo: string, guildName?: string): Chun
 // ─── Identity progress bar ──────────────────────────────────────────────────
 const IDENTITY_STEPS: IdentityCreationStep[] = [
   'idle',
+  'signing-consent',
+  'creating-consent-atom',
   'creating-pseudo-atom',
   'fetching-account-atom',
   'creating-account-atom',
   'creating-alias-triple',
+  'creating-accepted-triple',
   'creating-guild-membership',
   'success',
 ];
 
 const statusLabel: Partial<Record<IdentityCreationStep, string>> = {
+  'signing-consent':           'Signature des conditions (sans frais)...',
+  'creating-consent-atom':     'Enregistrement de la preuve légale...',
   'creating-pseudo-atom':      'Creating username atom...',
   'fetching-account-atom':     'Checking account...',
   'creating-account-atom':     'Creating account atom...',
   'creating-alias-triple':     'Creating alias link...',
+  'creating-accepted-triple':  'Liaison du consentement...',
   'creating-guild-membership': 'Creating guild membership...',
 };
 
-const IdentityProgressBar = ({ step, hasGuild }: { step: IdentityCreationStep; hasGuild: boolean }) => {
+const IdentityProgressBar = ({
+  step,
+  hasGuild,
+  consentAlreadyAccepted,
+}: {
+  step: IdentityCreationStep;
+  hasGuild: boolean;
+  consentAlreadyAccepted: boolean;
+}) => {
   const current = IDENTITY_STEPS.indexOf(step);
 
   const uiSteps = [
+    ...(!consentAlreadyAccepted ? [
+      {
+        label: 'Consent',
+        doneAfter: IDENTITY_STEPS.indexOf('creating-consent-atom'),
+        activeOn: ['signing-consent', 'creating-consent-atom'],
+      },
+    ] : []),
     {
       label: 'Username atom',
       doneAfter: IDENTITY_STEPS.indexOf('creating-pseudo-atom'),
@@ -106,6 +130,13 @@ const IdentityProgressBar = ({ step, hasGuild }: { step: IdentityCreationStep; h
       doneAfter: IDENTITY_STEPS.indexOf('creating-alias-triple'),
       activeOn: ['creating-alias-triple'],
     },
+    ...(!consentAlreadyAccepted ? [
+      {
+        label: 'Consent record',
+        doneAfter: IDENTITY_STEPS.indexOf('creating-accepted-triple'),
+        activeOn: ['creating-accepted-triple'],
+      },
+    ] : []),
     ...(hasGuild ? [{
       label: 'Guild membership',
       doneAfter: IDENTITY_STEPS.indexOf('creating-guild-membership'),
@@ -159,6 +190,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
   isInitializing,
   currentInitIndex,
   initError,
+  consentAlreadyAccepted,
 }) => {
   if (!walletAddress) {
     return (
@@ -170,7 +202,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
   if (registrationPhase === 'creating-identity') {
     return (
       <div>
-        <IdentityProgressBar step={identityStep} hasGuild={hasGuild} />
+        <IdentityProgressBar step={identityStep} hasGuild={hasGuild} consentAlreadyAccepted={!!consentAlreadyAccepted} />
 
         {identityStep !== 'error' ? (
           <p className={styles.statusText}>

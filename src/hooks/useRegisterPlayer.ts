@@ -251,9 +251,8 @@ export const useRegisterPlayer = ({
       }
 
       setState(s => ({ ...s, step: 'success' }));
-      // Invalidate both account atom and alias queries so the read hooks refresh
-      await queryClient.invalidateQueries({ queryKey: ['accountAtom'] });
-      await queryClient.invalidateQueries({ queryKey: ['playerAliases'] });
+      // Invalidate alias query so the read hooks refresh after registration
+      await queryClient.invalidateQueries({ queryKey: ['aliasesByPosition'] });
     } catch (err) {
       setState(s => ({
         ...s,

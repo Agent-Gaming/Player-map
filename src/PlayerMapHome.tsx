@@ -22,6 +22,7 @@ interface PlayerMapHomeProps {
   onClose?: () => void;
   isOpen?: boolean;
   onCreatePlayer?: () => void;
+  onRegistrationComplete?: () => void;
   constants?: DefaultPlayerMapConstants;
 }
 
@@ -33,6 +34,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   onClose,
   isOpen: externalIsOpen,
   onCreatePlayer,
+  onRegistrationComplete,
   constants,
 }) => {
   const publicClient = wagmiConfig?.publicClient;
@@ -142,6 +144,13 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       setRegistrationPhase('loading-existing');
     }
   }, [identityStep, registrationPhase, reg_pseudoAtomId, reg_accountAtomId, reg_aliasTripleId]);
+
+  // ─── Notify parent when registration is complete (triggers cache invalidation) ─
+  useEffect(() => {
+    if (registrationPhase === 'complete' && onRegistrationComplete) {
+      onRegistrationComplete();
+    }
+  }, [registrationPhase, onRegistrationComplete]);
 
   // ─── Check existing items — defined before the useEffect that calls it ────────
   const checkExistingItems = useCallback(async () => {

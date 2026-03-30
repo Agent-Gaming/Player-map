@@ -174,8 +174,85 @@ export const fetchAliasTriplesWithPosition = async (
   }
 };
 
+export interface RawAliasWithSubject extends RawAliasTriple {
+  subjectId: string  // term_id of the account atom (subject of the has-alias triple)
+}
+
 /**
- * Queries whether an account atom has an [accepted] triple pointing to any consent atom.
+ * Fetches [has alias] triples created by this wallet address.
+ * Does NOT require knowing the account atom ID in advance — resolves it from the triple's subject.
+ * Uses creator_id filter which is reliable regardless of vault position state.
+ * Also fetches the user's position in each alias triple's vault (may be 0).
+ */
+export const fetchAliasesByWalletPosition = async (
+  walletAddress: string,
+  predicateId: string,
+  network: Network = Network.MAINNET
+): Promise<RawAliasWithSubject[]> => {
+  try {
+    const apiUrl = API_URLS[network];
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query GetAliasesByCreator($predicateId: String!, $userAddress: String!) {
+            triples(where: {
+              predicate_id: { _eq: $predicateId },
+              creator_id: { _ilike: $userAddress }
+            }) {
+              term_id
+              subject_id
+              object {
+                term_id
+                data
+                image
+              }
+              term {
+                positions(where: { account_id: { _ilike: $userAddress } }) {
+                  shares
+                }
+              }
+            }
+          }
+        `,
+        variables: {
+          predicateId,
+          userAddress: walletAddress,
+        },
+      }),
+    });
+
+    const data = await response.json();
+    if (data.errors) {
+      console.error('GraphQL errors (fetchAliasesByWalletPosition):', data.errors);
+      return [];
+    }
+
+    const triples = data.data?.triples || [];
+    return triples.map((t: any): RawAliasWithSubject => {
+      const rawImage: string | undefined = t.object?.image ?? undefined;
+      const image = rawImage
+        ? (isIpfsUrl(rawImage) ? ipfsToHttpUrl(rawImage) : rawImage)
+        : undefined;
+      return {
+        tripleId: t.term_id,
+        subjectId: t.subject_id ?? '',
+        pseudo: t.object?.data ?? '',
+        atomId: t.object?.term_id ?? '',
+        image,
+        userPosition: t.term?.positions?.[0]?.shares
+          ? BigInt(t.term.positions[0].shares)
+          : 0n,
+      };
+    });
+  } catch (error) {
+    console.error('Error fetching aliases by wallet position:', error);
+    return [];
+  }
+};
+
+/**
  * Used at form load to skip consent steps for users who already accepted terms v1.0.
  * Returns exists: false (not called) when accountAtomId is undefined (new user).
  */

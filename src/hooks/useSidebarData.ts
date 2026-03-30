@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Network } from './useAtomData';
 import { fetchTriplesForAgent, fetchFollowsAndFollowers } from '../api/sidebarQueries';
-import { useTripleByCreator } from './useTripleByCreator';
+import { usePlayerAliases } from './usePlayerAliases';
 import { usePositions } from './usePositions';
 import { useClaimsBySubject } from './useClaimsBySubject';
 import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
@@ -30,21 +30,30 @@ export const useSidebarData = (
     follows: [],
     followers: []
   });
-  const [error, setError] = useState<string | null>(null);
 
-  // Utiliser les constantes passées en paramètre
   const { COMMON_IDS } = constants;
 
-  // Utiliser useTripleByCreator pour récupérer les triples du joueur
-  const { triples: playerTriples, loading: triplesLoading, error: triplesError } = useTripleByCreator(
-    walletAddress || '',
-    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId,
-    constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId,
-    network
-  );
+  // Récupère les alias du joueur — le primary alias donne le pseudo + image
+  // playerAtomId est le term_id de l'account atom (sujet du triple has alias)
+  const { aliases, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases({
+    walletAddress,
+    constants,
+    network,
+  });
 
-  // L'atom du joueur est le sujet du premier triple trouvé
-  const atomDetails = playerTriples.length > 0 ? playerTriples[0].subject : null;
+  // atomDetails construit depuis le primary alias :
+  // - term_id = playerAtomId (account atom, utilisé pour useClaimsBySubject)
+  // - label   = pseudo de l'alias primaire
+  // - image   = image de l'alias primaire
+  const atomDetails = useMemo(() => {
+    if (!playerAtomId) return null;
+    const primary = aliases.find(a => a.isPrimary) ?? aliases[0] ?? null;
+    return {
+      term_id: playerAtomId,
+      label: primary?.pseudo ?? '',
+      image: primary?.image ?? '',
+    };
+  }, [playerAtomId, aliases]);
 
   const { positions, loading: positionsLoading, error: positionsError } = usePositions(
     walletAddress,
@@ -73,28 +82,15 @@ export const useSidebarData = (
   });
 
   useEffect(() => {
-    if (triplesData) {
-      setTriples(triplesData);
-    }
+    if (triplesData) setTriples(triplesData);
   }, [triplesData]);
 
   useEffect(() => {
-    if (connectionsData) {
-      setConnections(connectionsData);
-    }
+    if (connectionsData) setConnections(connectionsData);
   }, [connectionsData]);
 
-  // Agréger les erreurs
-  const combinedError = triplesError || positionsError || claimsError || error;
-  const combinedLoading = triplesLoading || positionsLoading || claimsLoading;
-
-  console.log("useSidebarData - positions loaded:", {
-    count: positions.length,
-    loading: positionsLoading,
-    error: positionsError,
-    walletAddress,
-    firstPosition: positions[0]
-  });
+  const combinedLoading = aliasesLoading || positionsLoading || claimsLoading;
+  const combinedError = positionsError || claimsError;
 
   return {
     atomDetails,

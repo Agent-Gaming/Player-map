@@ -3,10 +3,7 @@ import { useMemo } from 'react';
 import { Network } from './useAtomData';
 import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 import { PlayerAlias } from '../types/alias';
-import {
-  fetchAccountAtom,
-  fetchAliasTriplesWithPosition,
-} from '../api/fetchPlayerAliases';
+import { fetchAliasesByWalletPosition } from '../api/fetchPlayerAliases';
 
 interface UsePlayerAliasesProps {
   walletAddress?: string;
@@ -21,30 +18,17 @@ export const usePlayerAliases = ({
 }: UsePlayerAliasesProps) => {
   const predicateId = constants.HAS_ALIAS_PREDICATE_ID;
 
-  // Query 1: find the account atom for this wallet address.
-  // The account atom is a string atom whose data field = walletAddress.toLowerCase(),
-  // created during Phase 1 registration via createStringAtom(walletAddress.toLowerCase()).
-  const { data: playerAtomId, isLoading: isLoadingAtom } = useQuery({
-    queryKey: ['accountAtom', walletAddress, network],
-    queryFn: () => fetchAccountAtom(walletAddress!, network),
+  // Single query: find has-alias triples where this wallet has a position.
+  // subject_id of the triple = account atom term_id (playerAtomId).
+  const { data: rawAliases, isLoading, error } = useQuery({
+    queryKey: ['aliasesByPosition', walletAddress, predicateId, network],
+    queryFn: () => fetchAliasesByWalletPosition(walletAddress!, predicateId, network),
     enabled: Boolean(walletAddress),
-    staleTime: 10 * 60 * 1000, // 10 min — account atom never changes once created
-    gcTime: 30 * 60 * 1000,
-    retry: 1,
-  });
-
-  // Query 2: fetch [accountAtom] [has alias] [...] triples — runs once accountAtomId is resolved
-  const { data: rawAliases, isLoading: isLoadingAliases, error } = useQuery({
-    queryKey: ['playerAliases', playerAtomId, walletAddress, predicateId, network],
-    queryFn: () =>
-      fetchAliasTriplesWithPosition(playerAtomId!, walletAddress!, predicateId, network),
-    enabled: Boolean(playerAtomId && walletAddress),
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 1,
   });
 
-  // Compute aliases sorted by userPosition desc; first entry is primary
   const aliases: PlayerAlias[] = useMemo(() => {
     if (!rawAliases?.length) return [];
     const sorted = [...rawAliases].sort((a, b) =>
@@ -53,13 +37,14 @@ export const usePlayerAliases = ({
     return sorted.map((a, i) => ({ ...a, isPrimary: i === 0 }));
   }, [rawAliases]);
 
+  // playerAtomId = subject_id shared by all has-alias triples of this wallet
+  const playerAtomId = rawAliases?.[0]?.subjectId ?? null;
+
   return {
     aliases,
     primaryAlias: aliases.find(a => a.isPrimary) ?? null,
-    // playerAtomId is the term_id of the account atom (wallet address as string atom)
-    playerAtomId: playerAtomId ?? null,
-    // isLoading covers both queries: account atom fetch AND alias triples fetch
-    isLoading: isLoadingAtom || isLoadingAliases,
+    playerAtomId,
+    isLoading,
     error: error as Error | null,
   };
 };

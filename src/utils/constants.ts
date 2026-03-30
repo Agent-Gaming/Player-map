@@ -9,6 +9,7 @@ export const COMMON_IDS = {
   HAS_ALIAS: '0x90b0a11a334ba1a7c3613ed8ea007f1f41b274892f0f05cc0b24d3ab34042d3c', // predicate → has alias
   IS_MEMBER_OF: '0xe489948c4bd4fa6f50f402434996b90942ab67585a71c71d81dff8e624f661d4', // predicate → is member of
   IN: '0xb0d3de9abeebc79e74504814f69d38eae809410c9759678855f79d1b4c7405cb', // predicate → in
+  ACCEPTED: '<ACCEPTED_PREDICATE_ID>', // TODO: replace with real term_id once atom is created on-chain
 };
 
 export const HAS_ALIAS_PREDICATE_ID = COMMON_IDS.HAS_ALIAS;

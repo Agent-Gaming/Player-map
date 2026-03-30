@@ -8,8 +8,8 @@ import { useBatchCreateTriple } from './useBatchCreateTriple';
 import { fetchAccountAtom } from '../api/fetchPlayerAliases';
 import { uploadToPinata } from '../utils/pinata';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
-import { calculateAtomId } from '@0xintuition/sdk';
-import { toHex, getAddress } from 'viem';
+import { calculateAtomId, createTripleStatement } from '@0xintuition/sdk';
+import { toHex, getAddress, keccak256, toBytes } from 'viem';
 
 interface UseRegisterPlayerProps {
   walletConnected?: any;
@@ -19,6 +19,8 @@ interface UseRegisterPlayerProps {
   network?: Network;
   guildId?: string;              // hex ID of selected guild atom; if set, creates nested guild triple in step 4
   existingAccountAtomId?: string; // if already known (returning user), skip fetch/create entirely
+  consentAlreadyAccepted?: boolean  // if true, skip signing-consent, creating-consent-atom, creating-accepted-triple
+  chainId?: number                   // for the EIP-712 domain
 }
 
 /**
@@ -43,12 +45,14 @@ export const useRegisterPlayer = ({
   network,
   guildId,
   existingAccountAtomId,
+  consentAlreadyAccepted,
+  chainId,
 }: UseRegisterPlayerProps) => {
   const [state, setState] = useState<IdentityCreationState>({ step: 'idle' });
   const queryClient = useQueryClient();
 
-  const { createAtom, createStringAtom, createEthereumAccountAtom } = useAtomCreation({ walletConnected, walletAddress, publicClient });
-  const { batchCreateTriple, computeTripleId } = useBatchCreateTriple({
+  const { createAtom, createStringAtom, createEthereumAccountAtom, createConsentAtom } = useAtomCreation({ walletConnected, walletAddress, publicClient });
+  const { batchCreateTriple, computeTripleId, checkTripleExists } = useBatchCreateTriple({
     walletConnected,
     walletAddress,
     publicClient,
@@ -65,6 +69,66 @@ export const useRegisterPlayer = ({
     }
 
     try {
+      // Step 0 — EIP-712 consent signature (off-chain, free — popup 1)
+      let signature = state.signature;
+      let consentAtomId = state.consentAtomId;
+      let consentMessage: Record<string, string> | undefined;
+
+      if (!consentAlreadyAccepted && !signature) {
+        setState(s => ({ ...s, step: 'signing-consent' }));
+
+        const domain = { name: 'Player Map', version: '1', chainId: chainId ?? 1 } as const;
+        const types = {
+          TermsAcceptance: [
+            { name: 'wallet',       type: 'address' },
+            { name: 'termsVersion', type: 'string' },
+            { name: 'termsURI',     type: 'string' },
+            { name: 'privacyURI',   type: 'string' },
+            { name: 'timestamp',    type: 'string' },
+            { name: 'statement',    type: 'string' },
+          ],
+        } as const;
+
+        const message = {
+          wallet: walletAddress as `0x${string}`,
+          termsVersion: 'v1.0',
+          termsURI: 'ipfs://bafy.../terms-v1.0.pdf',    // TODO: replace with real CID
+          privacyURI: 'ipfs://bafy.../privacy-v1.0.pdf', // TODO: replace with real CID
+          timestamp: new Date().toISOString(),
+          statement: 'I confirm that I have read and agree to the Terms of Service and Privacy Policy. I understand that blockchain records are permanent and that I am solely responsible for content I publish through this interface.',
+        };
+
+        signature = await walletConnected.signTypedData({
+          domain,
+          types,
+          primaryType: 'TermsAcceptance',
+          message,
+        });
+        consentMessage = message as unknown as Record<string, string>;
+        setState(s => ({ ...s, signature, _consentMessage: consentMessage }));
+      } else if (state._consentMessage) {
+        consentMessage = state._consentMessage;
+      }
+
+      // Step 1 — create consent atom on-chain (popup 2 begins here)
+      if (!consentAlreadyAccepted && !consentAtomId && consentMessage) {
+        setState(s => ({ ...s, step: 'creating-consent-atom' }));
+        const messageHash = keccak256(toBytes(JSON.stringify(consentMessage)));
+        const consentJson = {
+          type: 'terms_acceptance',
+          schema_version: '1.0',
+          accepted_at: consentMessage.timestamp,
+          terms_version: consentMessage.termsVersion,
+          terms_uri: consentMessage.termsURI,
+          privacy_uri: consentMessage.privacyURI,
+          message_hash: messageHash,
+          signature,
+        };
+        const result = await createConsentAtom(consentJson);
+        consentAtomId = `0x${result.atomId.toString(16)}`;
+        setState(s => ({ ...s, consentAtomId }));
+      }
+
       // Step 1 — pseudo atom (skip if already created on a previous attempt)
       let pseudoAtomId = state.pseudoAtomId;
       if (!pseudoAtomId) {
@@ -147,6 +211,33 @@ export const useRegisterPlayer = ({
       );
       const aliasTripleIdStr = `0x${aliasTripleVaultId.toString(16)}`;
       setState(s => ({ ...s, aliasTripleId: aliasTripleIdStr }));
+
+      // Step — [Account] — [accepted] — [Consent Atom] (skip if consent already accepted)
+      if (!consentAlreadyAccepted && consentAtomId) {
+        const acceptedPredicateId = constants.COMMON_IDS.ACCEPTED;
+        if (!acceptedPredicateId || acceptedPredicateId.startsWith('<')) {
+          throw new Error('ACCEPTED predicate ID is not configured — update COMMON_IDS.ACCEPTED');
+        }
+        setState(s => ({ ...s, step: 'creating-accepted-triple' }));
+
+        // Idempotent: check if triple already exists before creating
+        const alreadyExists = await checkTripleExists(
+          BigInt(accountAtomId),
+          BigInt(acceptedPredicateId),
+          BigInt(consentAtomId),
+        );
+        if (!alreadyExists) {
+          const tripleWriteConfig = {
+            address: ATOM_CONTRACT_ADDRESS as any,
+            walletClient: walletConnected as any,
+            publicClient,
+          };
+          await createTripleStatement(tripleWriteConfig, {
+            args: [[BigInt(accountAtomId), BigInt(acceptedPredicateId), BigInt(consentAtomId)]] as any,
+            value: 0n,
+          });
+        }
+      }
 
       // Step 4 — nested guild triple: [aliasTriple] [IS_MEMBER_OF] [guild] (optional)
       if (guildId && guildId.trim()) {

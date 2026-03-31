@@ -108,24 +108,33 @@ const PositionCard: React.FC<PositionCardProps> = ({
   const positionType = isFor ? "For" : "Against";
   
   // Get position description components for visual display
+  const truncateId = (id?: string) =>
+    id ? id.slice(0, 6) + '…' + id.slice(-4) : '?';
+
   const getPositionComponents = () => {
-    if (
-      activeTerm?.triple?.subject?.label &&
-      activeTerm?.triple?.predicate?.label &&
-      activeTerm?.triple?.object?.label
-    ) {
-      // Triple position - return components for visual display
+    if (activeTerm?.triple) {
+      const t = activeTerm.triple;
+      const inner = t._innerTriple ?? (!t.subject?.label && t.subject_term?.triple);
+      if (!t.subject?.label && inner) {
+        return {
+          type: "triple",
+          subject: inner.object?.label || truncateId(inner.object?.term_id),
+          predicate: t.predicate?.label || truncateId(t.predicate_id),
+          object: t.object?.label || truncateId(t.object?.term_id),
+          objectImage: t.object?.image,
+        };
+      }
       return {
         type: "triple",
-        subject: activeTerm.triple.subject.label,
-        predicate: activeTerm.triple.predicate.label,
-        object: activeTerm.triple.object.label,
+        subject: t.subject?.label || truncateId(t.subject_id),
+        predicate: t.predicate?.label || truncateId(t.predicate_id),
+        object: t.object?.label || truncateId(t.object?.term_id),
+        objectImage: t.object?.image,
       };
-    } else if (activeTerm?.atom?.label) {
-      // Atom position
+    } else if (activeTerm?.atom) {
       return {
         type: "atom",
-        label: activeTerm.atom.label,
+        label: activeTerm.atom.label || truncateId(activeTerm.atom.term_id),
       };
     }
     return { type: "unknown" };
@@ -304,54 +313,22 @@ const PositionCard: React.FC<PositionCardProps> = ({
       ? positionComponents.label
       : "Unknown";
   const subjectImage = activeTerm?.triple?.subject?.image;
-  const objectImage = activeTerm?.triple?.object?.image;
+  const objectImage = (positionComponents as any).objectImage ?? activeTerm?.triple?.object?.image;
 
   return (
     <div className={styles.cardRow}>
       {/* Triple / Atom display */}
       <div className={styles.tripleWrap}>
-        {positionComponents.type === "triple" && subjectLabel ? (
+        {positionComponents.type === "triple" ? (
           <>
-            {/* Subject pill */}
-            <div
-              title={subjectLabel}
-              className={styles.pillSm}
-            >
-              {subjectImage && (
-                <img
-                  src={subjectImage}
-                  alt=""
-                  className={styles.pillSmImage}
-                />
-              )}
-              <span className={styles.pillSmLabel}>
-                {subjectLabel}
-              </span>
+            <div title={subjectLabel} className={styles.pillSm}>
+              {subjectImage && <img src={subjectImage} alt="" className={styles.pillSmImage} />}
+              <span className={styles.pillSmLabel}>{subjectLabel}</span>
             </div>
-
-            {/* Predicate */}
-            <span
-              title={predicateLabel}
-              className={styles.predicateText}
-            >
-              {predicateLabel}
-            </span>
-
-            {/* Object pill */}
-            <div
-              title={objectLabel}
-              className={styles.pillSm}
-            >
-              {objectImage && (
-                <img
-                  src={objectImage}
-                  alt=""
-                  className={styles.pillSmImage}
-                />
-              )}
-              <span className={styles.pillSmLabel}>
-                {objectLabel}
-              </span>
+            <span title={predicateLabel} className={styles.predicateText}>{predicateLabel}</span>
+            <div title={objectLabel} className={styles.pillSm}>
+              {objectImage && <img src={objectImage} alt="" className={styles.pillSmImage} />}
+              <span className={styles.pillSmLabel}>{objectLabel}</span>
             </div>
           </>
         ) : (

@@ -20,6 +20,7 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
 }) => {
   // ── IDs de prédicats ─────────────────────────────────────────────────────────
   const IS_PLAYER_OF_ID = constants?.COMMON_IDS?.IS_PLAYER_OF;
+  const IS_MEMBER_OF_ID = constants?.COMMON_IDS?.IS_MEMBER_OF;
   const IS_ID = constants?.COMMON_IDS?.IS;
   const guildIds = new Set((constants?.OFFICIAL_GUILDS || []).map((g) => g.id));
 
@@ -29,16 +30,42 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
       ? a.predicate_id === IS_PLAYER_OF_ID
       : a.predicate?.label === "is player of"
   );
+  const isMemberOfClaims = activities.filter((a) =>
+    IS_MEMBER_OF_ID ? a.predicate_id === IS_MEMBER_OF_ID : false
+  );
   const isClaims = activities.filter((a) =>
     IS_ID ? a.predicate_id === IS_ID : a.predicate?.label === "is"
   );
 
   const games = isPlayerOfClaims.filter((a) => !guildIds.has(a.object_id));
-  const guilds = isPlayerOfClaims.filter((a) => guildIds.has(a.object_id));
-  const playerQualities = isClaims;
+  const guilds = [
+    ...isPlayerOfClaims.filter((a) => guildIds.has(a.object_id)),
+    ...isMemberOfClaims,
+  ];
+
+  // Player qualities — group IS claims by quality atom, sum votes across all games
+  const qualityMap = new Map<string, { object: { label: string; image?: string }; forCount: number; againstCount: number }>();
+  for (const claim of isClaims) {
+    const key = claim.object_id;
+    if (!key || !claim.object) continue;
+    const forCount = claim.term?.positions_aggregate?.aggregate?.count || 0;
+    const againstCount = claim.counter_term?.positions_aggregate?.aggregate?.count || 0;
+    const existing = qualityMap.get(key);
+    if (existing) {
+      existing.forCount += forCount;
+      existing.againstCount += againstCount;
+    } else {
+      qualityMap.set(key, { object: claim.object, forCount, againstCount });
+    }
+  }
+  // Only display qualities that have at least one vote
+  const playerQualities = Array.from(qualityMap.values()).filter(q => q.forCount + q.againstCount > 0);
 
   // ── Composant : une ligne de claim ──────────────────────────────────────────
-  const ClaimRow = ({ claim }: { claim: any }) => (
+  const ClaimRow = ({ claim }: { claim: any }) => {
+    const forCount = claim.forCount ?? claim.term?.positions_aggregate?.aggregate?.count ?? 0;
+    const againstCount = claim.againstCount ?? claim.counter_term?.positions_aggregate?.aggregate?.count ?? 0;
+    return (
     <div className={styles.claimRow}>
       {/* Icône */}
       {claim.object?.image ? (
@@ -59,18 +86,19 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
       {/* Votes */}
       <PositionBubble
         isFor={true}
-        count={claim.term?.positions_aggregate?.aggregate?.count || 0}
+        count={forCount}
         fontSize="14px"
         showCount={true}
       />
       <PositionBubble
         isFor={false}
-        count={claim.counter_term?.positions_aggregate?.aggregate?.count || 0}
+        count={againstCount}
         fontSize="14px"
         showCount={true}
       />
     </div>
-  );
+    );
+  };
 
   // ── Composant : groupe avec header ───────────────────────────────────────────
   const SectionGroup = ({
@@ -87,8 +115,8 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
         {showCount ? `${items.length} ` : ""}
         {label}
       </div>
-      {items.map((claim) => (
-        <ClaimRow key={claim.term_id} claim={claim} />
+      {items.map((claim, idx) => (
+        <ClaimRow key={claim.term_id ?? claim.object?.term_id ?? claim.object?.label ?? idx} claim={claim} />
       ))}
     </div>
   );

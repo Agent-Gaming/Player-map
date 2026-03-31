@@ -4,7 +4,7 @@ import { Network } from './useAtomData';
 import { fetchTriplesForAgent, fetchFollowsAndFollowers } from '../api/sidebarQueries';
 import { usePlayerAliases } from './usePlayerAliases';
 import { usePositions } from './usePositions';
-import { useClaimsBySubject } from './useClaimsBySubject';
+import { fetchTriplesByTermIds } from '../api/fetchTriplesByTermIds';
 import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 
 interface SidebarData {
@@ -42,7 +42,7 @@ export const useSidebarData = (
   });
 
   // atomDetails construit depuis le primary alias :
-  // - term_id = playerAtomId (account atom, utilisé pour useClaimsBySubject)
+  // - term_id = playerAtomId (account atom)
   // - label   = pseudo de l'alias primaire
   // - image   = image de l'alias primaire
   const atomDetails = useMemo(() => {
@@ -60,10 +60,84 @@ export const useSidebarData = (
     network
   );
 
-  const { claims: activities, loading: claimsLoading, error: claimsError } = useClaimsBySubject(
-    atomDetails?.term_id,
-    network
-  );
+  // Collect subject_ids of IN-predicate positions to resolve their quality atoms
+  const inSubjectIds = useMemo(() => {
+    return positions
+      .filter(p => p.term?.triple?.predicate_id === COMMON_IDS.IN)
+      .map(p => p.term.triple.subject_id as string)
+      .filter(Boolean);
+  }, [positions, COMMON_IDS.IN]);
+
+  const { data: qualityTriples } = useQuery({
+    queryKey: ['triplesByTermIds', inSubjectIds, network],
+    queryFn: () => fetchTriplesByTermIds(inSubjectIds, network),
+    enabled: inSubjectIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  // Map: subject_id (IS triple term_id) → quality atom { label, image }
+  const qualityBySubjectId = useMemo(() => {
+    const map = new Map<string, { term_id: string; label: string; image?: string }>();
+    for (const t of qualityTriples ?? []) {
+      if (t.object) map.set(t.term_id, t.object);
+    }
+    return map;
+  }, [qualityTriples]);
+
+  // Derive attestation activities from positions:
+  // - IS_PLAYER_OF → games
+  // - IS_MEMBER_OF → guilds (nested triple subject)
+  // - IS → player qualities (direct)
+  // - IN  → player qualities nested in context: [[X][IS][quality]] [IN] [bossfighters]
+  //         resolved via second fetch of the IS triple
+  const activities = useMemo(() => {
+    const relevantPredicates = new Set([
+      COMMON_IDS.IS_PLAYER_OF,
+      COMMON_IDS.IS_MEMBER_OF,
+      COMMON_IDS.IS,
+      COMMON_IDS.IN,
+    ]);
+    const seen = new Set<string>();
+    return positions
+      .filter(p => {
+        const triple = p.term?.triple;
+        return triple && relevantPredicates.has(triple.predicate_id);
+      })
+      .filter(p => {
+        const termId = p.term.triple.term_id;
+        if (seen.has(termId)) return false;
+        seen.add(termId);
+        return true;
+      })
+      .map(p => {
+        const triple = p.term.triple;
+
+        // Nested quality: [[X][IS][quality]] [IN] [context]
+        // Resolve quality atom from the fetched IS triple
+        if (triple.predicate_id === COMMON_IDS.IN) {
+          const qualityObject = qualityBySubjectId.get(triple.subject_id) ?? null;
+          return {
+            term_id: triple.term_id,
+            predicate_id: COMMON_IDS.IS,
+            object_id: qualityObject?.term_id ?? triple.subject_id,
+            object: qualityObject,
+            term: p.term,
+            counter_term: triple.counter_term,
+          };
+        }
+
+        return {
+          term_id: triple.term_id,
+          predicate_id: triple.predicate_id,
+          object_id: triple.object_id,
+          object: triple.object,
+          term: p.term,
+          counter_term: triple.counter_term,
+        };
+      })
+      .filter(a => a.object != null);
+  }, [positions, COMMON_IDS, qualityBySubjectId]);
 
   const { data: triplesData } = useQuery({
     queryKey: ['triplesForAgent', walletAddress, network],
@@ -89,8 +163,8 @@ export const useSidebarData = (
     if (connectionsData) setConnections(connectionsData);
   }, [connectionsData]);
 
-  const combinedLoading = aliasesLoading || positionsLoading || claimsLoading;
-  const combinedError = positionsError || claimsError;
+  const combinedLoading = aliasesLoading || positionsLoading;
+  const combinedError = positionsError;
 
   return {
     atomDetails,

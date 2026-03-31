@@ -59,6 +59,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   // ─── Consent state ───────────────────────────────────────────────────────────
   const [consentAlreadyAccepted, setConsentAlreadyAccepted] = useState(false);
   const [rgpdChecked, setRgpdChecked] = useState(false);
+  const [termsChecked, setTermsChecked] = useState(false);
 
   // ─── Phase 2 state ──────────────────────────────────────────────────────────
   const [existingItems, setExistingItems] = useState<InitItem[]>([]);
@@ -447,6 +448,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
   const isValidateDisabled =
     (useExistingAlias ? !selectedExistingAlias : !pseudoInput.trim()) ||
+    !termsChecked ||
     (!rgpdChecked && !consentAlreadyAccepted);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
@@ -529,10 +531,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
                 {/* Username row — with alias select when user has existing aliases */}
                 <div className={styles.formRow}>
-
-                  <div className={styles.formRowLabel}>
-                    <span className={styles.rowTitle}>Username</span>
-                  </div>
                   <div className={styles.formRowControl}>
                     {hasExistingAliases ? (
                       <>
@@ -576,7 +574,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                             onChange={e => setPseudoInput(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter' && !isValidateDisabled) handleValidate(); }}
                             className={styles.input}
-                            placeholder="DarkPlayer42"
+                            placeholder="Username"
                           />
                         )}
                       </>
@@ -587,7 +585,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                         onChange={e => setPseudoInput(e.target.value)}
                         onKeyDown={e => { if (e.key === 'Enter' && !isValidateDisabled) handleValidate(); }}
                         className={styles.input}
-                        placeholder="DarkPlayer42"
+                        placeholder="Username"
                       />
                     )}
                   </div>
@@ -621,16 +619,18 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                     <span className={styles.rowDesc}>This image will be used as the player's profile picture and can't be replaced or added later.</span>
                   </div>
                   <div className={styles.formRowControl}>
-                    {imagePreview && (
-                      <img src={imagePreview} alt="Preview" className={styles.imagePreviewThumb} />
-                    )}
-                    <button
-                      className={styles.uploadBtn}
-                      type="button"
-                      onClick={() => imageInputRef.current?.click()}
-                    >
-                      UPLOAD
-                    </button>
+                    <div className={styles.uploadRow}>
+                      <button
+                        className={styles.uploadBtn}
+                        type="button"
+                        onClick={() => imageInputRef.current?.click()}
+                      >
+                        UPLOAD
+                      </button>
+                      {imagePreview && (
+                        <img src={imagePreview} alt="Preview" className={styles.imagePreviewThumb} />
+                      )}
+                    </div>
                     <input
                       ref={imageInputRef}
                       type="file"
@@ -643,10 +643,22 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
                 {/* Terms */}
                 <div className={styles.termsBox}>
-                  <p>Users are solely responsible for any information, data, or content they record on the blockchain through the Service.</p>
-                  <p>Users agree not to create or publish profiles that : impersonate another person, contain defamatory information, violate privacy rights, infringe intellectual property rights or violate applicable laws.</p>
 
-                  <p>The Company does not review, approve, or moderate all information recorded on the blockchain through the Service.</p>
+                  <div className={styles.termsCheckRow}>
+                    <input
+                      id="terms-checkbox"
+                      type="checkbox"
+                      className={styles.termsCheckbox}
+                      checked={termsChecked}
+                      onChange={e => setTermsChecked(e.target.checked)}
+                    />
+                    <label htmlFor="terms-checkbox" className={styles.termsCheckLabel}>
+                      <p>Users are solely responsible for any information, data, or content they record on the blockchain through the Service.</p>
+                      <p>Users agree not to create or publish profiles that : impersonate another person, contain defamatory information, violate privacy rights, infringe intellectual property rights or violate applicable laws.</p>
+
+                      <p>The Company does not review, approve, or moderate all information recorded on the blockchain through the Service.</p>
+                    </label>
+                  </div>
                 </div>
 
                 {consentAlreadyAccepted ? (
@@ -654,15 +666,15 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                     <span>✓ You have already accepted the Terms of Services and Privacy Policy.</span>
                   </div>
                 ) : (
-                  <div className={styles.consentRow}>
+                  <div className={styles.termsCheckRow}>
                     <input
                       id="rgpd-checkbox"
                       type="checkbox"
-                      className={styles.consentCheckbox}
+                      className={styles.termsCheckbox}
                       checked={rgpdChecked}
                       onChange={e => setRgpdChecked(e.target.checked)}
                     />
-                    <label htmlFor="rgpd-checkbox" className={styles.consentLabel}>
+                    <label htmlFor="rgpd-checkbox" className={styles.termsCheckLabel}>
                       I confirm that I have read, consent and agree to the Player Map{' '}
                       <a
                         href="https://playermap.box/terms-of-service/"

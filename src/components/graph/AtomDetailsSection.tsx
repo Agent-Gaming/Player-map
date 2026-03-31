@@ -16,6 +16,7 @@ interface AtomDetailsSectionProps {
   };
   walletAddress?: string;
   showDescription?: boolean;
+  placeholderElement?: React.ReactNode;
 }
 
 const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
@@ -23,6 +24,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   connections,
   walletAddress,
   showDescription = true,
+  placeholderElement,
 }) => {
   const [ipfsMetadata, setIpfsMetadata] = useState<any>(null);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
@@ -174,12 +176,13 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       src={imageUrl as string}
                       fallbackSources={imageFallbacks}
                       alt={atomDetails.label || "Atom image"}
-                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px", display: "block" }}
+                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px"}}
                       placeholderText={atomDetails.emoji || "?"}
+                      placeholderElement={placeholderElement}
                       showPlaceholder={true}
                     />
                   </div>
-                  
+
                   {/* Colonne droite: nom + badge + description */}
                   <div className={styles.rightColumn}>
                     <div className={styles.nameRow}>
@@ -260,10 +263,11 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       alt={atomDetails.label || "Atom image"}
                       style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px", display: "block" }}
                       placeholderText={atomDetails.emoji || "?"}
+                      placeholderElement={placeholderElement}
                       showPlaceholder={true}
                     />
                   </div>
-                  
+
                   {/* Colonne droite: nom + description */}
                   <div className={styles.rightColumn}>
                     <p className={styles.atomNameAccent}>

@@ -75,6 +75,14 @@ export const fetchPositions = async (
                     term_id
                     label
                   }
+                  subject_term {
+                    id
+                    triple {
+                      subject { label term_id }
+                      predicate { label }
+                      object { label image term_id }
+                    }
+                  }
                   predicate {
                     term_id
                     label
@@ -82,6 +90,7 @@ export const fetchPositions = async (
                   object {
                     term_id
                     label
+                    image
                   }
                   counter_term {
                     id
@@ -113,11 +122,25 @@ export const fetchPositions = async (
           }
 
           const positions = data.data?.positions || [];
-          
+
           if (positions.length === 0) {
             hasMore = false;
           } else {
-            allPositions.push(...positions);
+            // Remap: attach _innerTriple when subject.label is empty (nested triple)
+            const remapped = positions.map((p: any) => {
+              const triple = p.term?.triple;
+              if (!triple || triple.subject?.label) return p;
+              const innerTriple = triple.subject_term?.triple ?? null;
+              if (!innerTriple) return p;
+              return {
+                ...p,
+                term: {
+                  ...p.term,
+                  triple: { ...triple, _innerTriple: innerTriple },
+                },
+              };
+            });
+            allPositions.push(...remapped);
             
             if (positions.length < batchSize) {
               hasMore = false;

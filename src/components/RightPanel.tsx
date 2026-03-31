@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { FaUser } from "react-icons/fa";
 import { RightPanelMode } from "./TopNavBar";
 import { ClaimVoting } from "./vote/ClaimVoting";
 import { SpeakUpHeader } from "./vote/SpeakUpHeader";
@@ -234,16 +235,6 @@ const ProfileContent: React.FC<{
     return sum + depositCount;
   }, 0);
 
-  console.log("ProfileContent Stats:", { 
-    totalVotes, 
-    totalAttestations, 
-    totalValue, 
-    totalValueRaw,
-    totalDeposits,
-    positions: positions.length,
-    firstPosition: positions[0]
-  });
-
   return (
     <div className={styles.profileContent}>
       {/* ── Header joueur ───────────────────────────────────────────────────── */}
@@ -253,6 +244,7 @@ const ProfileContent: React.FC<{
         connections={connections}
         walletAddress={walletAddress}
         showDescription={false}
+        placeholderElement={<FaUser size={60} color="#ffd32a" />}
       />
       </div>
 

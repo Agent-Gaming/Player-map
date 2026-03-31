@@ -64,7 +64,6 @@ const PositionsSection: React.FC<PositionsSectionProps> = ({
     );
     if (result?.success) {
       clearSelection();
-      // Refresh positions après redemption
       setIsReloading(true);
       await loadPositions();
       setIsReloading(false);

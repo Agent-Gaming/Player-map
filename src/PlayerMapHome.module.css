@@ -246,6 +246,17 @@
   font-size: 0.9em;
 }
 
+.selectHint {
+  font-size: 0.8em;
+  color: #888;
+  margin: 0 0 8px 0;
+}
+
+.gameNameHighlight {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
 /* ── Upload ──────────────────────────────────────────────────────────────────── */
 
 .uploadBtn {
@@ -432,10 +443,10 @@
 }
 
 .consentLink {
-  color: #818cf8;
+  color: #ffffff;
   text-decoration: underline;
 }
 
 .consentLink:hover {
-  color: #a5b4fc;
+  color: #c5c5c5;
 }

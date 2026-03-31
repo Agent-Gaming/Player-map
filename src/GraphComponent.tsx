@@ -74,6 +74,8 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     [activePositions, constants],
   );
 
+  // Pendant le chargement des positions, on ne sait pas encore si le player est confirmé.
+  // Si hasConfirmedPlayer=true, on attend aussi le sidebar pour savoir si l'alias existe.
   const isLoading = positionsLoading;
   const hasError = null;
 
@@ -96,6 +98,11 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     loading: sidebarLoading,
     error: sidebarError,
   } = useSidebarData(walletAddress, Network.MAINNET, constants);
+
+  // Étend isLoading pour attendre le sidebar si le player est confirmé (évite flash du form)
+  const isProfileLoading = hasConfirmedPlayer && sidebarLoading;
+  // Accès complet au map : triple "is player of" + alias existant
+  const canAccessMap = hasConfirmedPlayer && !!myAtomDetails;
 
   // ── Données atom sélectionné ──────────────────────────────────────────────────
   const { atomDetails: selectedAtomDetails, loading: selectedLoading, error: selectedError } =
@@ -154,7 +161,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   }
 
   // ── Chargement ────────────────────────────────────────────────────────────────
-  if (isLoading) {
+  if (isLoading || isProfileLoading) {
     return (
       <div className={styles.errorContainer}>
         <div className={styles.spinner} />
@@ -170,8 +177,8 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
       {/* Modal connexion wallet */}
       <ConnectWalletModal isOpen={!isWalletReady} onConnectWallet={handleConnectWallet} />
 
-      {/* Home / inscription — wallet non connecté ou pas encore de player */}
-      {(!isWalletReady || (isWalletReady && !hasConfirmedPlayer)) && (
+      {/* Home / inscription — wallet non connecté, pas encore de player, ou profil incomplet */}
+      {(!isWalletReady || (isWalletReady && !canAccessMap)) && (
         <div className={!isWalletReady ? styles.homeBlurred : styles.homeVisible}>
           <PlayerMapHome
             walletConnected={walletConnected}
@@ -179,6 +186,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             wagmiConfig={wagmiConfig}
             walletHooks={walletHooks}
             constants={constants}
+            hasConfirmedPlayer={hasConfirmedPlayer}
             onCreatePlayer={handleCreatePlayer}
             onRegistrationComplete={handleRegistrationComplete}
           />
@@ -186,7 +194,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
       )}
 
       {/* Layout principal : navbar + graphe + panneau ─────────────────────── */}
-      {isWalletReady && hasConfirmedPlayer && (
+      {isWalletReady && canAccessMap && (
         <div className={styles.mainLayout}>
           {/* Navbar fixe en haut */}
           <TopNavBar

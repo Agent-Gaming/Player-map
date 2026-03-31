@@ -24,6 +24,7 @@ interface PlayerMapHomeProps {
   onCreatePlayer?: () => void;
   onRegistrationComplete?: () => void;
   constants?: DefaultPlayerMapConstants;
+  hasConfirmedPlayer?: boolean;
 }
 
 const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
@@ -36,6 +37,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   onCreatePlayer,
   onRegistrationComplete,
   constants,
+  hasConfirmedPlayer = false,
 }) => {
   const publicClient = wagmiConfig?.publicClient;
 
@@ -116,16 +118,24 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   // ─── Auto-transition: returning user already has account atom ────────────────
   useEffect(() => {
     if (!aliasesLoading && playerAtomId && showForm && registrationPhase === 'input') {
-      const primary = aliases.find(a => a.isPrimary);
-      if (primary) {
-        setPseudo(primary.pseudo);
-        setPseudoAtomId(primary.atomId);
-        setAliasTripleId(primary.tripleId);
+
+      if (hasConfirmedPlayer) {
+        // Already registered for this game → skip form, go to Phase 2 check
+        const primary = aliases.find(a => a.isPrimary);
+        if (primary) {
+          setPseudo(primary.pseudo);
+          setPseudoAtomId(primary.atomId);
+          setAliasTripleId(primary.tripleId);
+          setAccountAtomId(playerAtomId);
+        }
+        setRegistrationPhase('loading-existing');
+      } else {
+        // Has alias from another game → stay on form, pre-select existing alias
+        setUseExistingAlias(true);
         setAccountAtomId(playerAtomId);
       }
-      setRegistrationPhase('loading-existing');
 
-      // Check if consent was already accepted on-chain
+      // Check if consent was already accepted on-chain (both cases)
       const acceptedId = constants?.COMMON_IDS?.ACCEPTED;
       if (playerAtomId && !playerAtomId.startsWith('<') && acceptedId && !acceptedId.startsWith('<')) {
         fetchAccountConsent(playerAtomId, acceptedId).then(result => {
@@ -133,7 +143,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         }).catch(() => {/* silently ignore */});
       }
     }
-  }, [playerAtomId, aliasesLoading, showForm]);
+  }, [playerAtomId, aliasesLoading, showForm, hasConfirmedPlayer]);
   // Note: registrationPhase intentionally NOT in deps (avoid re-trigger)
 
   // ─── Transition after Phase 1 success → loading-existing ─────────────────────
@@ -347,8 +357,24 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   };
 
   const handleValidate = () => {
-    const username = useExistingAlias ? selectedExistingAlias : pseudoInput.trim();
-    if (!username || !constants) return;
+    if (!constants) return;
+
+    if (useExistingAlias && selectedExistingAlias) {
+      // Existing alias: find by atomId, extract display name, skip Phase 1
+      const selectedAlias = aliases.find(a => a.atomId === selectedExistingAlias);
+      if (!selectedAlias) return;
+      let label = selectedAlias.pseudo;
+      try { label = JSON.parse(selectedAlias.pseudo).name || selectedAlias.pseudo; } catch { /* use raw */ }
+      setPseudo(label);
+      setPseudoAtomId(selectedAlias.atomId);
+      setAliasTripleId(selectedAlias.tripleId);
+      // accountAtomId already set in useEffect (= playerAtomId)
+      setRegistrationPhase('loading-existing');
+      return;
+    }
+
+    const username = pseudoInput.trim();
+    if (!username) return;
     setPseudo(username);
     setRegistrationPhase('creating-identity');
     register(username, imageFile ?? undefined);
@@ -555,18 +581,30 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                           </label>
                         </div>
                         {useExistingAlias ? (
-                          <select
-                            value={selectedExistingAlias}
-                            onChange={e => setSelectedExistingAlias(e.target.value)}
-                            className={styles.select}
-                          >
-                            <option value="">Your account already has a username for at least one game in the ecosystem. Which one would you like to use to confirm you are a player of this game?</option>
-                            {aliases.map(a => (
-                              <option key={a.atomId} value={a.pseudo}>
-                                {a.pseudo}{a.isPrimary ? " ★" : ""}
-                              </option>
-                            ))}
-                          </select>
+                          <>
+                            <p className={styles.selectHint}>
+                              Your account already has a username for at least one game in the Player Map. Do you want to use one of them to confirm you are a player of{' '}
+                              <span className={styles.gameNameHighlight}>
+                                {(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'}
+                              </span>?
+                            </p>
+                            <select
+                              value={selectedExistingAlias}
+                              onChange={e => setSelectedExistingAlias(e.target.value)}
+                              className={styles.select}
+                            >
+                              <option value="">— Select a username —</option>
+                              {aliases.map(a => {
+                                let label = a.pseudo;
+                                try { label = JSON.parse(a.pseudo).name || a.pseudo; } catch { /* use raw */ }
+                                return (
+                                  <option key={a.atomId} value={a.atomId}>
+                                    {label}{a.isPrimary ? " ★" : ""}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </>
                         ) : (
                           <input
                             type="text"
@@ -595,7 +633,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 {guilds.length > 0 && (
                   <div className={styles.formRow}>
                     <div className={styles.formRowLabel}>
-                      <span>Are you a member of a guild in this game?</span>
+                      <span>Are you a member of a guild in <span>{(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'}</span>?</span>
                     </div>
                     <div className={styles.formRowControl}>
                       <select
@@ -612,7 +650,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                   </div>
                 )}
 
-                {/* Profile picture row */}
+                {/* Profile picture row — hidden when reusing an existing alias */}
+                {!useExistingAlias && (
                 <div className={styles.formRow}>
                   <div className={styles.formRowLabel}>
                     <span className={styles.rowTitle}>Player profile picture</span>
@@ -640,6 +679,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                     />
                   </div>
                 </div>
+                )} {/* end !useExistingAlias */}
 
                 {/* Terms */}
                 <div className={styles.termsBox}>

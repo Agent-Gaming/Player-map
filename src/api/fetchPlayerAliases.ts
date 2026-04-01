@@ -127,6 +127,7 @@ export const fetchAliasTriplesWithPosition = async (
               term_id
               object {
                 term_id
+                label
                 data
                 image
               }
@@ -160,7 +161,7 @@ export const fetchAliasTriplesWithPosition = async (
         : undefined;
       return {
         tripleId: t.term_id,
-        pseudo: t.object?.data ?? '',
+        pseudo: t.object?.label || t.object?.data || '',
         atomId: t.object?.term_id ?? '',
         image,
         userPosition: t.term?.positions?.[0]?.shares
@@ -205,6 +206,7 @@ export const fetchAliasesByWalletPosition = async (
               subject_id
               object {
                 term_id
+                label
                 data
                 image
               }
@@ -238,7 +240,7 @@ export const fetchAliasesByWalletPosition = async (
       return {
         tripleId: t.term_id,
         subjectId: t.subject_id ?? '',
-        pseudo: t.object?.data ?? '',
+        pseudo: t.object?.label || t.object?.data || '',
         atomId: t.object?.term_id ?? '',
         image,
         userPosition: t.term?.positions?.[0]?.shares

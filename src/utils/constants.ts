@@ -2,33 +2,43 @@
 
 // Prédicats communs
 export const COMMON_IDS = {
-  GAMES_ID: "0x5dc0a2335c12343d8e0f71b62a73fbf70d06fcbaf647f57d82a189873ad90da3",
+  GAMES_ID: "0x15fd51c3248baf65414b97a52ff4302e653bd4f765e6784fd5eb4906ea322390",
   FOLLOWS: "0x8f9b5dc2e7b8bd12f6762c839830672f1d13c08e72b5f09f194cafc153f2df8a", // prédicat --> follows
-  IS: "0x2af261bce70c2fc3a1abf882e3e89b23066fcd150bfda27fab69f9f55ed2d9d0",  // prédicat --> is
-  IS_PLAYER_OF: "0x05f1707d8cb50571d01021f09a664826aa1be2ff43504c0cca55eef87142f84f",  // prédicat --> is player of
+  IS: "0xdd4320a03fcd85ed6ac29f3171208f05418324d6943f1fac5d3c23cc1ce10eb3",  // prédicat --> is
+  IS_PLAYER_OF: "0x6bd2557fa101349b1adab869c7f14bdcb5dce3ae0bc722bee3ae183a544faa81",  // prédicat --> is player of
+  HAS_ALIAS: '0x90b0a11a334ba1a7c3613ed8ea007f1f41b274892f0f05cc0b24d3ab34042d3c', // predicate → has alias
+  IS_MEMBER_OF: '0xe489948c4bd4fa6f50f402434996b90942ab67585a71c71d81dff8e624f661d4', // predicate → is member of
+  IN: '0xb0d3de9abeebc79e74504814f69d38eae809410c9759678855f79d1b4c7405cb', // predicate → in
+  ACCEPTED: '0x69b32b0ec575de94fea50d8ed84f198d46ab1590b6ec10d6527a1cc93c2c2dc', // TODO: replace with real term_id once atom is created on-chain
 };
+
+export const HAS_ALIAS_PREDICATE_ID = COMMON_IDS.HAS_ALIAS;
 
 // Types de triples pour les joueurs
 export const PLAYER_TRIPLE_TYPES = {
   PLAYER_GAME: {
     predicateId: COMMON_IDS.IS_PLAYER_OF, // predicat --> is player of !!!
-    objectId: COMMON_IDS.GAMES_ID // object --> games (BossFighters)
+    objectId: COMMON_IDS.GAMES_ID, // object --> games (BossFighters)
+    label: 'is player of BossFighters',
   },
   PLAYER_QUALITY_1: {
-    predicateId: COMMON_IDS.IS, // predicat --> is 
-    objectId: "0xc9559c712c264e5f94ce450ed9473c451b6fd01ab6a436a726fbae767cd67b9c" // object --> fairplay !!!
+    predicateId: COMMON_IDS.IS,
+    objectId: "0xe8c70540064241818928054f9d655b79a9fc06fad93967db766347d9ed678795", // object --> fairplay
+    label: 'is fairplay',
   },
   PLAYER_QUALITY_2: {
-    predicateId: COMMON_IDS.IS, // predicat --> is 
-    objectId: "0x56d28a901a7f2617247f1663b0c25c77ba6403a8141bac43b1e94eb32a2de941" // object --> strong boss !!!
+    predicateId: COMMON_IDS.IS,
+    objectId: "0x0b5b1eecbe6c655584f57c15b1fd0a8fbec0ba39bbc1f253824b2075739c3fe1", // object --> strong boss
+    label: 'is strong boss',
   },
   PLAYER_QUALITY_3: {
-    predicateId: COMMON_IDS.IS, // predicat --> is 
-    objectId: "0xc8433466cda62c0e8bb4fc5433f3faa51949072d6c7b0df50a595c95fb97f1bb" // object --> strong fighter !!!
+    predicateId: COMMON_IDS.IS,
+    objectId: "0x48e31f7beaec9a71b62de49865ee2ba664c72c6860f7802d2174d003e635ff7d", // object --> strong fighter
+    label: 'is strong fighter',
   },
   PLAYER_GUILD: {
     predicateId: COMMON_IDS.IS_PLAYER_OF, // predicat --> is player of !!!
-    objectId: null // Sera défini dynamiquement en fonction du choix de guilde
+    objectId: null, // dynamically set based on guild choice — excluded from Phase 2 auto-claims
   }
 };
 
@@ -39,7 +49,8 @@ export const OFFICIAL_GUILDS = [
   { id: "0xd9e1d54c0cb904c23e04caea94f9d0dae00874ec18849ca74a832e94c6de01fa", name: "The NEST" }, // id --> The NEST !!!
   { id: "0xd473ceacf850609ff8881c398e85e59aadbc315588ca78182313cc1af05a2800", name: "Clock Work Gamers" }, // id --> Clock Work Gamers !!!
   { id: "0x14511bc4065a1e7d67ba7d50d4706a8899a148a2e68b55213794c14e347acaa", name: "Vast Impact Gaming" }, // id --> Vast Impact Gaming !!!
-  // { id: "0x93815368a0d207e11be12da396d51dea4e3f8e637fe49f696648feb451f6f9c7", name: "Kraken Gaming" }, // id --> Kraken Gaming !!!
+  // { id: "0x93815368a0d207e11be12da396d51dea4e3f8e637fe49f696648feb451f6f9c7", name: "Kraken Gaming" }, // old wrong ID
+  { id: "0x4ba717c7f309c98d2ba72c8412960af16872def8e8462f69da2e340762a01627", name: "Kraken Gaming" },
   // { id: "0x508dee963f045411bd0bf4ab9433f40b72ca4270eb0f31222f299211cffbb0bc", name: "FAM" } // id --> FAM
 ];
 
@@ -76,5 +87,6 @@ export const DEFAULT_CONSTANTS = {
   COMMON_IDS,
   PLAYER_TRIPLE_TYPES,
   OFFICIAL_GUILDS,
-  PREDEFINED_CLAIM_IDS
+  PREDEFINED_CLAIM_IDS,
+  HAS_ALIAS_PREDICATE_ID,
 };

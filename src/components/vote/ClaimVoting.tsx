@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Network } from "../../hooks/useAtomData";
 import { useSubmitVotes } from "../../hooks/useSubmitVotes";
 import { useVoteItemsManagement } from "../../hooks/useVoteItemsManagement";
@@ -7,9 +7,8 @@ import { VotingHeader } from "./VotingHeader";
 import { ClaimList } from "./ClaimList";
 import { TransactionStatusDisplay } from "./TransactionStatus";
 import { ConnectWalletModal, CreatePlayerModal } from "../modals";
-import { useTripleByCreator } from "../../hooks/useTripleByCreator";
+import { usePositions } from "../../hooks/usePositions";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
-import RegistrationForm from "../../RegistrationForm";
 import { useNetworkCheck } from '../../shared/hooks/useNetworkCheck';
 import { NetworkSwitchMessage } from '../../shared/components/NetworkSwitchMessage';
 import styles from "./ClaimVoting.module.css";
@@ -39,31 +38,26 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   walletHooks,
   constants,
 }) => {
-  // État pour gérer l'ouverture du formulaire d'inscription
-  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
   // État pour gérer l'affichage de la modale CreatePlayerModal
   const [showCreatePlayerModal, setShowCreatePlayerModal] = useState(false);
 
   // Vérifier si le wallet est connecté
   const [isWalletReady, setIsWalletReady] = useState(false);
-  
+
   // Utiliser les constantes passées en paramètre
   const { PLAYER_TRIPLE_TYPES } = constants;
-  
-  // Vérifier si l'utilisateur a un Player atom sur le jeu
-  const {
-    loading: tripleLoading,
-    triples: playerTriples,
-  } = useTripleByCreator(
-    walletAddress || "", 
-    PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId,
-    PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId, 
-    network,
-    constants // Passer les constantes personnalisées !
+
+  // Vérifier si l'utilisateur a le nested triple "is player of Bossfighters" via ses positions
+  const { positions: activePositions, loading: positionsLoading } =
+    usePositions(walletAddress || undefined, network);
+
+  const hasPlayerAtom = useMemo(
+    () => activePositions.some((p: any) =>
+      p.term?.triple?.predicate_id === PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
+      p.term?.triple?.object_id === PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
+    ),
+    [activePositions, PLAYER_TRIPLE_TYPES],
   );
-  
-  // Vérifie si l'utilisateur a un player atom
-  const hasPlayerAtom = playerTriples.length > 0;
 
   // Mettre à jour isWalletReady quand walletAddress change
   useEffect(() => {
@@ -73,12 +67,12 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
 
   // Mettre à jour l'affichage de la modale CreatePlayerModal
   useEffect(() => {
-    if (isWalletReady && !hasPlayerAtom && !tripleLoading) {
+    if (isWalletReady && !hasPlayerAtom && !positionsLoading) {
       setShowCreatePlayerModal(true);
     } else {
       setShowCreatePlayerModal(false);
     }
-  }, [isWalletReady, hasPlayerAtom, tripleLoading]);
+  }, [isWalletReady, hasPlayerAtom, positionsLoading]);
 
   // Use the vote items management hook
   const {
@@ -125,15 +119,9 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   // Fonction pour gérer le clic sur le bouton "Create Player"
   const handleCreatePlayer = () => {
     setShowCreatePlayerModal(false);
-    setIsRegistrationFormOpen(true);
     if (onCreatePlayer) {
       onCreatePlayer();
     }
-  };
-
-  // Fonction pour fermer le formulaire d'inscription
-  const handleCloseRegistrationForm = () => {
-    setIsRegistrationFormOpen(false);
   };
 
   // Fonction pour fermer la modale CreatePlayerModal et tout le composant de vote
@@ -164,24 +152,13 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   }
 
   // Si l'utilisateur a connecté son wallet mais n'a pas de player
-  if (isWalletReady && !hasPlayerAtom && !tripleLoading) {
+  if (isWalletReady && !hasPlayerAtom && !positionsLoading) {
     return (
       <div className={styles.playerPrompt}>
         <CreatePlayerModal
           isOpen={true}
           onCreatePlayer={handleCreatePlayer}
           onClose={handleCloseCreatePlayerModal}
-        />
-        
-        {/* Formulaire d'inscription */}
-        <RegistrationForm
-          isOpen={isRegistrationFormOpen}
-          onClose={handleCloseRegistrationForm}
-          walletConnected={walletConnected}
-          walletAddress={walletAddress}
-          wagmiConfig={wagmiConfig}
-          walletHooks={walletHooks}
-          constants={constants}
         />
       </div>
     );
@@ -198,7 +175,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
       {/* Liste scrollable — prend tout l'espace disponible */}
       <div className={styles.scrollList}>
         <ClaimList
-          isLoading={isLoading || tripleLoading}
+          isLoading={isLoading || positionsLoading}
           voteItems={voteItems}
           onChangeUnits={handleChangeUnits}
           isVoteDirectionAllowed={isVoteDirectionAllowed}

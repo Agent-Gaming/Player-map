@@ -1,0 +1,451 @@
+@import "./styles/variables.css";
+
+/* ── Identity progress bar ────────────────────────────────────────────────── */
+
+.progressBar {
+  margin-bottom: 20px;
+}
+
+.progressSteps {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.progressStep {
+  text-align: center;
+  flex: 1;
+}
+
+.stepCircle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  font-weight: bold;
+  background-color: #2e2e40;
+  color: #fff;
+}
+
+.stepCircleDone {
+  background-color: #4caf50;
+  color: #000;
+}
+
+.stepCircleActive {
+  background-color: var(--color-primary);
+  color: #000;
+}
+
+.stepLabel {
+  font-size: 0.78em;
+  margin-top: 5px;
+  color: #aaa;
+}
+
+/* ── Status / error ───────────────────────────────────────────────────────── */
+
+.statusText {
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9em;
+  min-height: 20px;
+}
+
+.errorBlock {
+  text-align: center;
+}
+
+.errorText {
+  color: #ff4444;
+  font-size: 0.85em;
+  margin-bottom: 12px;
+}
+
+.errorActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btnRetry {
+  padding: 6px 16px;
+  background-color: var(--color-primary);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85em;
+  transition: background-color 0.2s;
+}
+
+.btnRetry:hover {
+  background-color: #ffed4e;
+}
+
+.btnCancel {
+  padding: 6px 14px;
+  background-color: #2e2e40;
+  color: #ff8888;
+  border: 1px solid #555;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+
+/* ── Phase: complete ──────────────────────────────────────────────────────── */
+
+.completeBox {
+  text-align: center;
+  padding-top: 8px;
+}
+
+.completeIcon {
+  font-size: 2em;
+  margin-bottom: 8px;
+}
+
+.completeTitle {
+  color: #4caf50;
+  margin-bottom: 8px;
+}
+
+.completeSubtext {
+  color: #aaa;
+}
+
+.completeUsername {
+  color: var(--color-primary);
+}
+
+/* ── Aliases (read-only context) ──────────────────────────────────────────── */
+
+.aliasesBox {
+  margin-bottom: 14px;
+}
+
+.aliasesLabel {
+  font-size: 0.78em;
+  color: #aaa;
+  margin-bottom: 5px;
+}
+
+.aliasTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.aliasTag {
+  padding: 2px 10px;
+  background-color: #1e1e30;
+  border: 1px solid #333;
+  border-radius: 12px;
+  font-size: 0.82em;
+  color: #ccc;
+}
+
+.aliasTagPrimary {
+  padding: 2px 10px;
+  background-color: #1e1e30;
+  border: 1px solid var(--color-primary);
+  border-radius: 12px;
+  font-size: 0.82em;
+  color: var(--color-primary);
+}
+
+/* ── Phase: creating-claims progress ──────────────────────────────────────── */
+
+.claimsProgress {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.claimsProgressLabel {
+  color: var(--color-primary);
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.claimsProgressSub {
+  color: #aaa;
+  font-size: 0.85em;
+}
+
+/* ── Claims list ──────────────────────────────────────────────────────────── */
+
+.claimsTitle {
+  color: var(--color-primary);
+  margin-bottom: 12px;
+  text-align: center;
+  font-size: 0.95em;
+}
+
+.claimsList {
+  margin-bottom: 14px;
+}
+
+.claimItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+  background-color: #1e1e30;
+  border: 1px solid #333;
+}
+
+.claimItemSelected {
+  background-color: #1a1e35;
+  border: 1px solid var(--color-primary);
+}
+
+.claimItemDone {
+  background-color: #152015;
+  border: 1px solid #4caf50;
+  cursor: default;
+}
+
+/* ── Claim checkbox ───────────────────────────────────────────────────────── */
+
+.claimCheckbox {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.72em;
+  font-weight: bold;
+  color: #000;
+  border: 2px solid #555;
+  background-color: transparent;
+}
+
+.claimCheckboxSelected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+
+.claimCheckboxDone {
+  border-color: #4caf50;
+  background-color: #4caf50;
+}
+
+/* ── Claim label ──────────────────────────────────────────────────────────── */
+
+.claimLabel {
+  font-size: 0.88em;
+  color: #e0e0e0;
+}
+
+.claimLabelDone {
+  font-size: 0.88em;
+  color: #88cc88;
+}
+
+.claimLabelUsername {
+  color: var(--color-primary);
+}
+
+.claimLabelUsernameDone {
+  color: #88cc88;
+}
+
+/* ── No claims / error ────────────────────────────────────────────────────── */
+
+.noClaims {
+  color: #aaa;
+  font-size: 0.85em;
+  margin-bottom: 14px;
+}
+
+.claimError {
+  color: #ff4444;
+  font-size: 0.8em;
+  margin-bottom: 8px;
+}
+
+/* ── Actions ──────────────────────────────────────────────────────────────── */
+
+.actionsRow {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+.btnCreateClaims {
+  padding: 8px 18px;
+  background-color: var(--color-primary);
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.88em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btnCreateClaims:hover:not(:disabled) {
+  background-color: #ffed4e;
+}
+
+.btnCreateClaims:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSkip {
+  padding: 8px 16px;
+  background-color: #2e2e40;
+  color: #bbb;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.88em;
+}
+
+.btnSkip:hover {
+  border-color: #666;
+  color: #fff;
+}
+
+/* ── Loading ──────────────────────────────────────────────────────────────── */
+
+.loading {
+  color: #aaa;
+  font-size: 0.82em;
+  margin-bottom: 8px;
+}
+
+/* ── Loading existing ─────────────────────────────────────────────────────── */
+
+.loadingExisting {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.loadingExistingText {
+  color: #aaa;
+  font-size: 0.88em;
+}
+
+/* ── PLAYER INITIALIZATION layout ─────────────────────────────────────────── */
+
+.initZone {
+  margin-bottom: 14px;
+}
+
+.initZoneLabel {
+  font-weight: bold;
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+}
+
+.initItemList {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Row wrapper — no box, just a bottom border */
+.initItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 4px;
+  border-bottom: 1px solid #232336;
+}
+
+.title2 {
+  font-size: 18px;
+  margin: 0 0 4px 0;
+  color: var(--color-primary);
+  font-weight: bold;
+  width: 80%;
+  text-align: left;
+}
+
+.initItem:last-child {
+  border-bottom: none;
+}
+
+.initItemDone .tripleRow .atomChip {
+  opacity: 0.7;
+}
+
+.initItemActive .tripleRow .atomChip {
+  border-color: var(--color-primary);
+}
+
+.initItemError .tripleRow .atomChip {
+  border-color: #ff4444;
+}
+
+/* Status dot to the left of the triple */
+
+.initItemIconDone  { color: #4caf50; }
+.initItemIconActive { color: var(--color-primary); }
+.initItemIconError  { color: #ff4444; }
+
+/* ── Triple chip row ──────────────────────────────────────────────────────── */
+
+.tripleRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Atom chip */
+.atomChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #1a1a1ad4;
+  border-radius: 5px;
+  padding: 6px 12px;
+  white-space: nowrap;
+}
+
+/* Grey circle — for the account / Profil_ID atom */
+.atomChipCircle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #666;
+  flex-shrink: 0;
+}
+
+/* Small square icon — for named atoms (pseudo, fairplay, guild, game…) */
+.atomChipSquare {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  background: #3a3a58;
+  border: 1px solid #555;
+  flex-shrink: 0;
+}
+
+/* Profile image for alias atoms */
+.atomChipImage {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Predicate text between chips */
+.predicateLabel {
+  padding: 0 2px;
+  white-space: nowrap;
+}

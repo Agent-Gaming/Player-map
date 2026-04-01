@@ -9,6 +9,7 @@ interface SafeImageProps {
   fallbackSources?: string[]; // Nouveau: liste de fallbacks à essayer
   showPlaceholder?: boolean;
   placeholderText?: string;
+  placeholderElement?: React.ReactNode;
 }
 
 /**
@@ -24,7 +25,8 @@ const SafeImage: React.FC<SafeImageProps> = ({
   fallbackSrc,
   fallbackSources = [],
   showPlaceholder = true,
-  placeholderText = '?'
+  placeholderText = '?',
+  placeholderElement,
 }) => {
   const [imgSrc, setImgSrc] = useState<string | undefined>(src);
   const [hasError, setHasError] = useState(false);
@@ -76,7 +78,7 @@ const SafeImage: React.FC<SafeImageProps> = ({
         }}
         title={alt}
       >
-        {placeholderText}
+        {placeholderElement ?? placeholderText}
       </div>
     );
   }

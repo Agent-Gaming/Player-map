@@ -47,6 +47,7 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
         onLoadingChange={() => {}}
         walletAddress={walletAddress}
         gamesId={gamesId}
+        config={{ constants }}
         disableNodeDetailsSidebar={true}
         hideNavigationBar={true}
         onControlsReady={onControlsReady}

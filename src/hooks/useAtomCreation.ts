@@ -1,15 +1,13 @@
-import { ATOM_CONTRACT_ADDRESS, VALUE_PER_ATOM, atomABI } from '../abi';
-import { toHex, parseEventLogs } from 'viem';
-import { hashDataToIPFS } from '../utils/ipfsUtils'; // Importer depuis ipfsUtils
+import {
+  createAtomFromString,
+  createAtomFromThing,
+  createAtomFromEthereumAccount,
+  createAtomFromIpfsUpload,
+} from '@0xintuition/sdk';
+import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
 import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
-
-export type IpfsAtom = {
-  '@context': string;
-  '@type': string;
-  name: string;
-  description?: string;
-  image?: string;
-};
+import { getPinataConstants } from '../utils/globalConstants';
+import type { Address } from 'viem';
 
 export type IpfsAtomInput = {
   name: string;
@@ -24,130 +22,117 @@ export interface UseAtomCreationProps {
 }
 
 export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }: UseAtomCreationProps) => {
-  // Fonction pour créer un atome à partir des données utilisateur
+  const writeConfig = {
+    address: ATOM_CONTRACT_ADDRESS as Address,
+    walletClient: walletConnected as any,
+    publicClient,
+  };
+
+  /**
+   * Creates a rich JSON-LD atom (name + optional image).
+   * Converts IPFS image URLs to HTTP gateway URLs before storing.
+   */
   const createAtom = async (input: IpfsAtomInput): Promise<{ atomId: bigint; ipfsHash: string }> => {
     if (!walletConnected || !walletAddress) {
       throw new Error('Wallet not connected');
     }
+    const imageUrl = input.image && isIpfsUrl(input.image)
+      ? ipfsToHttpUrl(input.image)
+      : input.image;
 
-    try {
-      // 1. Formater les données selon le schéma (comme dans buildproof)
-      const atomData: IpfsAtom = {
-        '@context': 'https://schema.org/',
-        '@type': 'Thing',
-        ...input,
-      };
+    console.log('[createAtom] ▶ name:', input.name, '| image:', imageUrl ?? '(none)');
+    const result = await createAtomFromThing(writeConfig, {
+      name: input.name,
+      image: imageUrl,
+      description: input.description,
+    });
+    console.log('[createAtom] ✓ atomId:', result.state.termId, '| ipfsHash:', result.uri);
+    return {
+      atomId: BigInt(result.state.termId),
+      ipfsHash: result.uri ?? '',
+    };
+  };
 
-      // Transformer les URL IPFS en URL HTTP pour les images
-      if (atomData.image && isIpfsUrl(atomData.image)) {
-        // Convertir l'URL IPFS en URL HTTP de façon asynchrone
-        atomData.image = await ipfsToHttpUrl(atomData.image);
-      }
-
-      // 2. Convert JSON data to bytes for the contract (like the original backend)
-      const jsonString = JSON.stringify(atomData);
-      const dataBytes = toHex(jsonString);
-
-      // 3. Upload to IPFS for reference (optional)
-      const { ipfsHash } = await hashDataToIPFS(atomData);
-
-      // 4. Use VALUE_PER_ATOM directly
-      const requiredAmount = VALUE_PER_ATOM;
-
-      // 5. Create the atom with createAtoms
-      const txHash = await walletConnected.writeContract({
-        address: ATOM_CONTRACT_ADDRESS,
-        abi: atomABI,
-        functionName: 'createAtoms',
-        args: [
-          [dataBytes],
-          [requiredAmount]
-        ],
-        value: requiredAmount,
-        gas: 2000000n, // Limit gas to 2M to prevent MetaMask from using excessive values
-      });
-
-      // 6. Wait for transaction confirmation
-      // Normalize txHash (can be a string or an object with hash)
-      const normalizedTxHash = typeof txHash === 'string' ? txHash : txHash.hash || txHash;
-      
-      let receipt;
-      // Try first with publicClient (Viem)
-      if (publicClient && publicClient.waitForTransactionReceipt) {
-        receipt = await publicClient.waitForTransactionReceipt({ hash: normalizedTxHash });
-      } 
-      // Otherwise try with walletConnected
-      else if (walletConnected.waitForTransactionReceipt) {
-        receipt = await walletConnected.waitForTransactionReceipt({ hash: normalizedTxHash });
-      } 
-      // Otherwise try with txHash.wait (ethers.js)
-      else if (txHash.wait) {
-        receipt = await txHash.wait();
-      } 
-      // Last resort: use publicClient.getTransactionReceipt with polling
-      else if (publicClient && publicClient.getTransactionReceipt) {
-        // Manual polling to retrieve receipt
-        const maxAttempts = 30; // 30 attempts
-        const delay = 2000; // 2 seconds between each attempt
-        for (let i = 0; i < maxAttempts; i++) {
-          try {
-            receipt = await publicClient.getTransactionReceipt({ hash: normalizedTxHash });
-            if (receipt) break;
-          } catch (error) {
-            // Transaction not yet confirmed, continue waiting
-          }
-          await new Promise(resolve => setTimeout(resolve, delay));
-        }
-        if (!receipt) {
-          throw new Error('Transaction receipt not found after waiting');
-        }
-      } 
-      else {
-        throw new Error('No method available to wait for transaction receipt. publicClient is required.');
-      }
-
-      // 7. Verify that receipt exists and check transaction status
-      if (!receipt) {
-        throw new Error('Transaction receipt not found');
-      }
-
-      // Check if transaction was successful
-      if (receipt.status === 'reverted' || receipt.status === 0) {
-        throw new Error('Transaction reverted. The transaction may have failed due to insufficient gas or contract error.');
-      }
-
-      // Verify that receipt contains logs
-      if (!receipt.logs || receipt.logs.length === 0) {
-        throw new Error('Transaction receipt does not contain logs. Transaction may have been reverted.');
-      }
-
-      // 8. Decode events from receipt
-      const events = parseEventLogs({
-        abi: atomABI,
-        logs: receipt.logs
-      });
-
-      // 9. Find AtomCreated event and extract real atomId (termId)
-      const atomCreatedEvent = events.find((e: any) => e.eventName === 'AtomCreated') as any;
-      
-      if (!atomCreatedEvent || !atomCreatedEvent.args || !atomCreatedEvent.args.termId) {
-        throw new Error('AtomCreated event not found in transaction receipt');
-      }
-
-      // 10. Extract real atomId from event
-      const realAtomId = atomCreatedEvent.args.termId;
-
-      return {
-        atomId: BigInt(realAtomId),
-        ipfsHash
-      };
-    } catch (error) {
-      console.error('Error creating atom:', error);
-      throw error;
+  /**
+   * Creates a plain UTF-8 string atom (pseudonym / username atoms without image).
+   */
+  const createStringAtom = async (str: string): Promise<{ atomId: bigint }> => {
+    if (!walletConnected || !walletAddress) {
+      throw new Error('Wallet not connected');
     }
+    console.log('[createStringAtom] ▶ str:', str);
+    const result = await createAtomFromString(writeConfig, str);
+    console.log('[createStringAtom] ✓ atomId:', result.state.termId);
+    return { atomId: BigInt(result.state.termId) };
+  };
+
+  /**
+   * Creates an Ethereum account atom for a wallet address.
+   * The SDK encodes the address as toHex(getAddress(address)) — 20 bytes checksummed.
+   * Replaces the rawHex=true path previously in createStringAtom.
+   *
+   * SDK signature: createAtomFromEthereumAccount(config, address, deposit?)
+   * where deposit is ADDED to getAtomCost(). We fetch getAtomCost() ourselves so
+   * total assets = max(getAtomCost(), VITE_VALUE_PER_ATOM), matching the contract minimum.
+   */
+  const createEthereumAccountAtom = async (address: string): Promise<{ atomId: bigint }> => {
+    if (!walletConnected || !walletAddress) {
+      throw new Error('Wallet not connected');
+    }
+    console.log('[createEthereumAccountAtom] ▶ address to register:', address);
+    console.log('[createEthereumAccountAtom] signer walletAddress:', walletAddress);
+    console.log('[createEthereumAccountAtom] contract:', ATOM_CONTRACT_ADDRESS);
+    console.log('[createEthereumAccountAtom] publicClient available:', !!publicClient);
+
+    const envAtomCost = BigInt(import.meta.env.VITE_VALUE_PER_ATOM || '10000000000000000');
+    console.log('[createEthereumAccountAtom] envAtomCost (VITE_VALUE_PER_ATOM):', envAtomCost.toString(), `(${Number(envAtomCost) / 1e18} ETH)`);
+
+    const atomBaseCost: bigint = publicClient
+      ? (await publicClient.readContract({
+          address: ATOM_CONTRACT_ADDRESS as Address,
+          abi: atomABI,
+          functionName: 'getAtomCost',
+        }) as bigint)
+      : 0n;
+    console.log('[createEthereumAccountAtom] contract getAtomCost():', atomBaseCost.toString(), `(${Number(atomBaseCost) / 1e18} ETH)`);
+
+    const depositAmount = envAtomCost > atomBaseCost ? envAtomCost - atomBaseCost : 0n;
+    console.log('[createEthereumAccountAtom] depositAmount (extra passed to SDK):', depositAmount.toString(), `(${Number(depositAmount) / 1e18} ETH)`);
+    console.log('[createEthereumAccountAtom] total assets = getAtomCost + deposit =', (atomBaseCost + depositAmount).toString());
+
+    const result = await createAtomFromEthereumAccount(writeConfig, address as Address, depositAmount as any);
+    console.log('[createEthereumAccountAtom] ✓ full result:', result);
+    console.log('[createEthereumAccountAtom] ✓ atomId:', result.state.termId);
+    return { atomId: BigInt(result.state.termId) };
+  };
+
+  /**
+   * Creates a consent atom by uploading a JSON object to IPFS via Pinata,
+   * then creating an on-chain atom pointing to that IPFS URI.
+   * Requires PINATA_CONFIG.JWT_KEY to be set via setPinataConstants().
+   */
+  const createConsentAtom = async (consentJson: object): Promise<{ atomId: bigint }> => {
+    if (!walletConnected || !walletAddress) {
+      throw new Error('Wallet not connected');
+    }
+    const pinataConstants = getPinataConstants();
+    if (!pinataConstants?.PINATA_CONFIG?.JWT_KEY) {
+      throw new Error('Pinata JWT not configured — call setPinataConstants() with PINATA_CONFIG');
+    }
+    const config = {
+      ...writeConfig,
+      pinataApiJWT: pinataConstants.PINATA_CONFIG.JWT_KEY as string,
+    };
+    console.log('[createConsentAtom] ▶ uploading consent JSON to IPFS');
+    const result = await createAtomFromIpfsUpload(config, consentJson);
+    console.log('[createConsentAtom] ✓ atomId:', result.state.termId, '| uri:', result.uri);
+    return { atomId: BigInt(result.state.termId) };
   };
 
   return {
     createAtom,
+    createStringAtom,
+    createEthereumAccountAtom,
+    createConsentAtom,
   };
-}; 
+};

@@ -21,20 +21,33 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
   const activeTerm = isAtomActivity ? term : (isFor ? term : term?.triple?.counter_term);
   
   // Get activity description components for visual display
+  const truncateId = (id?: string) =>
+    id ? id.slice(0, 6) + '…' + id.slice(-4) : '?';
+
   const getActivityComponents = () => {
-    if (activeTerm?.triple?.subject?.label && activeTerm?.triple?.predicate?.label && activeTerm?.triple?.object?.label) {
-      // Triple activity - return components for visual display
+    if (activeTerm?.triple) {
+      const t = activeTerm.triple;
+      const inner = t._innerTriple ?? (!t.subject?.label && t.subject_term?.triple);
+      if (!t.subject?.label && inner) {
+        return {
+          type: 'triple',
+          subject: inner.object?.label || truncateId(inner.object?.term_id),
+          predicate: t.predicate?.label || truncateId(t.predicate_id),
+          object: t.object?.label || truncateId(t.object?.term_id),
+          objectImage: t.object?.image,
+        };
+      }
       return {
         type: 'triple',
-        subject: activeTerm.triple.subject.label,
-        predicate: activeTerm.triple.predicate.label,
-        object: activeTerm.triple.object.label
+        subject: t.subject?.label || truncateId(t.subject_id),
+        predicate: t.predicate?.label || truncateId(t.predicate_id),
+        object: t.object?.label || truncateId(t.object?.term_id),
+        objectImage: t.object?.image,
       };
-    } else if (activeTerm?.atom?.label) {
-      // Atom activity
+    } else if (activeTerm?.atom) {
       return {
         type: 'atom',
-        label: activeTerm.atom.label
+        label: activeTerm.atom.label || truncateId(activeTerm.atom.term_id),
       };
     }
     return { type: 'unknown' };
@@ -57,7 +70,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
     ? activityComponents.label
     : 'Unknown';
   const subjectImage = activeTerm?.triple?.subject?.image;
-  const objectImage = activeTerm?.triple?.object?.image;
+  const objectImage = (activityComponents as any).objectImage ?? activeTerm?.triple?.object?.image;
 
   // Date courte
   const isRedeem = activity.activity_type === 'redemption';
@@ -73,7 +86,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
         <span className={`${styles.badge} ${isRedeem ? styles.badgeRedeem : styles.badgeDeposit}`}>
           {isRedeem ? "Redeem" : "Deposit"}
         </span>
-        {activityComponents.type === 'triple' && subjectLabel ? (
+        {activityComponents.type === 'triple' ? (
           <>
             <div title={subjectLabel} className={styles.pill}>
               {subjectImage && <img src={subjectImage} alt="" className={styles.pillImg} />}

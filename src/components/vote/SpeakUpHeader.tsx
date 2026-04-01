@@ -127,13 +127,13 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
 
       {/* Statistiques */}
       <div className={styles.statsRow}>
-        <StatCard label="Guilds"       value={totalGuilds}       loading={false}   variant="guild" />
+        <StatCard label="Guild(s)"       value={totalGuilds}       loading={false}   variant="guild" />
         <div className={styles.statsDivider} />
-        <StatCard label="Players"      value={totalPlayers}      loading={loading} variant="player" />
+        <StatCard label="Player(s)"      value={totalPlayers}      loading={loading} variant="player" />
         <div className={styles.statsDivider} />
-        <StatCard label="Attestation"  value={totalAttestations} loading={loading} variant="attestation" />
+        <StatCard label="Attestation(s)"  value={totalAttestations} loading={loading} variant="attestation" />
         <div className={styles.statsDivider} />
-        <StatCard label="Votes"        value={totalVotes}        loading={loading} variant="triple" />
+        <StatCard label="Vote(s)"        value={totalVotes}        loading={loading} variant="triple" />
       </div>
     </div>
   );

@@ -5,29 +5,28 @@ import React, {
   useMemo,
 } from "react";
 import { Network } from "./hooks/useAtomData";
-import { useTripleByCreator } from "./hooks/useTripleByCreator";
 import { usePositions } from "./hooks/usePositions";
 import { useSidebarData } from "./hooks/useSidebarData";
 import { useSelectedAtomData } from "./hooks/useSelectedAtomData";
 import { useSelectedAtomClaims } from "./hooks/useSelectedAtomClaims";
 import PlayerMapHome from "./PlayerMapHome";
 import PlayerMapGraph from "./PlayerMapGraph";
-import RegistrationForm from "./RegistrationForm";
 import { ConnectWalletModal } from "./components/modals";
 import TopNavBar, { RightPanelMode, GraphControls } from "./components/TopNavBar";
 import RightPanel from "./components/RightPanel";
-import { PlayerMapQueryClientProvider } from "./contexts/QueryClientContext";
+import { PlayerMapQueryClientProvider, useQueryClientContext } from "./contexts/QueryClientContext";
 import {
   PlayerMapConfig,
   DefaultPlayerMapConstants,
 } from "./types/PlayerMapConfig";
 import { usePlayerConstants } from "./hooks/usePlayerConstants";
 import initGraphql from "./config/graphql";
+import { apiCache } from "./utils/apiCache";
 import IntuitionLogo from "./assets/img/Intuition-logo.svg";
 import styles from "./GraphComponent.module.css";
 
 interface GraphComponentProps {
-  walletConnected?: boolean;
+  walletConnected?: any;
   walletAddress?: string;
   wagmiConfig?: any;
   walletHooks?: any;
@@ -56,34 +55,29 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
 
   // ── Wallet ────────────────────────────────────────────────────────────────────
   const [isWalletReady, setIsWalletReady] = useState(false);
-  const lowerCaseAddress = walletAddress ?? "";
 
   useEffect(() => {
     setIsWalletReady(Boolean(walletAddress && walletAddress !== ""));
   }, [walletAddress]);
 
   // ── Player atom & positions ───────────────────────────────────────────────────
-  const { loading: tripleLoading, error: tripleError, triples: playerTriplesRaw } =
-    useTripleByCreator(
-      lowerCaseAddress,
-      constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId,
-      constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId,
-      network,
-    );
-
   const { positions: activePositions, loading: positionsLoading } =
     usePositions(isWalletReady ? walletAddress : undefined, network);
 
-  const playerTriples = useMemo(
-    () => (playerTriplesRaw?.length ? [...playerTriplesRaw] : []),
-    [playerTriplesRaw],
+  // Detect "is player of Bossfighters" via a nested triple in active positions
+  // (the subject of this triple is the alias triple, not an atom — creator_id is not accessible)
+  const hasConfirmedPlayer = useMemo(
+    () => activePositions.some((p: any) =>
+      p.term?.triple?.predicate_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
+      p.term?.triple?.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
+    ),
+    [activePositions, constants],
   );
 
-  const hasPlayerAtom = playerTriples.length > 0;
-  const hasActivePositions = activePositions.length > 0;
-  const hasConfirmedPlayer = hasPlayerAtom && hasActivePositions;
-  const isLoading = tripleLoading || positionsLoading;
-  const hasError = tripleError;
+  // Pendant le chargement des positions, on ne sait pas encore si le player est confirmé.
+  // Si hasConfirmedPlayer=true, on attend aussi le sidebar pour savoir si l'alias existe.
+  const isLoading = positionsLoading;
+  const hasError = null;
 
   // ── Graph controls (remontés depuis GraphVisualization) ───────────────────────
   const [graphControls, setGraphControls] = useState<GraphControls | null>(null);
@@ -104,6 +98,11 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     loading: sidebarLoading,
     error: sidebarError,
   } = useSidebarData(walletAddress, Network.MAINNET, constants);
+
+  // Étend isLoading pour attendre le sidebar si le player est confirmé (évite flash du form)
+  const isProfileLoading = hasConfirmedPlayer && sidebarLoading;
+  // Accès complet au map : triple "is player of" + alias existant
+  const canAccessMap = hasConfirmedPlayer && !!myAtomDetails;
 
   // ── Données atom sélectionné ──────────────────────────────────────────────────
   const { atomDetails: selectedAtomDetails, loading: selectedLoading, error: selectedError } =
@@ -131,21 +130,22 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   }, []);
 
   // ── Inscription ───────────────────────────────────────────────────────────────
-  const [isRegistrationFormOpen, setIsRegistrationFormOpen] = useState(false);
-
   const handleCreatePlayer = useCallback(() => {
     if (onCreatePlayer) onCreatePlayer();
-    setIsRegistrationFormOpen(true);
   }, [onCreatePlayer]);
-
-  const handleCloseRegistrationForm = useCallback(() => {
-    setIsRegistrationFormOpen(false);
-    if (onClose) onClose();
-  }, [onClose]);
 
   const handleConnectWallet = useCallback(() => {
     if (onConnectWallet) onConnectWallet();
   }, [onConnectWallet]);
+
+  // ── Invalidation cache après création du joueur ───────────────────────────────
+  const queryClient = useQueryClientContext();
+  const handleRegistrationComplete = useCallback(() => {
+    apiCache.clear();
+    queryClient.invalidateQueries({ queryKey: ['triplesByCreator'] });
+    queryClient.invalidateQueries({ queryKey: ['positions'] });
+    queryClient.invalidateQueries({ queryKey: ['aliasesByPosition'] });
+  }, [queryClient]);
 
   // ── Erreur ────────────────────────────────────────────────────────────────────
   if (hasError) {
@@ -161,7 +161,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   }
 
   // ── Chargement ────────────────────────────────────────────────────────────────
-  if (isLoading) {
+  if (isLoading || isProfileLoading) {
     return (
       <div className={styles.errorContainer}>
         <div className={styles.spinner} />
@@ -177,21 +177,24 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
       {/* Modal connexion wallet */}
       <ConnectWalletModal isOpen={!isWalletReady} onConnectWallet={handleConnectWallet} />
 
-      {/* Home / inscription — wallet non connecté ou pas encore de player */}
-      {(!isWalletReady || (isWalletReady && !hasConfirmedPlayer)) && (
+      {/* Home / inscription — wallet non connecté, pas encore de player, ou profil incomplet */}
+      {(!isWalletReady || (isWalletReady && !canAccessMap)) && (
         <div className={!isWalletReady ? styles.homeBlurred : styles.homeVisible}>
           <PlayerMapHome
-            walletConnected={isWalletReady}
+            walletConnected={walletConnected}
             walletAddress={walletAddress}
             wagmiConfig={wagmiConfig}
             walletHooks={walletHooks}
+            constants={constants}
+            hasConfirmedPlayer={hasConfirmedPlayer}
             onCreatePlayer={handleCreatePlayer}
+            onRegistrationComplete={handleRegistrationComplete}
           />
         </div>
       )}
 
-      {/* ── Layout principal : navbar + graphe + panneau ─────────────────────── */}
-      {isWalletReady && hasConfirmedPlayer && (
+      {/* Layout principal : navbar + graphe + panneau ─────────────────────── */}
+      {isWalletReady && canAccessMap && (
         <div className={styles.mainLayout}>
           {/* Navbar fixe en haut */}
           <TopNavBar
@@ -242,16 +245,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
         </div>
       )}
 
-      {/* Formulaire d'inscription */}
-      <RegistrationForm
-        isOpen={isRegistrationFormOpen}
-        onClose={handleCloseRegistrationForm}
-        walletConnected={walletConnected}
-        walletAddress={walletAddress}
-        wagmiConfig={wagmiConfig}
-        walletHooks={walletHooks}
-        constants={constants}
-      />
     </div>
   );
 };

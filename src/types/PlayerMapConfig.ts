@@ -6,6 +6,7 @@ export interface PlayerMapConstants {
   PLAYER_TRIPLE_TYPES: Record<string, any>;
   OFFICIAL_GUILDS: Array<{id: string, name: string}>;
   PREDEFINED_CLAIM_IDS: string[];
+  HAS_ALIAS_PREDICATE_ID: string;
 }
 
 /**

@@ -33,4 +33,3 @@ const ActivitySection: React.FC<ActivitySectionProps> = ({ accountId }) => {
 };
 
 export default ActivitySection;
-

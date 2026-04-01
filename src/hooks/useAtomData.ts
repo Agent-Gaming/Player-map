@@ -1,4 +1,4 @@
-import { createServerClient, API_URL_DEV } from '@0xintuition/graphql';
+import { createServerClient, configureClient } from '@0xintuition/graphql';
 
 // Enum pour les différents réseaux disponibles
 export enum Network {
@@ -20,14 +20,6 @@ export const API_URLS = {
 
 // Fonction pour créer un client avec le réseau approprié
 export const createClient = (network: Network = Network.MAINNET): ReturnType<typeof createServerClient> => {
-  const options = {
-    url: API_URLS[network],
-    headers: {
-      'Content-Type': 'application/json',
-      // Add an API key header if available
-      // 'x-api-key': process.env.INTUITION_API_KEY || ''
-    },
-    token: undefined // Assuming token is optional and can be undefined
-  };
-  return createServerClient(options);
-}; 
+  configureClient({ apiUrl: API_URLS[network] });
+  return createServerClient({});
+};

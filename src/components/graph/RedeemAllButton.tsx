@@ -12,15 +12,15 @@ const RedeemAllButton: React.FC<RedeemAllButtonProps> = ({
   onRedeemAll, 
   isLoading 
 }) => {
-  if (selectedCount === 0) return null;
+  const isDisabled = isLoading || selectedCount === 0;
 
   return (
     <button
       onClick={onRedeemAll}
-      disabled={isLoading}
+      disabled={isDisabled}
       className={styles.redeemAllBtn}
     >
-      {isLoading ? 'Redeeming...' : `Redeem (${selectedCount})`}
+      {isLoading ? 'REDEEMING...' : `REDEEM (${selectedCount})`}
     </button>
   );
 };

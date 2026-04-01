@@ -80,16 +80,20 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
     const subjectIds   = triples.map(t => toHex(t.subjectId,   { size: 32 }) as Hex);
     const predicateIds = triples.map(t => toHex(t.predicateId, { size: 32 }) as Hex);
     const objectIds    = triples.map(t => toHex(t.objectId,    { size: 32 }) as Hex);
-    const assets       = triples.map(() => tripleVaultDeposit);
 
-    // SDK sends value = getTripleCost() (1x). For N > 1 triples, pass extra
-    // depositAmount so that total value = N * tripleVaultDeposit.
-    const extraDeposit = tripleVaultDeposit * BigInt(triples.length - 1);
+    // Add 0.01 ETH on top of the minimum vault deposit to include an initial stake
+    const depositPerTriple = tripleVaultDeposit + 10000000000000000n;
+    const assets = triples.map(() => depositPerTriple);
+
+    // SDK sends tripleVaultDeposit by default (1x minimum).
+    // Total ETH needed = N * depositPerTriple
+    // Extra to pass = N * depositPerTriple - tripleVaultDeposit
+    const totalExtraDeposit = depositPerTriple * BigInt(triples.length) - tripleVaultDeposit;
 
     const result = await batchCreateTripleStatements(
       writeConfig,
       [subjectIds, predicateIds, objectIds, assets] as any,
-      extraDeposit > 0n ? (extraDeposit as any) : undefined,
+      totalExtraDeposit > 0n ? (totalExtraDeposit as any) : undefined,
     );
 
     return { hash: result.transactionHash, state: result.state };

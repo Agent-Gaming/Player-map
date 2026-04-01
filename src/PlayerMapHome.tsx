@@ -8,7 +8,7 @@ import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
 import { usePlayerAliases } from "./hooks/usePlayerAliases";
 import { fetchAccountConsent } from './api/fetchPlayerAliases';
 import { useRegisterPlayer } from "./hooks/useRegisterPlayer";
-import { useBatchCreateTriple } from "./hooks/useBatchCreateTriple";
+import { useBatchCreateTriple, TripleToCreate } from "./hooks/useBatchCreateTriple";
 import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "./shared/components/NetworkSwitchMessage";
 import PlayerCreationProgress from "./PlayerCreationProgress";
@@ -123,7 +123,9 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         // Already registered for this game → skip form, go to Phase 2 check
         const primary = aliases.find(a => a.isPrimary);
         if (primary) {
-          setPseudo(primary.pseudo);
+          let primaryPseudo = primary.pseudo;
+          try { primaryPseudo = JSON.parse(primaryPseudo).name || primaryPseudo; } catch { /* use raw */ }
+          setPseudo(primaryPseudo);
           setPseudoAtomId(primary.atomId);
           setAliasTripleId(primary.tripleId);
           setAccountAtomId(playerAtomId);
@@ -172,6 +174,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     const isId = constants.COMMON_IDS.IS;
     const isPlayerOfId = constants.COMMON_IDS.IS_PLAYER_OF;
     const inId = constants.COMMON_IDS.IN;
+    const isMemberOfId = constants.COMMON_IDS.IS_MEMBER_OF;
 
     // Check Item B: [accountAtomId] → IS → [fairplayAtomId]
     const fairplayExists = await checkTripleExists(
@@ -197,10 +200,17 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       );
     }
 
-    // Build existing items (Phase 1 always created these)
     const guildName = selectedGuild
       ? constants.OFFICIAL_GUILDS.find(g => g.id === selectedGuild)?.name ?? selectedGuild
       : null;
+
+    // Check guild membership on-chain — may not exist if reusing an existing alias
+    let guildExists = false;
+    if (selectedGuild && isMemberOfId && !isMemberOfId.startsWith('<')) {
+      guildExists = await checkTripleExists(
+        BigInt(aliasTripleId), BigInt(isMemberOfId), BigInt(selectedGuild)
+      );
+    }
 
     const phase1Items: InitItem[] = [
       {
@@ -208,7 +218,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         label: `Atom: "${pseudo}"`,
         description: 'Username atom',
         status: 'existing',
-        image: aliases?.find(a => a.pseudo === pseudo)?.image,
+        image: aliases?.find(a => a.atomId === pseudoAtomId)?.image,
       },
       {
         id: 'account-atom', type: 'atom',
@@ -221,7 +231,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         label: `Account has alias ${pseudo}`,
         description: `[Account] — [has alias] — [${pseudo}]`,
         status: 'existing',
-        image: aliases?.find(a => a.pseudo === pseudo)?.image,
+        image: aliases?.find(a => a.atomId === pseudoAtomId)?.image,
       },
     ];
     if (guildName) {
@@ -229,12 +239,12 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         id: 'guild-nested', type: 'nested-triple',
         label: `(has alias) is member of ${guildName}`,
         description: `Nested: (alias triple) — [is member of] — [${guildName}]`,
-        status: 'existing',
+        status: guildExists ? 'existing' : 'to-create',
       });
     }
 
-    const existing: InitItem[] = [...phase1Items];
-    const toCreate: InitItem[] = [];
+    const existing: InitItem[] = [...phase1Items].filter(i => i.status === 'existing');
+    const toCreate: InitItem[] = [...phase1Items].filter(i => i.status === 'to-create');
 
     // Item B
     if (fairplayExists && knownFairplayTripleId) {
@@ -409,67 +419,65 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     const isId = constants.COMMON_IDS.IS;
     const isPlayerOfId = constants.COMMON_IDS.IS_PLAYER_OF;
     const inId = constants.COMMON_IDS.IN;
+    const isMemberOfId = constants.COMMON_IDS.IS_MEMBER_OF;
 
-    let currentFairplayTripleId = fairplayTripleId;
-    let idx = 0;
+    try {
+      // computeTripleId is deterministic (pure SDK calculation — no RPC call)
+      // so we can resolve fairplayTripleId upfront and include context-nested in the same batch
+      const computedFairplayId = await computeTripleId(
+        BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId)
+      );
+      const resolvedFairplayTripleId = `0x${computedFairplayId.toString(16)}`;
 
-    const tryCreate = async (id: string): Promise<boolean> => {
-      const item = toCreateItems.find(i => i.id === id && i.status === 'to-create');
-      if (!item) return true; // already exists or not to create
+      // Build the batch from all to-create items
+      const triplesToCreate: TripleToCreate[] = [];
+      const batchedIds: string[] = [];
 
-      setCurrentInitIndex(idx++);
-      setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'creating' } : i));
-
-      try {
-        if (id === 'fairplay') {
-          await batchCreateTriple([{
-            subjectId: BigInt(accountAtomId),
-            predicateId: BigInt(isId),
-            objectId: BigInt(fairplayAtomId),
-          }]);
-          const newId = await computeTripleId(BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId));
-          currentFairplayTripleId = `0x${newId.toString(16)}`;
-          setFairplayTripleId(currentFairplayTripleId);
-          setToCreateItems(prev => prev.map(i =>
-            i.id === id ? { ...i, status: 'created', resultTripleId: currentFairplayTripleId ?? undefined } : i
-          ));
-        } else if (id === 'game-nested') {
-          await batchCreateTriple([{
-            subjectId: BigInt(aliasTripleId),
-            predicateId: BigInt(isPlayerOfId),
-            objectId: BigInt(gamesId),
-          }]);
-          setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'created' } : i));
-        } else if (id === 'context-nested') {
-          if (!currentFairplayTripleId) throw new Error('Fairplay triple ID not available for nested context');
-          await batchCreateTriple([{
-            subjectId: BigInt(currentFairplayTripleId),
-            predicateId: BigInt(inId),
-            objectId: BigInt(gamesId),
-          }]);
-          setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'created' } : i));
+      for (const item of pending) {
+        if (item.id === 'fairplay') {
+          triplesToCreate.push({ subjectId: BigInt(accountAtomId), predicateId: BigInt(isId), objectId: BigInt(fairplayAtomId) });
+          batchedIds.push(item.id);
+        } else if (item.id === 'game-nested') {
+          triplesToCreate.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isPlayerOfId), objectId: BigInt(gamesId) });
+          batchedIds.push(item.id);
+        } else if (item.id === 'context-nested') {
+          triplesToCreate.push({ subjectId: BigInt(resolvedFairplayTripleId), predicateId: BigInt(inId), objectId: BigInt(gamesId) });
+          batchedIds.push(item.id);
+        } else if (item.id === 'guild-nested' && selectedGuild && isMemberOfId && !isMemberOfId.startsWith('<')) {
+          triplesToCreate.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isMemberOfId), objectId: BigInt(selectedGuild) });
+          batchedIds.push(item.id);
         }
-        return true;
-      } catch (err) {
-        setToCreateItems(prev => prev.map(i => i.id === id ? { ...i, status: 'error' } : i));
-        setInitError(err instanceof Error ? err.message : String(err));
-        return false;
       }
-    };
 
-    // Ordered: B first (fairplay), then A (game-nested), then C (context-nested)
-    const success1 = await tryCreate('fairplay');
-    if (!success1) { setIsInitializing(false); setRegistrationPhase('ready-to-initialize'); return; }
+      if (triplesToCreate.length === 0) {
+        setIsInitializing(false);
+        setRegistrationPhase('complete');
+        return;
+      }
 
-    const success2 = await tryCreate('game-nested');
-    if (!success2) { setIsInitializing(false); setRegistrationPhase('ready-to-initialize'); return; }
+      // Mark all as creating
+      setToCreateItems(prev => prev.map(i => batchedIds.includes(i.id) ? { ...i, status: 'creating' } : i));
 
-    const success3 = await tryCreate('context-nested');
-    if (!success3) { setIsInitializing(false); setRegistrationPhase('ready-to-initialize'); return; }
+      // Single transaction — one wallet confirmation for all triples
+      await batchCreateTriple(triplesToCreate);
 
-    setIsInitializing(false);
-    setRegistrationPhase('complete');
-  }, [accountAtomId, aliasTripleId, fairplayTripleId, toCreateItems, constants,
+      // Mark all as created
+      setFairplayTripleId(resolvedFairplayTripleId);
+      setToCreateItems(prev => prev.map(i =>
+        batchedIds.includes(i.id)
+          ? { ...i, status: 'created', ...(i.id === 'fairplay' ? { resultTripleId: resolvedFairplayTripleId } : {}) }
+          : i
+      ));
+
+      setIsInitializing(false);
+      setRegistrationPhase('complete');
+    } catch (err) {
+      setToCreateItems(prev => prev.map(i => i.status === 'creating' ? { ...i, status: 'error' } : i));
+      setInitError(err instanceof Error ? err.message : String(err));
+      setIsInitializing(false);
+      setRegistrationPhase('ready-to-initialize');
+    }
+  }, [accountAtomId, aliasTripleId, toCreateItems, selectedGuild, constants,
       batchCreateTriple, computeTripleId]);
 
   const isValidateDisabled =
@@ -633,7 +641,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 {guilds.length > 0 && (
                   <div className={styles.formRow}>
                     <div className={styles.formRowLabel}>
-                      <span>Are you a member of a guild in <span>{(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'}</span>?</span>
+                      <span>Are you a member of a guild in <span className={styles.gameNameHighlight}>{(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'}</span>?</span>
                     </div>
                     <div className={styles.formRowControl}>
                       <select

@@ -48,9 +48,11 @@ export const useSidebarData = (
   const atomDetails = useMemo(() => {
     if (!playerAtomId) return null;
     const primary = aliases.find(a => a.isPrimary) ?? aliases[0] ?? null;
+    let pseudoLabel = primary?.pseudo ?? '';
+    try { pseudoLabel = JSON.parse(pseudoLabel).name || pseudoLabel; } catch { /* use raw */ }
     return {
       term_id: playerAtomId,
-      label: primary?.pseudo ?? '',
+      label: pseudoLabel,
       image: primary?.image ?? '',
     };
   }, [playerAtomId, aliases]);
@@ -102,7 +104,13 @@ export const useSidebarData = (
     return positions
       .filter(p => {
         const triple = p.term?.triple;
-        return triple && relevantPredicates.has(triple.predicate_id);
+        if (!triple || !relevantPredicates.has(triple.predicate_id)) return false;
+        // For IS predicate, only include triples where the user's account atom is the subject
+        // (own quality attestations), not triples from voting on other players' qualities
+        if (triple.predicate_id === COMMON_IDS.IS && playerAtomId) {
+          return triple.subject_id === playerAtomId;
+        }
+        return true;
       })
       .filter(p => {
         const termId = p.term.triple.term_id;
@@ -137,7 +145,7 @@ export const useSidebarData = (
         };
       })
       .filter(a => a.object != null);
-  }, [positions, COMMON_IDS, qualityBySubjectId]);
+  }, [positions, COMMON_IDS, qualityBySubjectId, playerAtomId]);
 
   const { data: triplesData } = useQuery({
     queryKey: ['triplesForAgent', walletAddress, network],

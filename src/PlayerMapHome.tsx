@@ -94,6 +94,12 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
           publicClient,
           guildId: selectedGuild,
           existingAccountAtomId: accountAtomId,
+          existingPseudoAtomId: useExistingAlias
+            ? aliases.find(a => a.atomId === selectedExistingAlias)?.atomId
+            : undefined,
+          existingAliasTripleId: useExistingAlias
+            ? aliases.find(a => a.atomId === selectedExistingAlias)?.tripleId
+            : undefined,
           consentAlreadyAccepted,
           chainId: publicClient?.chain?.id,
         }
@@ -370,7 +376,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (!constants) return;
 
     if (useExistingAlias && selectedExistingAlias) {
-      // Existing alias: find by atomId, extract display name, skip Phase 1
+      // Existing alias: find by atomId, extract display name, skip pseudo/alias/guild creation
+      // but still run the consent flow (sign + consent atom + accepted triple) if not already accepted
       const selectedAlias = aliases.find(a => a.atomId === selectedExistingAlias);
       if (!selectedAlias) return;
       let label = selectedAlias.pseudo;
@@ -379,7 +386,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       setPseudoAtomId(selectedAlias.atomId);
       setAliasTripleId(selectedAlias.tripleId);
       // accountAtomId already set in useEffect (= playerAtomId)
-      setRegistrationPhase('loading-existing');
+      setRegistrationPhase('creating-identity');
+      register(label); // useRegisterPlayer skips pseudo/account/alias/guild, runs consent if needed
       return;
     }
 

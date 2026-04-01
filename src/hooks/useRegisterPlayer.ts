@@ -17,8 +17,10 @@ interface UseRegisterPlayerProps {
   constants: DefaultPlayerMapConstants;
   publicClient?: any;
   network?: Network;
-  guildId?: string;              // hex ID of selected guild atom; if set, creates nested guild triple in step 4
+  guildId?: string;               // hex ID of selected guild atom; if set, creates nested guild triple in step 4
   existingAccountAtomId?: string; // if already known (returning user), skip fetch/create entirely
+  existingPseudoAtomId?: string;  // if set, skip pseudo atom creation (reusing existing alias)
+  existingAliasTripleId?: string; // if set, skip alias triple + guild triple creation (handled in Phase 2)
   consentAlreadyAccepted?: boolean  // if true, skip signing-consent, creating-consent-atom, creating-accepted-triple
   chainId?: number                   // for the EIP-712 domain
 }
@@ -45,6 +47,8 @@ export const useRegisterPlayer = ({
   network,
   guildId,
   existingAccountAtomId,
+  existingPseudoAtomId,
+  existingAliasTripleId,
   consentAlreadyAccepted,
   chainId,
 }: UseRegisterPlayerProps) => {
@@ -130,8 +134,8 @@ export const useRegisterPlayer = ({
         setState(s => ({ ...s, consentAtomId }));
       }
 
-      // Step 1 — pseudo atom (skip if already created on a previous attempt)
-      let pseudoAtomId = state.pseudoAtomId;
+      // Step 1 — pseudo atom (skip if already created on a previous attempt, or if an existing atom is provided)
+      let pseudoAtomId = state.pseudoAtomId ?? existingPseudoAtomId;
       if (!pseudoAtomId) {
         setState(s => ({ ...s, step: 'creating-pseudo-atom' }));
         if (imageFile) {
@@ -197,21 +201,25 @@ export const useRegisterPlayer = ({
       }
 
       // Step 3 — [accountAtom] [has alias] [pseudoAtom] triple
-      setState(s => ({ ...s, step: 'creating-alias-triple' }));
-      await batchCreateTriple([{
-        subjectId: BigInt(accountAtomId),
-        predicateId: BigInt(predicateId),
-        objectId: BigInt(pseudoAtomId),
-      }]);
+      // Skip if an existing alias triple is provided (reusing alias — triple already on-chain)
+      let aliasTripleIdStr = existingAliasTripleId ?? state.aliasTripleId;
+      if (!aliasTripleIdStr) {
+        setState(s => ({ ...s, step: 'creating-alias-triple' }));
+        await batchCreateTriple([{
+          subjectId: BigInt(accountAtomId),
+          predicateId: BigInt(predicateId),
+          objectId: BigInt(pseudoAtomId),
+        }]);
 
-      // Compute the alias triple vault ID (pure contract read — no gas)
-      const aliasTripleVaultId = await computeTripleId(
-        BigInt(accountAtomId),
-        BigInt(predicateId),
-        BigInt(pseudoAtomId),
-      );
-      const aliasTripleIdStr = `0x${aliasTripleVaultId.toString(16)}`;
-      setState(s => ({ ...s, aliasTripleId: aliasTripleIdStr }));
+        // Compute the alias triple vault ID (pure contract read — no gas)
+        const aliasTripleVaultId = await computeTripleId(
+          BigInt(accountAtomId),
+          BigInt(predicateId),
+          BigInt(pseudoAtomId),
+        );
+        aliasTripleIdStr = `0x${aliasTripleVaultId.toString(16)}`;
+        setState(s => ({ ...s, aliasTripleId: aliasTripleIdStr }));
+      }
 
       // Step — [Account] — [accepted] — [Consent Atom] (skip if consent already accepted)
       if (!consentAlreadyAccepted && consentAtomId) {
@@ -237,14 +245,15 @@ export const useRegisterPlayer = ({
       }
 
       // Step 4 — nested guild triple: [aliasTriple] [IS_MEMBER_OF] [guild] (optional)
-      if (guildId && guildId.trim()) {
+      // Skip if existingAliasTripleId is set — guild membership is handled in Phase 2
+      if (!existingAliasTripleId && guildId && guildId.trim()) {
         const isMemberOfId = constants.COMMON_IDS.IS_MEMBER_OF;
         if (!isMemberOfId || isMemberOfId.startsWith('<')) {
           throw new Error('IS_MEMBER_OF predicate ID is not configured');
         }
         setState(s => ({ ...s, step: 'creating-guild-membership' }));
         await batchCreateTriple([{
-          subjectId: aliasTripleVaultId,
+          subjectId: BigInt(aliasTripleIdStr),
           predicateId: BigInt(isMemberOfId),
           objectId: BigInt(guildId),
         }]);
@@ -275,8 +284,8 @@ export const useRegisterPlayer = ({
     step: state.step,
     isRegistering: !TERMINAL.includes(state.step),
     error: state.error,
-    pseudoAtomId: state.pseudoAtomId,
+    pseudoAtomId: state.pseudoAtomId ?? existingPseudoAtomId,
     accountAtomId: state.accountAtomId,
-    aliasTripleId: state.aliasTripleId,
+    aliasTripleId: state.aliasTripleId ?? existingAliasTripleId,
   };
 };

@@ -197,11 +197,18 @@ export const useDepositTriple = ({
         success: true,
         hash: typeof txHash === "string" ? txHash : txHash.hash,
       };
-    } catch (error) {
+    } catch (error: any) {
       setIsLoading(false);
+      console.error('[useDepositTriple] Deposit error:', error);
+
+      const isRejected =
+        error?.name === 'UserRejectedRequestError' ||
+        (error?.message ?? '').toLowerCase().includes('user rejected') ||
+        (error?.shortMessage ?? '').toLowerCase().includes('user rejected');
+
       return {
         success: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: isRejected ? 'User rejected the request.' : (error?.shortMessage ?? error?.message ?? String(error)),
       };
     }
   };

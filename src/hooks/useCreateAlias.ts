@@ -67,11 +67,18 @@ export const useCreateAlias = ({
       setState({ step: 'success', pseudoAtomId });
       // Invalidate both alias queries so the list refreshes
       await queryClient.invalidateQueries({ queryKey: ['playerAliases'] });
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[useCreateAlias] Error creating alias:', err);
+
+      const isRejected =
+        err?.name === 'UserRejectedRequestError' ||
+        (err?.message ?? '').toLowerCase().includes('user rejected') ||
+        (err?.shortMessage ?? '').toLowerCase().includes('user rejected');
+
       setState(s => ({
         ...s,
         step: 'error',
-        error: err instanceof Error ? err.message : String(err),
+        error: isRejected ? 'User rejected the request.' : (err?.shortMessage ?? err?.message ?? String(err)),
       }));
     }
   };

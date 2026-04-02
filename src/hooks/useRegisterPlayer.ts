@@ -262,11 +262,18 @@ export const useRegisterPlayer = ({
       setState(s => ({ ...s, step: 'success' }));
       // Invalidate alias query so the read hooks refresh after registration
       await queryClient.invalidateQueries({ queryKey: ['aliasesByPosition'] });
-    } catch (err) {
+    } catch (err: any) {
+      console.error('[useRegisterPlayer] Registration error:', err);
+
+      const isRejected =
+        err?.name === 'UserRejectedRequestError' ||
+        (err?.message ?? '').toLowerCase().includes('user rejected') ||
+        (err?.shortMessage ?? '').toLowerCase().includes('user rejected');
+
       setState(s => ({
         ...s,
         step: 'error',
-        error: err instanceof Error ? err.message : String(err),
+        error: isRejected ? 'User rejected the request.' : (err?.shortMessage ?? err?.message ?? String(err)),
       }));
     }
   };

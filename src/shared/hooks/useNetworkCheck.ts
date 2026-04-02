@@ -79,6 +79,7 @@ export const useNetworkCheck = ({ walletConnected, publicClient }: UseNetworkChe
     isCorrectNetwork: currentChainId !== null && allowedChainIds.includes(currentChainId),
     currentChainId,
     targetChainId,
-    allowedChainIds
+    allowedChainIds,
+    switchNetwork
   };
 };

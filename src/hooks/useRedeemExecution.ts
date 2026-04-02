@@ -47,9 +47,15 @@ export const useRedeemExecution = ({ walletConnected, walletAddress }: UseRedeem
       });
 
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error redeeming selected positions:', error);
-      return { success: false, error };
+
+      const isRejected =
+        error?.name === 'UserRejectedRequestError' ||
+        (error?.message ?? '').toLowerCase().includes('user rejected') ||
+        (error?.shortMessage ?? '').toLowerCase().includes('user rejected');
+
+      return { success: false, error: isRejected ? 'User rejected the request.' : (error?.shortMessage ?? error?.message ?? String(error)) };
     }
   };
 

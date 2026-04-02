@@ -8,8 +8,7 @@ export const fetchPositions = async (
   accountId: string,
   network: Network = Network.MAINNET
 ) => {
-  const cacheKey = `positions_${accountId}_${network}`;
-
+  const cacheKey = `positions_${accountId}_${network}`; 
   return apiCache.withCache(
     cacheKey,
     { accountId, network },
@@ -32,7 +31,7 @@ export const fetchPositions = async (
           
           // Une seule requête avec toutes les relations imbriquées
           const query = `query GetActivePositions($accountId: String!, $limit: Int!, $offset: Int!) {
-            positions(where: { account_id: { _eq: $accountId }, shares: { _gt: 0 } }, limit: $limit, offset: $offset) {
+            positions(where: { account_id: { _ilike: $accountId }, shares: { _gt: 0 } }, limit: $limit, offset: $offset) {
               id
               shares
               curve_id

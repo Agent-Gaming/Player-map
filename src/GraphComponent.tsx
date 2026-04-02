@@ -55,6 +55,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
 
   // ── Wallet ────────────────────────────────────────────────────────────────────
   const [isWalletReady, setIsWalletReady] = useState(false);
+  const [justRegistered, setJustRegistered] = useState(false);
 
   useEffect(() => {
     setIsWalletReady(Boolean(walletAddress && walletAddress !== ""));
@@ -67,10 +68,21 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // Detect "is player of Bossfighters" via a nested triple in active positions
   // (the subject of this triple is the alias triple, not an atom — creator_id is not accessible)
   const hasConfirmedPlayer = useMemo(
-    () => activePositions.some((p: any) =>
-      p.term?.triple?.predicate_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
-      p.term?.triple?.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
-    ),
+    () => {
+      const match = activePositions.some((p: any) =>
+        p.term?.triple?.predicate_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
+        p.term?.triple?.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
+      );
+      console.log('[PlayerMap] hasConfirmedPlayer:', match);
+      console.log('[PlayerMap] activePositions count:', activePositions.length);
+      console.log('[PlayerMap] PLAYER_GAME predicateId:', constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId);
+      console.log('[PlayerMap] PLAYER_GAME objectId:', constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId);
+      console.log('[PlayerMap] positions with triples:', activePositions
+        .filter((p: any) => p.term?.triple)
+        .map((p: any) => ({ predicate_id: p.term.triple.predicate_id, object_id: p.term.triple.object_id }))
+      );
+      return match;
+    },
     [activePositions, constants],
   );
 
@@ -101,8 +113,9 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
 
   // Étend isLoading pour attendre le sidebar si le player est confirmé (évite flash du form)
   const isProfileLoading = hasConfirmedPlayer && sidebarLoading;
-  // Accès complet au map : triple "is player of" + alias existant
-  const canAccessMap = hasConfirmedPlayer && !!myAtomDetails;
+  // Accès complet au map : triple "is player of" + alias existant, ou juste après inscription
+  const canAccessMap = justRegistered || (hasConfirmedPlayer && !!myAtomDetails);
+  console.log('[PlayerMap] canAccessMap:', canAccessMap, '| myAtomDetails:', !!myAtomDetails, '| sidebarLoading:', sidebarLoading);
 
   // ── Données atom sélectionné ──────────────────────────────────────────────────
   const { atomDetails: selectedAtomDetails, loading: selectedLoading, error: selectedError } =
@@ -146,6 +159,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     queryClient.invalidateQueries({ queryKey: ['positions'] });
     queryClient.invalidateQueries({ queryKey: ['aliasesByPosition'] });
     queryClient.invalidateQueries({ queryKey: ['triplesForAgent'] });
+    setJustRegistered(true);
   }, [queryClient]);
 
   // ── Erreur ────────────────────────────────────────────────────────────────────

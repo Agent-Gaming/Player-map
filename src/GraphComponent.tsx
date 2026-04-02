@@ -145,6 +145,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     queryClient.invalidateQueries({ queryKey: ['triplesByCreator'] });
     queryClient.invalidateQueries({ queryKey: ['positions'] });
     queryClient.invalidateQueries({ queryKey: ['aliasesByPosition'] });
+    queryClient.invalidateQueries({ queryKey: ['triplesForAgent'] });
   }, [queryClient]);
 
   // ── Erreur ────────────────────────────────────────────────────────────────────

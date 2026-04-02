@@ -86,13 +86,13 @@ const IDENTITY_STEPS: IdentityCreationStep[] = [
 ];
 
 const statusLabel: Partial<Record<IdentityCreationStep, string>> = {
-  'signing-consent':           'Signature des conditions (sans frais)...',
-  'creating-consent-atom':     'Enregistrement de la preuve légale...',
+  'signing-consent':           'Signing terms and conditions (no fees)...',
+  'creating-consent-atom':     'Recording legal proof...',
   'creating-pseudo-atom':      'Creating username atom...',
   'fetching-account-atom':     'Checking account...',
   'creating-account-atom':     'Creating account atom...',
   'creating-alias-triple':     'Creating alias link...',
-  'creating-accepted-triple':  'Liaison du consentement...',
+  'creating-accepted-triple':  'Linking consent...',
   'creating-guild-membership': 'Creating guild membership...',
 };
 

@@ -113,7 +113,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     constants: constants ?? ({} as any),
   });
 
-  const { isCorrectNetwork, currentChainId, targetChainId } = useNetworkCheck({
+  const { isCorrectNetwork, currentChainId, targetChainId, switchNetwork } = useNetworkCheck({
     walletConnected,
     publicClient: wagmiConfig?.publicClient,
   });
@@ -529,7 +529,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
             <p>
               [<span className={styles.highlight}>Subject</span>] ⇒ [
               <span className={styles.highlight}>Predicate</span>] ⇒ [
-              <span className={styles.highlight}>Object</span>] (For example, a triple could be : [SciFi] [is] [strong Boss])
+              <span className={styles.highlight}>Object</span>] (For example, a triple could be : [player42] ⇒ [is] ⇒ [fairplay])
             </p>
             <p>This keeps our attestations tidy !</p>
           </div>
@@ -561,6 +561,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
               <NetworkSwitchMessage
                 currentChainId={currentChainId}
                 targetChainId={targetChainId}
+                onSwitchNetwork={switchNetwork}
               />
             ) : registrationPhase === 'input' ? (
               /* ── Input Form ─────────────────────────────────────────────────── */
@@ -576,25 +577,19 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                   <div className={styles.formRowControl}>
                     {hasExistingAliases ? (
                       <>
-                        <div className={styles.radioGroup}>
-                          <label className={styles.radioLabel}>
-                            <input
-                              type="radio"
-                              name="aliasMode"
-                              checked={useExistingAlias}
-                              onChange={() => setUseExistingAlias(true)}
-                            />
+                        <div className={styles.aliasModeButtons}>
+                          <button
+                            className={`${styles.aliasModeBtn} ${useExistingAlias ? styles.aliasModeActive : styles.aliasModeInactive}`}
+                            onClick={() => setUseExistingAlias(true)}
+                          >
                             Use an existing username
-                          </label>
-                          <label className={styles.radioLabel}>
-                            <input
-                              type="radio"
-                              name="aliasMode"
-                              checked={!useExistingAlias}
-                              onChange={() => setUseExistingAlias(false)}
-                            />
+                          </button>
+                          <button
+                            className={`${styles.aliasModeBtn} ${!useExistingAlias ? styles.aliasModeActive : styles.aliasModeInactive}`}
+                            onClick={() => setUseExistingAlias(false)}
+                          >
                             Create a new username
-                          </label>
+                          </button>
                         </div>
                         {useExistingAlias ? (
                           <>
@@ -649,7 +644,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 {guilds.length > 0 && (
                   <div className={styles.formRow}>
                     <div className={styles.formRowLabel}>
-                      <span>Are you a member of a guild in <span className={styles.gameNameHighlight}>{(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'}</span>?</span>
+                      <span>Are you a member of a guild in <span className={styles.gameNameHighlight}>{(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'} </span> ?</span>
                     </div>
                     <div className={styles.formRowControl}>
                       <select

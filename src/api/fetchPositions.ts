@@ -8,12 +8,11 @@ export const fetchPositions = async (
   accountId: string,
   network: Network = Network.MAINNET
 ) => {
-  const normalizedAccountId = accountId.toLowerCase();
-  const cacheKey = `positions_${normalizedAccountId}_${network}`;
-  
+  const cacheKey = `positions_${accountId}_${network}`;
+
   return apiCache.withCache(
     cacheKey,
-    { accountId: normalizedAccountId, network },
+    { accountId, network },
     async () => {
       try {
         const apiUrl = API_URLS[network];
@@ -111,7 +110,7 @@ export const fetchPositions = async (
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               query,
-              variables: { accountId: normalizedAccountId, limit: batchSize, offset }
+              variables: { accountId, limit: batchSize, offset }
             })
           });
 

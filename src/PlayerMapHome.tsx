@@ -582,13 +582,13 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                             className={`${styles.aliasModeBtn} ${useExistingAlias ? styles.aliasModeActive : styles.aliasModeInactive}`}
                             onClick={() => setUseExistingAlias(true)}
                           >
-                            Use an existing username
+                            Existing username
                           </button>
                           <button
                             className={`${styles.aliasModeBtn} ${!useExistingAlias ? styles.aliasModeActive : styles.aliasModeInactive}`}
                             onClick={() => setUseExistingAlias(false)}
                           >
-                            Create a new username
+                            Create username
                           </button>
                         </div>
                         {useExistingAlias ? (
@@ -610,7 +610,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                                 try { label = JSON.parse(a.pseudo).name || a.pseudo; } catch { /* use raw */ }
                                 return (
                                   <option key={a.atomId} value={a.atomId}>
-                                    {label}{a.isPrimary ? " ★" : ""}
+                                    {label}{a.isPrimary ? "" : ""}
                                   </option>
                                 );
                               })}

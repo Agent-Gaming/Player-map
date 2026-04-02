@@ -412,10 +412,10 @@
   display: flex;
   gap: 8px;
   margin-bottom: 12px;
+  align-self: flex-start;
 }
 
 .aliasModeBtn {
-  flex: 1;
   padding: 10px 16px;
   border: 1px solid #444;
   border-radius: 4px;
@@ -425,6 +425,11 @@
   transition: all 0.2s;
   background-color: #1e1e30;
   color: #888;
+  outline: none;
+}
+
+.aliasModeBtn:focus {
+  outline: none;
 }
 
 .aliasModeActive {
@@ -435,9 +440,9 @@
 }
 
 .aliasModeInactive {
-  background-color: #2a2a3e;
-  color: #666;
-  border-color: #444;
+  background-color: #2a2710;
+  color: #7a7050;
+  border-color: #3a3620;
 }
 
 .aliasModeInactive:hover {
@@ -488,5 +493,5 @@
 }
 
 .consentLink:hover {
-  color: #c5c5c5;
+  color: #000000;
 }

@@ -13,6 +13,7 @@ import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "./shared/components/NetworkSwitchMessage";
 import PlayerCreationProgress from "./PlayerCreationProgress";
 import { RegistrationPhase, InitItem } from "./types/alias";
+import { useAtomLabel } from "./hooks/useAtomLabel";
 
 interface PlayerMapHomeProps {
   walletConnected?: any;
@@ -120,6 +121,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
   const guilds = constants?.OFFICIAL_GUILDS ?? [];
   const hasExistingAliases = !aliasesLoading && aliases && aliases.length > 0;
+  const gameName = useAtomLabel(constants?.COMMON_IDS?.GAMES_ID);
 
   // ─── Auto-transition: returning user already has account atom ────────────────
   useEffect(() => {
@@ -277,15 +279,15 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (gameExists) {
       existing.push({
         id: 'game-nested', type: 'nested-triple',
-        label: '(has alias) is player of Bossfighter',
-        description: 'Nested: (alias triple) — [is player of] — [Bossfighter]',
+        label: `(has alias) is player of ${gameName}`,
+        description: `Nested: (alias triple) — [is player of] — [${gameName}]`,
         status: 'existing',
       });
     } else {
       toCreate.push({
         id: 'game-nested', type: 'nested-triple',
-        label: '(has alias) is player of Bossfighter',
-        description: 'Nested: (alias triple) — [is player of] — [Bossfighter]',
+        label: `(has alias) is player of ${gameName}`,
+        description: `Nested: (alias triple) — [is player of] — [${gameName}]`,
         status: 'to-create',
         subjectId: aliasTripleId,
         predicateId: isPlayerOfId,
@@ -297,15 +299,15 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (contextExists && knownFairplayTripleId) {
       existing.push({
         id: 'context-nested', type: 'nested-triple',
-        label: '(is fairplay) in Bossfighter',
-        description: 'Nested: (fairplay triple) — [in] — [Bossfighter]',
+        label: `(is fairplay) in ${gameName}`,
+        description: `Nested: (fairplay triple) — [in] — [${gameName}]`,
         status: 'existing',
       });
     } else {
       toCreate.push({
         id: 'context-nested', type: 'nested-triple',
-        label: '(is fairplay) in Bossfighter',
-        description: 'Nested: (fairplay triple) — [in] — [Bossfighter]',
+        label: `(is fairplay) in ${gameName}`,
+        description: `Nested: (fairplay triple) — [in] — [${gameName}]`,
         status: 'to-create',
         // Note: no subjectId — depends on fairplayTripleId resolved at creation time
       });
@@ -596,7 +598,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                             <p className={styles.selectHint}>
                               Your account already has a username for at least one game in the Player Map. Do you want to use one of them to confirm you are a player of{' '}
                               <span className={styles.gameNameHighlight}>
-                                {(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'}
+                                {gameName}
                               </span>?
                             </p>
                             <select
@@ -644,7 +646,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 {guilds.length > 0 && (
                   <div className={styles.formRow}>
                     <div className={styles.formRowLabel}>
-                      <span>Are you a member of a guild in <span className={styles.gameNameHighlight}>{(constants?.PLAYER_TRIPLE_TYPES?.PLAYER_GAME?.label ?? '').replace(/^is player of\s*/i, '') || 'this game'} </span> ?</span>
+                      <span>Are you a member of a guild in <span className={styles.gameNameHighlight}>{gameName} </span> ?</span>
                     </div>
                     <div className={styles.formRowControl}>
                       <select
@@ -766,7 +768,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 </button>
                 <PlayerCreationProgress
                   walletAddress={walletAddress}
-                  constants={constants!}
+                  gameName={gameName}
                   registrationPhase={registrationPhase}
                   pseudoInput={pseudoInput}
                   onPseudoInputChange={setPseudoInput}

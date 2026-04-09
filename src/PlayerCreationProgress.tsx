@@ -1,12 +1,11 @@
 import React from "react";
-import { DefaultPlayerMapConstants } from './types/PlayerMapConfig';
 import { PlayerAlias, RegistrationPhase, IdentityCreationStep, InitItem } from './types/alias';
 import styles from './PlayerCreationProgress.module.css';
 
 
 interface PlayerCreationProgressProps {
   walletAddress?: string;
-  constants: DefaultPlayerMapConstants;
+  gameName?: string;
 
   // Phase state machine
   registrationPhase: RegistrationPhase;
@@ -50,7 +49,8 @@ const profil: ChunkAtom = { kind: 'atom', circle: true, label: 'Profil_ID' }
 const pred  = (label: string): ChunkPredicate => ({ kind: 'predicate', label })
 const atom  = (label: string, image?: string): ChunkAtom      => ({ kind: 'atom', circle: false, label, image })
 
-function getItemChunks(item: InitItem, pseudo: string, guildName?: string): Chunk[] {
+function getItemChunks(item: InitItem, pseudo: string, guildName?: string, gameName?: string): Chunk[] {
+  const game = gameName || 'this game';
   switch (item.id) {
     case 'pseudo-atom':
       return [atom(pseudo || item.label, item.image)]
@@ -63,9 +63,9 @@ function getItemChunks(item: InitItem, pseudo: string, guildName?: string): Chun
     case 'fairplay':
       return [profil, pred('is'), atom('Fairplay')]
     case 'game-nested':
-      return [profil, pred('has alias'), atom(pseudo, item.image), pred('is player of'), atom('Bossfighter')]
+      return [profil, pred('has alias'), atom(pseudo, item.image), pred('is player of'), atom(game)]
     case 'context-nested':
-      return [profil, pred('is'), atom('Fairplay'), pred('in'), atom('Bossfighter')]
+      return [profil, pred('is'), atom('Fairplay'), pred('in'), atom(game)]
     default:
       return [atom(item.label, item.image)]
   }
@@ -191,7 +191,9 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
   currentInitIndex,
   initError,
   consentAlreadyAccepted,
+  gameName = 'this game',
 }) => {
+
   if (!walletAddress) {
     return (
       <p className={styles.errorText}>Please connect your wallet first</p>
@@ -265,7 +267,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
               {existingItems.map(item => (
                 <div key={item.id} className={styles.initItem}>
                   <div className={styles.tripleRow}>
-                    {getItemChunks(item, pseudo, guildName).map((chunk, i) =>
+                    {getItemChunks(item, pseudo, guildName, gameName).map((chunk, i) =>
                       chunk.kind === 'atom' ? (
                         <span key={i} className={styles.atomChip}>
                           {chunk.image
@@ -315,7 +317,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
                       {isDone ? '✓' : isActive ? '⟳' : '○'}
                     </span>
                     <div className={styles.tripleRow}>
-                      {getItemChunks(item, pseudo, guildName).map((chunk, i) =>
+                      {getItemChunks(item, pseudo, guildName, gameName).map((chunk, i) =>
                         chunk.kind === 'atom' ? (
                           <span key={i} className={styles.atomChip}>
                             {chunk.circle

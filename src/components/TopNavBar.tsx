@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
 import { FaUser, FaArrowLeft, FaArrowRight, FaProjectDiagram } from "react-icons/fa";
 import { SmartSearchInterface } from "playermap_graph";
-import { isIpfsUrl, ipfsToHttpUrl } from "../utils/pinata";
+import { ipfsToHttpUrl } from "../utils/pinata";
 import SafeImage from "./SafeImage";
 import searchIconUrl from "../assets/img/search.svg";
 import agentLogoUrl from "../assets/img/agent.svg";
@@ -53,13 +53,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   onPanelModeChange,
   myAtomDetails,
 }) => {
-  // Resolve avatar URL (supports IPFS)
+  // Resolve avatar URL (supports IPFS and proxies external URLs in Discord mode)
   const rawImage = myAtomDetails?.image as string | undefined;
-  const avatarUrl = rawImage
-    ? isIpfsUrl(rawImage)
-      ? ipfsToHttpUrl(rawImage)
-      : rawImage
-    : undefined;
+  const avatarUrl = rawImage ? ipfsToHttpUrl(rawImage) : undefined;
   const userName = myAtomDetails?.label as string | undefined;
   const [searchOpen, setSearchOpen] = useState(false);
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);

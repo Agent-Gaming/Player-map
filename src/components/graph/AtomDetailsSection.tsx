@@ -1,7 +1,7 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import { fetchAtomDetails, type AtomDetails } from "../../api/fetchAtomDetails";
-import { ipfsToHttpUrl, isIpfsUrl } from "../../utils/pinata";
+import { ipfsToHttpUrl } from "../../utils/pinata";
 import SafeImage from "../SafeImage";
 import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import verifiedIcon from "../../assets/img/verified.svg";
@@ -127,19 +127,9 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   let imageFallbacks: string[] = [];
   
   if (rawImageUrl) {
-    if (isIpfsUrl(rawImageUrl)) {
-      const hash = rawImageUrl.replace('ipfs://', '');
-      // Utiliser directement les gateways publiques IPFS (pas de 403)
-      const allGateways = [
-        `https://ipfs.io/ipfs/${hash}`, // Gateway publique officielle en premier
-        `https://cloudflare-ipfs.com/ipfs/${hash}`, // Cloudflare en backup
-        `https://gateway.pinata.cloud/ipfs/${hash}`, // Gateway publique Pinata
-      ];
-      imageUrl = allGateways[0]; // Première URL à essayer
-      imageFallbacks = allGateways.slice(1); // Les autres comme fallbacks
-    } else {
-      imageUrl = rawImageUrl;
-    }
+    // ipfsToHttpUrl handles both ipfs:// conversion and Discord proxying
+    imageUrl = ipfsToHttpUrl(rawImageUrl);
+    imageFallbacks = [];
   }
 
   // Extraire la description selon le type d'atom

@@ -7,6 +7,7 @@ import RedeemSelector from "./RedeemSelector";
 import { TripleBubble, AtomBubble, PositionBubble } from "./index";
 import { ATOM_CONTRACT_ADDRESS, atomABI } from "../../abi";
 import SafeImage from "../SafeImage";
+import { ipfsToHttpUrl } from "../../utils/pinata";
 import styles from "./Positions.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
@@ -322,12 +323,12 @@ const PositionCard: React.FC<PositionCardProps> = ({
         {positionComponents.type === "triple" ? (
           <>
             <div title={subjectLabel} className={styles.pillSm}>
-              {subjectImage && <img src={subjectImage} alt="" className={styles.pillSmImage} />}
+              {subjectImage && <img src={ipfsToHttpUrl(subjectImage)} alt="" className={styles.pillSmImage} />}
               <span className={styles.pillSmLabel}>{subjectLabel}</span>
             </div>
             <span title={predicateLabel} className={styles.predicateText}>{predicateLabel}</span>
             <div title={objectLabel} className={styles.pillSm}>
-              {objectImage && <img src={objectImage} alt="" className={styles.pillSmImage} />}
+              {objectImage && <img src={ipfsToHttpUrl(objectImage)} alt="" className={styles.pillSmImage} />}
               <span className={styles.pillSmLabel}>{objectLabel}</span>
             </div>
           </>

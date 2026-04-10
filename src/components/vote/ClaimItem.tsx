@@ -2,6 +2,7 @@ import React from "react";
 import { VoteItem, VoteDirection } from "../../types/vote";
 import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
+import { ipfsToHttpUrl } from "../../utils/pinata";
 import styles from "./ClaimItem.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
@@ -101,7 +102,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
         >
           {subject_image && (
             <img
-              src={subject_image}
+              src={ipfsToHttpUrl(subject_image)}
               alt=""
               className={styles.pillImage}
             />
@@ -122,7 +123,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
         >
           {object_image && (
             <img
-              src={object_image}
+              src={ipfsToHttpUrl(object_image)}
               alt=""
               className={styles.pillImage}
             />

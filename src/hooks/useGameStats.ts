@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Network, API_URLS } from "./useAtomData";
-import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
+import { useGameContext } from '../contexts/GameContext';
+import { PREDICATES } from '../utils/constants';
 
 export interface GameStats {
   gameName: string;
@@ -15,7 +16,6 @@ export interface GameStats {
 }
 
 export const useGameStats = (
-  constants: DefaultPlayerMapConstants,
   network: Network = Network.MAINNET
 ): GameStats => {
   const [gameName, setGameName] = useState("");
@@ -24,17 +24,20 @@ export const useGameStats = (
   const [totalVotes, setTotalVotes] = useState(0);
   const [totalAttestations, setTotalAttestations] = useState(0);
 
-  const predefinedClaimIds = constants.PREDEFINED_CLAIM_IDS ?? [];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const gamesId = constants.COMMON_IDS.GAMES_ID;
-  const isPlayerOfId = constants.COMMON_IDS.IS_PLAYER_OF;
-  const totalGuilds = constants.OFFICIAL_GUILDS.length;
+  const { activeGame } = useGameContext();
+  const gamesId = activeGame?.atomId;
+  const isPlayerOfId = PREDICATES.IS_PLAYER_OF;
+  const claimAtomIds = activeGame?.claims.map(c => c.atomId) ?? [];
+  const totalGuilds = activeGame?.guilds.length ?? 0;
 
   useEffect(() => {
-    if (!gamesId || !isPlayerOfId) return;
-    if (predefinedClaimIds.length === 0) return;
+    if (!gamesId || !isPlayerOfId || claimAtomIds.length === 0) {
+      setLoading(false);
+      return;
+    }
 
     const fetchStats = async () => {
       setLoading(true);
@@ -48,7 +51,7 @@ export const useGameStats = (
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             query: `
-              query GameStats($gamesId: String!, $isPlayerOfId: String!, $claimIds: [String!]!) {
+              query GameStats($gamesId: String!, $isPlayerOfId: String!, $claimAtomIds: [String!]!) {
                 gameAtom: atoms(where: { term_id: { _eq: $gamesId } }) {
                   term_id
                   label
@@ -62,7 +65,7 @@ export const useGameStats = (
                 }
                 votes: positions_aggregate(where: {
                   term: {
-                    triple: { term_id: { _in: $claimIds } }
+                    triple: { object_id: { _in: $claimAtomIds } }
                   }
                   shares: { _gt: 0 }
                 }) {
@@ -80,7 +83,7 @@ export const useGameStats = (
                 }
               }
             `,
-            variables: { gamesId, isPlayerOfId, claimIds: predefinedClaimIds },
+            variables: { gamesId, isPlayerOfId, claimAtomIds },
           }),
         });
 
@@ -111,7 +114,7 @@ export const useGameStats = (
     };
 
     fetchStats();
-  }, [gamesId, isPlayerOfId, network, predefinedClaimIds.join(',')]);
+  }, [gamesId, isPlayerOfId, network, claimAtomIds.join(',')]);
 
   return {
     gameName,

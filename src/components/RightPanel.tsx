@@ -302,7 +302,7 @@ const SpeakUpContent: React.FC<{
   wagmiConfig?: any;
   constants: DefaultPlayerMapConstants;
 }> = ({ walletAddress, walletConnected, wagmiConfig, constants }) => {
-  const stats = useGameStats(constants, Network.MAINNET);
+  const stats = useGameStats(Network.MAINNET);
 
   return (
     <div className={styles.speakUpContent}>

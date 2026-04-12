@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Network, API_URLS } from "./useAtomData";
-import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
 import { apiCache } from "../utils/apiCache";
 import { convertIpfsUrlsInObject } from "../utils/ipfsUtils";
 
@@ -165,18 +164,11 @@ export const useTripleByCreator = (
   creatorId: string,
   predicateId?: string,
   objectId?: string,
-  network: Network = Network.MAINNET,
-  constants?: DefaultPlayerMapConstants // Constantes optionnelles
+  network: Network = Network.MAINNET
 ) => {
-  // Utiliser les constantes passées en paramètre ou les valeurs par défaut
-  const { PLAYER_TRIPLE_TYPES } = constants || {
-    PLAYER_TRIPLE_TYPES: { PLAYER_GAME: { predicateId: "", objectId: "" } },
-  };
-
   // Utiliser les valeurs par défaut si non fournies
-  const finalPredicateId =
-    predicateId || PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId;
-  const finalObjectId = objectId || PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId;
+  const finalPredicateId = predicateId || "";
+  const finalObjectId = objectId || "";
 
   // Avantage: déduplication automatique des requêtes simultanées
   const { data, isLoading, error, isError } = useQuery({

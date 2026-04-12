@@ -35,7 +35,7 @@ export {
 
 // Exporter les types pour le composant de vote
 export { VoteDirection, type Claim, type VoteItem, type DepositResponse } from './types/vote';
-export { PREDEFINED_CLAIM_IDS, UNIT_VALUE } from './utils/constants';
+export { UNIT_VALUE } from './utils/constants';
 
 // Exporter la configuration avec types explicites
 export const PlayerMapConfig = {

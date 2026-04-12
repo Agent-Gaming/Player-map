@@ -24,6 +24,22 @@
   padding-top: 10px;
 }
 
+/* ─── Game Selector ───────────────────────────────────────────── */
+.gameSelectorWrapper {
+  display: flex;
+  align-items: center;
+}
+
+.gameSelector {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: inherit;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 /* ─── Bouton icône (base commune) ────────────────────────────── */
 .iconBtn {
   color: var(--color-primary);

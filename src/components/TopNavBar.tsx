@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { FaUser, FaArrowLeft, FaArrowRight, FaProjectDiagram } from "react-icons/fa";
 import { SmartSearchInterface } from "playermap_graph";
+import { useGameContext } from "../contexts/GameContext";
 import { ipfsToHttpUrl } from "../utils/pinata";
 import SafeImage from "./SafeImage";
 import searchIconUrl from "../assets/img/search.svg";
@@ -53,6 +54,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   onPanelModeChange,
   myAtomDetails,
 }) => {
+  // Game context
+  const { games, activeGame, setActiveGameId } = useGameContext();
+
   // Resolve avatar URL (supports IPFS and proxies external URLs in Discord mode)
   const rawImage = myAtomDetails?.image as string | undefined;
   const avatarUrl = rawImage ? ipfsToHttpUrl(rawImage) : undefined;
@@ -65,6 +69,23 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
     <nav className={styles.nav}>
       {/* ── Agent logo ─────────────────────────────── */}
       <img src={agentLogoUrl} alt="Agent" className={styles.agentLogo} />
+
+      {/* ── Game selector ───────────────────────────── */}
+      {games.length >= 2 && (
+        <div className={styles.gameSelectorWrapper}>
+          <select
+            className={styles.gameSelector}
+            value={activeGame?.atomId ?? ''}
+            onChange={e => setActiveGameId(e.target.value)}
+          >
+            {games.map(g => (
+              <option key={g.atomId} value={g.atomId}>
+                {g.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* ── Reset graph ─────────────────────────────── */}
       <button

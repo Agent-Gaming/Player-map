@@ -168,37 +168,17 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (!accountAtomId || !aliasTripleId || !pseudoAtomId) return;
     const gamesId = activeGame?.atomId;
     if (!gamesId) return;
-    const firstClaim = activeGame?.claims[0];
-    if (!firstClaim) return;
-    const fairplayAtomId = firstClaim.atomId;
+    const claims = activeGame?.claims ?? [];
+    if (claims.length === 0) return;
     const isId = PREDICATES.IS;
     const isPlayerOfId = PREDICATES.IS_PLAYER_OF;
     const inId = PREDICATES.IN;
     const isMemberOfId = PREDICATES.IS_MEMBER_OF;
 
-    // Check Item B: [accountAtomId] → IS → [fairplayAtomId]
-    const fairplayExists = await checkTripleExists(
-      BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId)
-    );
-    let knownFairplayTripleId: string | null = null;
-    if (fairplayExists) {
-      const id = await computeTripleId(BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId));
-      knownFairplayTripleId = `0x${id.toString(16)}`;
-      setFairplayTripleId(knownFairplayTripleId);
-    }
-
     // Check Item A: [aliasTripleId] → IS_PLAYER_OF → [gamesId]
     const gameExists = await checkTripleExists(
       BigInt(aliasTripleId), BigInt(isPlayerOfId), BigInt(gamesId)
     );
-
-    // Check Item C: [fairplayTripleId] → IN → [gamesId]
-    let contextExists = false;
-    if (knownFairplayTripleId) {
-      contextExists = await checkTripleExists(
-        BigInt(knownFairplayTripleId), BigInt(inId), BigInt(gamesId)
-      );
-    }
 
     const guildName = selectedGuild
       ? guilds.find(g => g.atomId === selectedGuild)?.label ?? selectedGuild
@@ -248,25 +228,42 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
     const gameLabel = activeGame?.label ?? 'this game';
 
-    // Item B
-    if (fairplayExists && knownFairplayTripleId) {
-      existing.push({
-        id: 'fairplay', type: 'triple',
-        label: `Account is ${firstClaim.label}`,
-        description: `[Account] — [is] — [${firstClaim.label}]`,
-        status: 'existing',
-        resultTripleId: knownFairplayTripleId,
-      });
-    } else {
-      toCreate.push({
-        id: 'fairplay', type: 'triple',
-        label: `Account is ${firstClaim.label}`,
-        description: `[Account] — [is] — [${firstClaim.label}]`,
-        status: 'to-create',
-        subjectId: accountAtomId,
-        predicateId: isId,
-        objectId: fairplayAtomId,
-      });
+    // Items B: one claim triple per entry in activeGame.claims
+    // Also track the first claim's triple id for Item C (context-nested)
+    let firstKnownClaimTripleId: string | null = null;
+    let firstClaimLabel = claims[0].label;
+    for (const claim of claims) {
+      const claimExists = await checkTripleExists(
+        BigInt(accountAtomId), BigInt(isId), BigInt(claim.atomId)
+      );
+      let knownClaimTripleId: string | null = null;
+      if (claimExists) {
+        const id = await computeTripleId(BigInt(accountAtomId), BigInt(isId), BigInt(claim.atomId));
+        knownClaimTripleId = `0x${id.toString(16)}`;
+        if (firstKnownClaimTripleId === null) {
+          firstKnownClaimTripleId = knownClaimTripleId;
+          setFairplayTripleId(knownClaimTripleId);
+        }
+      }
+      if (claimExists && knownClaimTripleId) {
+        existing.push({
+          id: `claim-${claim.atomId}`, type: 'triple',
+          label: `Account is ${claim.label}`,
+          description: `[Account] — [is] — [${claim.label}]`,
+          status: 'existing',
+          resultTripleId: knownClaimTripleId,
+        });
+      } else {
+        toCreate.push({
+          id: `claim-${claim.atomId}`, type: 'triple',
+          label: `Account is ${claim.label}`,
+          description: `[Account] — [is] — [${claim.label}]`,
+          status: 'to-create',
+          subjectId: accountAtomId,
+          predicateId: isId,
+          objectId: claim.atomId,
+        });
+      }
     }
 
     // Item A
@@ -289,21 +286,28 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       });
     }
 
-    // Item C (only checkable if fairplay triple exists; otherwise it cannot exist)
-    if (contextExists && knownFairplayTripleId) {
+    // Item C: context-nested uses the first claim's triple id
+    // (only checkable if that triple exists; otherwise it cannot exist)
+    let contextExists = false;
+    if (firstKnownClaimTripleId) {
+      contextExists = await checkTripleExists(
+        BigInt(firstKnownClaimTripleId), BigInt(inId), BigInt(gamesId)
+      );
+    }
+    if (contextExists && firstKnownClaimTripleId) {
       existing.push({
         id: 'context-nested', type: 'nested-triple',
-        label: `(is ${firstClaim.label}) in ${gameLabel}`,
-        description: `Nested: (fairplay triple) — [in] — [${gameLabel}]`,
+        label: `(is ${firstClaimLabel}) in ${gameLabel}`,
+        description: `Nested: (claim triple) — [in] — [${gameLabel}]`,
         status: 'existing',
       });
     } else {
       toCreate.push({
         id: 'context-nested', type: 'nested-triple',
-        label: `(is ${firstClaim.label}) in ${gameLabel}`,
-        description: `Nested: (fairplay triple) — [in] — [${gameLabel}]`,
+        label: `(is ${firstClaimLabel}) in ${gameLabel}`,
+        description: `Nested: (claim triple) — [in] — [${gameLabel}]`,
         status: 'to-create',
-        // Note: no subjectId — depends on fairplayTripleId resolved at creation time
+        // Note: no subjectId — depends on first claim's tripleId resolved at creation time
       });
     }
 
@@ -406,8 +410,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (!accountAtomId || !aliasTripleId) return;
     const gamesId = activeGame?.atomId;
     if (!gamesId) return;
-    const firstClaim = activeGame?.claims[0];
-    if (!firstClaim) return;
+    const claims = activeGame?.claims ?? [];
+    if (claims.length === 0) return;
 
     const pending = toCreateItems.filter(i => i.status === 'to-create');
     if (pending.length === 0) {
@@ -419,7 +423,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setInitError(undefined);
     setRegistrationPhase('creating-claims');
 
-    const fairplayAtomId = firstClaim.atomId;
     const isId = PREDICATES.IS;
     const isPlayerOfId = PREDICATES.IS_PLAYER_OF;
     const inId = PREDICATES.IN;
@@ -427,25 +430,27 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
     try {
       // computeTripleId is deterministic (pure SDK calculation — no RPC call)
-      // so we can resolve fairplayTripleId upfront and include context-nested in the same batch
-      const computedFairplayId = await computeTripleId(
-        BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId)
+      // Resolve the first claim's triple id upfront for use in context-nested
+      const computedFirstClaimId = await computeTripleId(
+        BigInt(accountAtomId), BigInt(isId), BigInt(claims[0].atomId)
       );
-      const resolvedFairplayTripleId = `0x${computedFairplayId.toString(16)}`;
+      const resolvedFirstClaimTripleId = `0x${computedFirstClaimId.toString(16)}`;
 
       // Build the batch from all to-create items
       const triplesToCreate: TripleToCreate[] = [];
       const batchedIds: string[] = [];
 
       for (const item of pending) {
-        if (item.id === 'fairplay') {
-          triplesToCreate.push({ subjectId: BigInt(accountAtomId), predicateId: BigInt(isId), objectId: BigInt(fairplayAtomId) });
+        if (item.id.startsWith('claim-')) {
+          // find the matching claim by atomId suffix
+          const claimAtomId = item.id.slice('claim-'.length);
+          triplesToCreate.push({ subjectId: BigInt(accountAtomId), predicateId: BigInt(isId), objectId: BigInt(claimAtomId) });
           batchedIds.push(item.id);
         } else if (item.id === 'game-nested') {
           triplesToCreate.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isPlayerOfId), objectId: BigInt(gamesId) });
           batchedIds.push(item.id);
         } else if (item.id === 'context-nested') {
-          triplesToCreate.push({ subjectId: BigInt(resolvedFairplayTripleId), predicateId: BigInt(inId), objectId: BigInt(gamesId) });
+          triplesToCreate.push({ subjectId: BigInt(resolvedFirstClaimTripleId), predicateId: BigInt(inId), objectId: BigInt(gamesId) });
           batchedIds.push(item.id);
         } else if (item.id === 'guild-nested' && selectedGuild) {
           triplesToCreate.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isMemberOfId), objectId: BigInt(selectedGuild) });
@@ -465,13 +470,18 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       // Single transaction — one wallet confirmation for all triples
       await batchCreateTriple(triplesToCreate);
 
-      // Mark all as created
-      setFairplayTripleId(resolvedFairplayTripleId);
-      setToCreateItems(prev => prev.map(i =>
-        batchedIds.includes(i.id)
-          ? { ...i, status: 'created', ...(i.id === 'fairplay' ? { resultTripleId: resolvedFairplayTripleId } : {}) }
-          : i
-      ));
+      // Mark all as created; tag each claim triple with its resolved triple id
+      setFairplayTripleId(resolvedFirstClaimTripleId);
+      setToCreateItems(prev => prev.map(i => {
+        if (!batchedIds.includes(i.id)) return i;
+        if (i.id.startsWith('claim-')) {
+          const claimAtomId = i.id.slice('claim-'.length);
+          // reuse computeTripleId synchronously — but it returns a Promise, so we store resolvedFirstClaimTripleId only for the first claim
+          const resultTripleId = claimAtomId === claims[0].atomId ? resolvedFirstClaimTripleId : undefined;
+          return { ...i, status: 'created', ...(resultTripleId ? { resultTripleId } : {}) };
+        }
+        return { ...i, status: 'created' };
+      }));
 
       setIsInitializing(false);
       setRegistrationPhase('complete');

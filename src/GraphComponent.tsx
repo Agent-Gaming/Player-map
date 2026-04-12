@@ -19,7 +19,6 @@ import {
   PlayerMapConfig,
   DefaultPlayerMapConstants,
 } from "./types/PlayerMapConfig";
-import { usePlayerConstants } from "./hooks/usePlayerConstants";
 import initGraphql from "./config/graphql";
 import { apiCache } from "./utils/apiCache";
 import IntuitionLogo from "./assets/img/Intuition-logo.svg";
@@ -50,7 +49,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Init ──────────────────────────────────────────────────────────────────────
   useEffect(() => { initGraphql(); }, []);
 
-  const constants: DefaultPlayerMapConstants = usePlayerConstants(config);
   const [network] = useState<Network>(Network.MAINNET);
 
   // ── Wallet ────────────────────────────────────────────────────────────────────

@@ -1,22 +1,20 @@
 import { useQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import { Network } from './useAtomData';
-import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 import { PlayerAlias } from '../types/alias';
 import { fetchAliasesByWalletPosition } from '../api/fetchPlayerAliases';
+import { PREDICATES } from '../utils/constants';
 
 interface UsePlayerAliasesProps {
   walletAddress?: string;
-  constants: DefaultPlayerMapConstants;
   network?: Network;
 }
 
 export const usePlayerAliases = ({
   walletAddress,
-  constants,
   network = Network.MAINNET,
 }: UsePlayerAliasesProps) => {
-  const predicateId = constants.HAS_ALIAS_PREDICATE_ID;
+  const predicateId = PREDICATES.HAS_ALIAS;
 
   // Single query: find has-alias triples where this wallet has a position.
   // subject_id of the triple = account atom term_id (playerAtomId).

@@ -1,7 +1,6 @@
 import { batchCreateTripleStatements, calculateTripleId } from '@0xintuition/sdk';
 import { toHex } from 'viem';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
-import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 import type { Address, Hex } from 'viem';
 
 export interface TripleToCreate {
@@ -14,7 +13,6 @@ interface UseBatchCreateTripleProps {
   walletConnected?: any;
   walletAddress?: string;
   publicClient?: any;
-  constants: DefaultPlayerMapConstants;
 }
 
 export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicClient }: UseBatchCreateTripleProps) => {

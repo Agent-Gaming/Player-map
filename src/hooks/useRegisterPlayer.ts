@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Network } from './useAtomData';
-import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 import { IdentityCreationState, IdentityCreationStep } from '../types/alias';
 import { useAtomCreation } from './useAtomCreation';
 import { useBatchCreateTriple } from './useBatchCreateTriple';
@@ -10,11 +9,11 @@ import { uploadToPinata } from '../utils/pinata';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
 import { calculateAtomId } from '@0xintuition/sdk';
 import { toHex, getAddress, keccak256, toBytes } from 'viem';
+import { PREDICATES } from '../utils/constants';
 
 interface UseRegisterPlayerProps {
   walletConnected?: any;
   walletAddress?: string;
-  constants: DefaultPlayerMapConstants;
   publicClient?: any;
   network?: Network;
   guildId?: string;               // hex ID of selected guild atom; if set, creates nested guild triple in step 4
@@ -42,7 +41,6 @@ interface UseRegisterPlayerProps {
 export const useRegisterPlayer = ({
   walletConnected,
   walletAddress,
-  constants,
   publicClient,
   network,
   guildId,
@@ -60,17 +58,12 @@ export const useRegisterPlayer = ({
     walletConnected,
     walletAddress,
     publicClient,
-    constants,
   });
 
   const register = async (pseudo: string, imageFile?: File) => {
     if (!walletConnected || !walletAddress || !pseudo.trim()) return;
 
-    const predicateId = constants.HAS_ALIAS_PREDICATE_ID;
-    if (!predicateId || predicateId.startsWith('<')) {
-      setState({ step: 'error', error: 'HAS_ALIAS_PREDICATE_ID is not configured — set it in your PlayerMapConstants' });
-      return;
-    }
+    const predicateId = PREDICATES.HAS_ALIAS;
 
     try {
       // Step 0 — EIP-712 consent signature (off-chain, free — popup 1)
@@ -223,10 +216,7 @@ export const useRegisterPlayer = ({
 
       // Step — [Account] — [accepted] — [Consent Atom] (skip if consent already accepted)
       if (!consentAlreadyAccepted && consentAtomId) {
-        const acceptedPredicateId = constants.COMMON_IDS.ACCEPTED;
-        if (!acceptedPredicateId || acceptedPredicateId.startsWith('<')) {
-          throw new Error('ACCEPTED predicate ID is not configured — update COMMON_IDS.ACCEPTED');
-        }
+        const acceptedPredicateId = PREDICATES.ACCEPTED;
         setState(s => ({ ...s, step: 'creating-accepted-triple' }));
 
         // Idempotent: check if triple already exists before creating
@@ -247,10 +237,7 @@ export const useRegisterPlayer = ({
       // Step 4 — nested guild triple: [aliasTriple] [IS_MEMBER_OF] [guild] (optional)
       // Skip if existingAliasTripleId is set — guild membership is handled in Phase 2
       if (!existingAliasTripleId && guildId && guildId.trim()) {
-        const isMemberOfId = constants.COMMON_IDS.IS_MEMBER_OF;
-        if (!isMemberOfId || isMemberOfId.startsWith('<')) {
-          throw new Error('IS_MEMBER_OF predicate ID is not configured');
-        }
+        const isMemberOfId = PREDICATES.IS_MEMBER_OF;
         setState(s => ({ ...s, step: 'creating-guild-membership' }));
         await batchCreateTriple([{
           subjectId: BigInt(aliasTripleIdStr),

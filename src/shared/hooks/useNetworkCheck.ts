@@ -11,6 +11,7 @@ interface NetworkCheckResult {
   currentChainId: number | null;
   targetChainId: number;
   allowedChainIds: number[];
+  switchNetwork: () => Promise<void>;
 }
 
 interface WalletError {

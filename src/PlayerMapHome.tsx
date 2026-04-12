@@ -4,7 +4,6 @@ import IntuitionSmallLogo from "./assets/img/Intuition-logo.svg";
 import LogoAgentBg from "./assets/img/logo-agent.svg";
 import Atom from "./assets/img/atom.svg";
 import styles from "./PlayerMapHome.module.css";
-import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
 import { usePlayerAliases } from "./hooks/usePlayerAliases";
 import { fetchAccountConsent } from './api/fetchPlayerAliases';
 import { useRegisterPlayer } from "./hooks/useRegisterPlayer";
@@ -13,7 +12,8 @@ import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "./shared/components/NetworkSwitchMessage";
 import PlayerCreationProgress from "./PlayerCreationProgress";
 import { RegistrationPhase, InitItem } from "./types/alias";
-import { useAtomLabel } from "./hooks/useAtomLabel";
+import { useGameContext } from "./contexts/GameContext";
+import { PREDICATES } from "./utils/constants";
 
 interface PlayerMapHomeProps {
   walletConnected?: any;
@@ -24,7 +24,6 @@ interface PlayerMapHomeProps {
   isOpen?: boolean;
   onCreatePlayer?: () => void;
   onRegistrationComplete?: () => void;
-  constants?: DefaultPlayerMapConstants;
   hasConfirmedPlayer?: boolean;
 }
 
@@ -37,10 +36,10 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   isOpen: externalIsOpen,
   onCreatePlayer,
   onRegistrationComplete,
-  constants,
   hasConfirmedPlayer = false,
 }) => {
   const publicClient = wagmiConfig?.publicClient;
+  const { activeGame } = useGameContext();
 
   // ─── View state ─────────────────────────────────────────────────────────────
   const [showForm, setShowForm] = useState(false);
@@ -73,9 +72,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   const [initError, setInitError] = useState<string | undefined>(undefined);
 
   // ─── Hooks ──────────────────────────────────────────────────────────────────
-  const { aliases, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases(
-    constants ? { walletAddress, constants } : ({} as any)
-  );
+  const { aliases, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases({ walletAddress });
 
   const {
     register,
@@ -86,32 +83,26 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     pseudoAtomId: reg_pseudoAtomId,
     accountAtomId: reg_accountAtomId,
     aliasTripleId: reg_aliasTripleId,
-  } = useRegisterPlayer(
-    constants
-      ? {
-          walletConnected,
-          walletAddress,
-          constants,
-          publicClient,
-          guildId: selectedGuild,
-          existingAccountAtomId: accountAtomId,
-          existingPseudoAtomId: useExistingAlias
-            ? aliases.find(a => a.atomId === selectedExistingAlias)?.atomId
-            : undefined,
-          existingAliasTripleId: useExistingAlias
-            ? aliases.find(a => a.atomId === selectedExistingAlias)?.tripleId
-            : undefined,
-          consentAlreadyAccepted,
-          chainId: publicClient?.chain?.id,
-        }
-      : ({} as any)
-  );
+  } = useRegisterPlayer({
+    walletConnected,
+    walletAddress,
+    publicClient,
+    guildId: selectedGuild,
+    existingAccountAtomId: accountAtomId,
+    existingPseudoAtomId: useExistingAlias
+      ? aliases.find(a => a.atomId === selectedExistingAlias)?.atomId
+      : undefined,
+    existingAliasTripleId: useExistingAlias
+      ? aliases.find(a => a.atomId === selectedExistingAlias)?.tripleId
+      : undefined,
+    consentAlreadyAccepted,
+    chainId: publicClient?.chain?.id,
+  });
 
   const { batchCreateTriple, checkTripleExists, computeTripleId } = useBatchCreateTriple({
     walletConnected,
     walletAddress,
     publicClient,
-    constants: constants ?? ({} as any),
   });
 
   const { isCorrectNetwork, currentChainId, targetChainId, switchNetwork } = useNetworkCheck({
@@ -119,9 +110,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     publicClient: wagmiConfig?.publicClient,
   });
 
-  const guilds = constants?.OFFICIAL_GUILDS ?? [];
+  const guilds = activeGame?.guilds ?? [];
   const hasExistingAliases = !aliasesLoading && aliases && aliases.length > 0;
-  const gameName = useAtomLabel(constants?.COMMON_IDS?.GAMES_ID);
 
   // ─── Auto-transition: returning user already has account atom ────────────────
   useEffect(() => {
@@ -146,8 +136,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       }
 
       // Check if consent was already accepted on-chain (both cases)
-      const acceptedId = constants?.COMMON_IDS?.ACCEPTED;
-      if (playerAtomId && !playerAtomId.startsWith('<') && acceptedId && !acceptedId.startsWith('<')) {
+      const acceptedId = PREDICATES.ACCEPTED;
+      if (playerAtomId && !playerAtomId.startsWith('<')) {
         fetchAccountConsent(playerAtomId, acceptedId).then(result => {
           if (result.exists) setConsentAlreadyAccepted(true);
         }).catch(() => {/* silently ignore */});
@@ -175,14 +165,16 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
   // ─── Check existing items — defined before the useEffect that calls it ────────
   const checkExistingItems = useCallback(async () => {
-    if (!accountAtomId || !aliasTripleId || !pseudoAtomId || !constants) return;
-
-    const fairplayAtomId = constants.PLAYER_TRIPLE_TYPES.PLAYER_QUALITY_1.objectId as string;
-    const gamesId = constants.COMMON_IDS.GAMES_ID;
-    const isId = constants.COMMON_IDS.IS;
-    const isPlayerOfId = constants.COMMON_IDS.IS_PLAYER_OF;
-    const inId = constants.COMMON_IDS.IN;
-    const isMemberOfId = constants.COMMON_IDS.IS_MEMBER_OF;
+    if (!accountAtomId || !aliasTripleId || !pseudoAtomId) return;
+    const gamesId = activeGame?.atomId;
+    if (!gamesId) return;
+    const firstClaim = activeGame?.claims[0];
+    if (!firstClaim) return;
+    const fairplayAtomId = firstClaim.atomId;
+    const isId = PREDICATES.IS;
+    const isPlayerOfId = PREDICATES.IS_PLAYER_OF;
+    const inId = PREDICATES.IN;
+    const isMemberOfId = PREDICATES.IS_MEMBER_OF;
 
     // Check Item B: [accountAtomId] → IS → [fairplayAtomId]
     const fairplayExists = await checkTripleExists(
@@ -209,12 +201,12 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     }
 
     const guildName = selectedGuild
-      ? constants.OFFICIAL_GUILDS.find(g => g.id === selectedGuild)?.name ?? selectedGuild
+      ? guilds.find(g => g.atomId === selectedGuild)?.label ?? selectedGuild
       : null;
 
     // Check guild membership on-chain — may not exist if reusing an existing alias
     let guildExists = false;
-    if (selectedGuild && isMemberOfId && !isMemberOfId.startsWith('<')) {
+    if (selectedGuild) {
       guildExists = await checkTripleExists(
         BigInt(aliasTripleId), BigInt(isMemberOfId), BigInt(selectedGuild)
       );
@@ -254,20 +246,22 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     const existing: InitItem[] = [...phase1Items].filter(i => i.status === 'existing');
     const toCreate: InitItem[] = [...phase1Items].filter(i => i.status === 'to-create');
 
+    const gameLabel = activeGame?.label ?? 'this game';
+
     // Item B
     if (fairplayExists && knownFairplayTripleId) {
       existing.push({
         id: 'fairplay', type: 'triple',
-        label: 'Account is fairplay',
-        description: '[Account] — [is] — [fairplay]',
+        label: `Account is ${firstClaim.label}`,
+        description: `[Account] — [is] — [${firstClaim.label}]`,
         status: 'existing',
         resultTripleId: knownFairplayTripleId,
       });
     } else {
       toCreate.push({
         id: 'fairplay', type: 'triple',
-        label: 'Account is fairplay',
-        description: '[Account] — [is] — [fairplay]',
+        label: `Account is ${firstClaim.label}`,
+        description: `[Account] — [is] — [${firstClaim.label}]`,
         status: 'to-create',
         subjectId: accountAtomId,
         predicateId: isId,
@@ -279,15 +273,15 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (gameExists) {
       existing.push({
         id: 'game-nested', type: 'nested-triple',
-        label: `(has alias) is player of ${gameName}`,
-        description: `Nested: (alias triple) — [is player of] — [${gameName}]`,
+        label: `(has alias) is player of ${gameLabel}`,
+        description: `Nested: (alias triple) — [is player of] — [${gameLabel}]`,
         status: 'existing',
       });
     } else {
       toCreate.push({
         id: 'game-nested', type: 'nested-triple',
-        label: `(has alias) is player of ${gameName}`,
-        description: `Nested: (alias triple) — [is player of] — [${gameName}]`,
+        label: `(has alias) is player of ${gameLabel}`,
+        description: `Nested: (alias triple) — [is player of] — [${gameLabel}]`,
         status: 'to-create',
         subjectId: aliasTripleId,
         predicateId: isPlayerOfId,
@@ -299,15 +293,15 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (contextExists && knownFairplayTripleId) {
       existing.push({
         id: 'context-nested', type: 'nested-triple',
-        label: `(is fairplay) in ${gameName}`,
-        description: `Nested: (fairplay triple) — [in] — [${gameName}]`,
+        label: `(is ${firstClaim.label}) in ${gameLabel}`,
+        description: `Nested: (fairplay triple) — [in] — [${gameLabel}]`,
         status: 'existing',
       });
     } else {
       toCreate.push({
         id: 'context-nested', type: 'nested-triple',
-        label: `(is fairplay) in ${gameName}`,
-        description: `Nested: (fairplay triple) — [in] — [${gameName}]`,
+        label: `(is ${firstClaim.label}) in ${gameLabel}`,
+        description: `Nested: (fairplay triple) — [in] — [${gameLabel}]`,
         status: 'to-create',
         // Note: no subjectId — depends on fairplayTripleId resolved at creation time
       });
@@ -316,7 +310,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setExistingItems(existing);
     setToCreateItems(toCreate);
     setRegistrationPhase('ready-to-initialize');
-  }, [accountAtomId, aliasTripleId, pseudoAtomId, pseudo, selectedGuild, aliases, constants,
+  }, [accountAtomId, aliasTripleId, pseudoAtomId, pseudo, selectedGuild, aliases, activeGame, guilds,
       checkTripleExists, computeTripleId]);
 
   // ─── Trigger existence checks when entering loading-existing ──────────────────
@@ -325,8 +319,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       registrationPhase === 'loading-existing' &&
       accountAtomId &&
       aliasTripleId &&
-      pseudoAtomId &&
-      constants
+      pseudoAtomId
     ) {
       checkExistingItems().catch(err => {
         console.error('Phase 2 check error:', err);
@@ -375,8 +368,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   };
 
   const handleValidate = () => {
-    if (!constants) return;
-
     if (useExistingAlias && selectedExistingAlias) {
       // Existing alias: find by atomId, extract display name, skip pseudo/alias/guild creation
       // but still run the consent flow (sign + consent atom + accepted triple) if not already accepted
@@ -412,7 +403,11 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   };
 
   const handleInitialize = useCallback(async () => {
-    if (!accountAtomId || !aliasTripleId || !constants) return;
+    if (!accountAtomId || !aliasTripleId) return;
+    const gamesId = activeGame?.atomId;
+    if (!gamesId) return;
+    const firstClaim = activeGame?.claims[0];
+    if (!firstClaim) return;
 
     const pending = toCreateItems.filter(i => i.status === 'to-create');
     if (pending.length === 0) {
@@ -424,12 +419,11 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setInitError(undefined);
     setRegistrationPhase('creating-claims');
 
-    const fairplayAtomId = constants.PLAYER_TRIPLE_TYPES.PLAYER_QUALITY_1.objectId as string;
-    const gamesId = constants.COMMON_IDS.GAMES_ID;
-    const isId = constants.COMMON_IDS.IS;
-    const isPlayerOfId = constants.COMMON_IDS.IS_PLAYER_OF;
-    const inId = constants.COMMON_IDS.IN;
-    const isMemberOfId = constants.COMMON_IDS.IS_MEMBER_OF;
+    const fairplayAtomId = firstClaim.atomId;
+    const isId = PREDICATES.IS;
+    const isPlayerOfId = PREDICATES.IS_PLAYER_OF;
+    const inId = PREDICATES.IN;
+    const isMemberOfId = PREDICATES.IS_MEMBER_OF;
 
     try {
       // computeTripleId is deterministic (pure SDK calculation — no RPC call)
@@ -453,7 +447,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         } else if (item.id === 'context-nested') {
           triplesToCreate.push({ subjectId: BigInt(resolvedFairplayTripleId), predicateId: BigInt(inId), objectId: BigInt(gamesId) });
           batchedIds.push(item.id);
-        } else if (item.id === 'guild-nested' && selectedGuild && isMemberOfId && !isMemberOfId.startsWith('<')) {
+        } else if (item.id === 'guild-nested' && selectedGuild) {
           triplesToCreate.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isMemberOfId), objectId: BigInt(selectedGuild) });
           batchedIds.push(item.id);
         }
@@ -487,7 +481,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       setIsInitializing(false);
       setRegistrationPhase('ready-to-initialize');
     }
-  }, [accountAtomId, aliasTripleId, toCreateItems, selectedGuild, constants,
+  }, [accountAtomId, aliasTripleId, toCreateItems, selectedGuild, activeGame,
       batchCreateTriple, computeTripleId]);
 
   const isValidateDisabled =
@@ -598,7 +592,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                             <p className={styles.selectHint}>
                               Your account already has a username for at least one game in the Player Map. Do you want to use one of them to confirm you are a player of{' '}
                               <span className={styles.gameNameHighlight}>
-                                {gameName}
+                                {activeGame?.label ?? 'this game'}
                               </span>?
                             </p>
                             <select
@@ -646,7 +640,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 {guilds.length > 0 && (
                   <div className={styles.formRow}>
                     <div className={styles.formRowLabel}>
-                      <span>Are you a member of a guild in <span className={styles.gameNameHighlight}>{gameName} </span> ?</span>
+                      <span>Are you a member of a guild in <span className={styles.gameNameHighlight}>{activeGame?.label ?? 'this game'} </span> ?</span>
                     </div>
                     <div className={styles.formRowControl}>
                       <select
@@ -656,7 +650,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                       >
                         <option value="">— No guild —</option>
                         {guilds.map(g => (
-                          <option key={g.id} value={g.id}>{g.name}</option>
+                          <option key={g.atomId} value={g.atomId}>{g.label}</option>
                         ))}
                       </select>
                     </div>
@@ -768,7 +762,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 </button>
                 <PlayerCreationProgress
                   walletAddress={walletAddress}
-                  gameName={gameName}
+                  gameLabel={activeGame?.label ?? ''}
+                  resolvedClaims={activeGame?.claims ?? []}
                   registrationPhase={registrationPhase}
                   pseudoInput={pseudoInput}
                   onPseudoInputChange={setPseudoInput}
@@ -783,7 +778,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                   aliasesLoading={aliasesLoading}
                   hasGuild={Boolean(selectedGuild)}
                   guildName={selectedGuild
-                    ? constants?.OFFICIAL_GUILDS?.find(g => g.id === selectedGuild)?.name
+                    ? guilds.find(g => g.atomId === selectedGuild)?.label
                     : undefined}
                   existingItems={existingItems}
                   toCreateItems={toCreateItems}

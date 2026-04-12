@@ -69,7 +69,7 @@ function getItemChunks(
     case 'guild-nested':
       return [profil, pred('has alias'), atom(pseudo, item.image), pred('is member of'), atom(guildName ?? '…')]
     case 'fairplay': {
-      const claimLabel = resolvedClaims.find(c => c.atomId === item.objectId)?.label ?? item.label
+      const claimLabel = resolvedClaims.find(c => c.atomId === item.subjectId || c.atomId === item.objectId)?.label ?? item.label
       return [profil, pred('is'), atom(claimLabel, item.image)]
     }
     case 'game-nested':

@@ -5,7 +5,10 @@ import styles from './PlayerCreationProgress.module.css';
 
 interface PlayerCreationProgressProps {
   walletAddress?: string;
-  gameName?: string;
+
+  // Game context
+  gameLabel: string;
+  resolvedClaims: Array<{ atomId: string; label: string; imageUrl?: string }>;
 
   // Phase state machine
   registrationPhase: RegistrationPhase;
@@ -49,8 +52,13 @@ const profil: ChunkAtom = { kind: 'atom', circle: true, label: 'Profil_ID' }
 const pred  = (label: string): ChunkPredicate => ({ kind: 'predicate', label })
 const atom  = (label: string, image?: string): ChunkAtom      => ({ kind: 'atom', circle: false, label, image })
 
-function getItemChunks(item: InitItem, pseudo: string, guildName?: string, gameName?: string): Chunk[] {
-  const game = gameName || 'this game';
+function getItemChunks(
+  item: InitItem,
+  pseudo: string,
+  guildName: string | undefined,
+  gameLabel: string,
+  resolvedClaims: Array<{ atomId: string; label: string; imageUrl?: string }>
+): Chunk[] {
   switch (item.id) {
     case 'pseudo-atom':
       return [atom(pseudo || item.label, item.image)]
@@ -60,12 +68,16 @@ function getItemChunks(item: InitItem, pseudo: string, guildName?: string, gameN
       return [profil, pred('has alias'), atom(pseudo, item.image)]
     case 'guild-nested':
       return [profil, pred('has alias'), atom(pseudo, item.image), pred('is member of'), atom(guildName ?? '…')]
-    case 'fairplay':
-      return [profil, pred('is'), atom('Fairplay')]
+    case 'fairplay': {
+      const claimLabel = resolvedClaims.find(c => c.atomId === item.objectId)?.label ?? item.label
+      return [profil, pred('is'), atom(claimLabel, item.image)]
+    }
     case 'game-nested':
-      return [profil, pred('has alias'), atom(pseudo, item.image), pred('is player of'), atom(game)]
-    case 'context-nested':
-      return [profil, pred('is'), atom('Fairplay'), pred('in'), atom(game)]
+      return [profil, pred('has alias'), atom(pseudo, item.image), pred('is player of'), atom(gameLabel)]
+    case 'context-nested': {
+      const claimLabel = resolvedClaims.find(c => c.atomId === item.objectId)?.label ?? item.label
+      return [profil, pred('is'), atom(claimLabel, item.image), pred('in'), atom(gameLabel)]
+    }
     default:
       return [atom(item.label, item.image)]
   }
@@ -170,6 +182,8 @@ const IdentityProgressBar = ({
 
 const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
   walletAddress,
+  gameLabel,
+  resolvedClaims,
   registrationPhase,
   pseudoInput,
   onPseudoInputChange,
@@ -191,7 +205,6 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
   currentInitIndex,
   initError,
   consentAlreadyAccepted,
-  gameName = 'this game',
 }) => {
 
   if (!walletAddress) {
@@ -267,7 +280,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
               {existingItems.map(item => (
                 <div key={item.id} className={styles.initItem}>
                   <div className={styles.tripleRow}>
-                    {getItemChunks(item, pseudo, guildName, gameName).map((chunk, i) =>
+                    {getItemChunks(item, pseudo, guildName, gameLabel, resolvedClaims).map((chunk, i) =>
                       chunk.kind === 'atom' ? (
                         <span key={i} className={styles.atomChip}>
                           {chunk.image
@@ -317,7 +330,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
                       {isDone ? '✓' : isActive ? '⟳' : '○'}
                     </span>
                     <div className={styles.tripleRow}>
-                      {getItemChunks(item, pseudo, guildName, gameName).map((chunk, i) =>
+                      {getItemChunks(item, pseudo, guildName, gameLabel, resolvedClaims).map((chunk, i) =>
                         chunk.kind === 'atom' ? (
                           <span key={i} className={styles.atomChip}>
                             {chunk.circle

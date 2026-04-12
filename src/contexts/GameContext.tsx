@@ -90,17 +90,17 @@ export const GameContextProvider: React.FC<GameContextProviderProps> = ({
 
       const resolved: ResolvedGame[] = games.map(g => ({
         atomId: g.atomId,
-        label: lookup.get(g.atomId)?.label ?? g.atomId.slice(0, 8),
+        label: lookup.get(g.atomId)?.label ?? `${g.atomId.slice(0, 8)}…${g.atomId.slice(-4)}`,
         imageUrl: lookup.get(g.atomId)?.imageUrl,
         claims: g.claims.map(c => ({
           atomId: c.atomId,
-          label: lookup.get(c.atomId)?.label ?? c.atomId.slice(0, 8),
+          label: lookup.get(c.atomId)?.label ?? `${c.atomId.slice(0, 8)}…${c.atomId.slice(-4)}`,
           imageUrl: lookup.get(c.atomId)?.imageUrl,
           category: c.category,
         })),
         guilds: (g.guilds ?? []).map(guild => ({
           atomId: guild.atomId,
-          label: lookup.get(guild.atomId)?.label ?? guild.atomId.slice(0, 8),
+          label: lookup.get(guild.atomId)?.label ?? `${guild.atomId.slice(0, 8)}…${guild.atomId.slice(-4)}`,
         })),
       }))
 

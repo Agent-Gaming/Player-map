@@ -1,6 +1,5 @@
 import React from "react";
 import { VoteItem, VoteDirection } from "../../types/vote";
-import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
 import { ipfsToHttpUrl } from "../../utils/pinata";
 import styles from "./ClaimItem.module.css";
@@ -18,7 +17,6 @@ interface ClaimItemProps {
   ) => boolean;
   walletAddress?: string;
   network?: Network;
-  constants: DefaultPlayerMapConstants;
 }
 
 export const ClaimItem: React.FC<ClaimItemProps> = ({
@@ -27,7 +25,6 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   isVoteDirectionAllowed = () => true,
   walletAddress = "",
   network = Network.MAINNET,
-  constants,
 }) => {
   const {
     id,

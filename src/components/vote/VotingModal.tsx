@@ -1,7 +1,6 @@
 import React from "react";
 import { ClaimVoting } from "./ClaimVoting";
 import { SpeakUpHeader } from "./SpeakUpHeader";
-import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
 import { useGameStats } from "../../hooks/useGameStats";
 import styles from "./VotingModal.module.css";
@@ -12,7 +11,6 @@ interface VotingModalProps {
   walletAddress?: string;
   publicClient?: any;
   onClose: () => void;
-  constants: DefaultPlayerMapConstants;
   wagmiConfig?: any;
 }
 
@@ -27,10 +25,9 @@ const VotingModal: React.FC<VotingModalProps> = ({
   walletAddress,
   publicClient,
   onClose,
-  constants,
   wagmiConfig,
 }) => {
-  const stats = useGameStats(constants, Network.MAINNET);
+  const stats = useGameStats(Network.MAINNET);
 
   return (
     <div
@@ -59,7 +56,6 @@ const VotingModal: React.FC<VotingModalProps> = ({
               onClose={onClose}
               network={Network.MAINNET}
               wagmiConfig={wagmiConfig}
-              constants={constants}
             />
           </div>
         </div>

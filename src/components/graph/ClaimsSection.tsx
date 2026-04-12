@@ -1,7 +1,8 @@
 import React from "react";
 import { PositionBubble } from "./index";
 import SafeImage from "../SafeImage";
-import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
+import { useGameContext } from "../../contexts/GameContext";
+import { PREDICATES } from "../../utils/constants";
 import styles from "./ClaimsSection.module.css";
 
 interface ClaimsSectionProps {
@@ -10,19 +11,19 @@ interface ClaimsSectionProps {
   walletAddress?: string;
   walletConnected?: any;
   publicClient?: any;
-  constants?: DefaultPlayerMapConstants;
 }
 
 const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   activities,
   title,
-  constants,
 }) => {
+  const { activeGame } = useGameContext();
+
   // ── IDs de prédicats ─────────────────────────────────────────────────────────
-  const IS_PLAYER_OF_ID = constants?.COMMON_IDS?.IS_PLAYER_OF;
-  const IS_MEMBER_OF_ID = constants?.COMMON_IDS?.IS_MEMBER_OF;
-  const IS_ID = constants?.COMMON_IDS?.IS;
-  const guildIds = new Set((constants?.OFFICIAL_GUILDS || []).map((g) => g.id));
+  const IS_PLAYER_OF_ID = PREDICATES.IS_PLAYER_OF;
+  const IS_MEMBER_OF_ID = PREDICATES.IS_MEMBER_OF;
+  const IS_ID = PREDICATES.IS;
+  const guildIds = new Set((activeGame?.guilds || []).map((g) => g.atomId));
 
   // ── Groupes de claims ────────────────────────────────────────────────────────
   const isPlayerOfClaims = activities.filter((a) =>

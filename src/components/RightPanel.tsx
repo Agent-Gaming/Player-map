@@ -8,7 +8,6 @@ import ClaimsSection from "./graph/ClaimsSection";
 import AtomClaimsSection from "./graph/AtomClaimsSection";
 import PositionsSection from "./graph/PositionsSection";
 import ActivitySection from "./graph/ActivitySection";
-import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
 import { Network } from "../hooks/useAtomData";
 import { useGameStats } from "../hooks/useGameStats";
 import tripleSvg from "../assets/img/triple.svg";
@@ -23,9 +22,6 @@ interface RightPanelProps {
   walletAddress?: string;
   walletConnected?: any;
   wagmiConfig?: any;
-
-  // constantes
-  constants: DefaultPlayerMapConstants;
 
   // données "mon profil"
   myAtomDetails?: any;
@@ -182,7 +178,6 @@ const ProfileContent: React.FC<{
   publicClient?: any;
   loading?: boolean;
   error?: string | null;
-  constants?: DefaultPlayerMapConstants;
 }> = ({
   atomDetails,
   connections,
@@ -194,7 +189,6 @@ const ProfileContent: React.FC<{
   publicClient,
   loading,
   error,
-  constants,
 }) => {
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
@@ -280,7 +274,6 @@ const ProfileContent: React.FC<{
         walletAddress={walletAddress}
         walletConnected={walletConnected}
         publicClient={publicClient}
-        constants={constants}
       />
       </div>
 
@@ -300,8 +293,7 @@ const SpeakUpContent: React.FC<{
   walletAddress?: string;
   walletConnected?: any;
   wagmiConfig?: any;
-  constants: DefaultPlayerMapConstants;
-}> = ({ walletAddress, walletConnected, wagmiConfig, constants }) => {
+}> = ({ walletAddress, walletConnected, wagmiConfig }) => {
   const stats = useGameStats(Network.MAINNET);
 
   return (
@@ -314,7 +306,6 @@ const SpeakUpContent: React.FC<{
           publicClient={wagmiConfig?.publicClient}
           network={Network.MAINNET}
           wagmiConfig={wagmiConfig}
-          constants={constants}
         />
       </div>
     </div>
@@ -328,7 +319,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
   walletAddress,
   walletConnected,
   wagmiConfig,
-  constants,
   myAtomDetails,
   myActivities = [],
   myPositions = [],
@@ -353,7 +343,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
             walletAddress={walletAddress}
             walletConnected={walletConnected}
             wagmiConfig={wagmiConfig}
-            constants={constants}
           />
         </div>
       )}
@@ -390,7 +379,6 @@ const RightPanel: React.FC<RightPanelProps> = ({
             publicClient={wagmiConfig?.publicClient}
             loading={sidebarLoading}
             error={sidebarError}
-            constants={constants}
           />
         </div>
       )}

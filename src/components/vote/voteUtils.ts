@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from "react";
 import { VoteItem, VoteDirection } from "../../types/vote";
-import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import { Network } from "../../hooks/useAtomData";
+import { useGameContext } from "../../contexts/GameContext";
 import { useFetchTripleDetails, TripleDetails } from "../../hooks/useFetchTripleDetails";
 import { useDisplayTriplesWithPosition } from "../../hooks/useDisplayTriplesWithPosition";
 import { fetchPositions } from "../../api/fetchPositions";
@@ -168,20 +168,19 @@ export const useVoteItemsManagementOptimized = ({
   network = Network.MAINNET,
   walletAddress = "",
   onError,
-  constants
 }: {
   network?: Network;
   walletAddress?: string;
   onError?: (message: string) => void;
-  constants: DefaultPlayerMapConstants;
 }) => {
   const [voteItems, setVoteItems] = useState<VoteItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress>({ loaded: 0, total: 0 });
   const [isFullyLoaded, setIsFullyLoaded] = useState(false);
   const [isLoadingInProgress, setIsLoadingInProgress] = useState(false);
-  
-  const { PREDEFINED_CLAIM_IDS } = constants;
+
+  const { activeGame } = useGameContext();
+  const PREDEFINED_CLAIM_IDS = activeGame?.claims.map(c => c.atomId) ?? [];
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
 

@@ -93,7 +93,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
         message
       });
     },
-    constants // Passer les constantes personnalisées !
   });
 
   // Use hook for submitting votes

@@ -1,6 +1,6 @@
 import React from "react";
 import { GraphVisualization } from "playermap_graph";
-import { DefaultPlayerMapConstants } from "./types/PlayerMapConfig";
+import { useGameContext } from "./contexts/GameContext";
 import Atom from "./assets/img/atom.svg";
 import styles from "./PlayerMapGraph.module.css";
 
@@ -17,8 +17,6 @@ interface GraphControls {
 
 interface PlayerMapGraphProps {
   walletAddress?: string;
-  constants: DefaultPlayerMapConstants;
-  gamesId?: string;
   /** Callback déclenché quand un nœud du graphe est cliqué */
   onNodeSelect?: (node: any) => void;
   /** Remonte les contrôles de navigation au composant parent */
@@ -31,13 +29,13 @@ interface PlayerMapGraphProps {
 
 const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
   walletAddress,
-  constants,
-  gamesId,
   onNodeSelect,
   onControlsReady,
   onSpeakUpClick,
   isSpeakUpActive = false,
 }) => {
+  const { activeGame } = useGameContext()
+  const gamesId = activeGame?.atomId
 
   return (
     <div className={styles.wrapper}>
@@ -47,7 +45,6 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
         onLoadingChange={() => {}}
         walletAddress={walletAddress}
         gamesId={gamesId}
-        config={{ constants }}
         disableNodeDetailsSidebar={true}
         hideNavigationBar={true}
         onControlsReady={onControlsReady}

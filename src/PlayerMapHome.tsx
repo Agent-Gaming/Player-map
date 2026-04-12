@@ -66,7 +66,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   // ─── Phase 2 state ──────────────────────────────────────────────────────────
   const [existingItems, setExistingItems] = useState<InitItem[]>([]);
   const [toCreateItems, setToCreateItems] = useState<InitItem[]>([]);
-  const [fairplayTripleId, setFairplayTripleId] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(false);
   const [currentInitIndex, setCurrentInitIndex] = useState(0);
   const [initError, setInitError] = useState<string | undefined>(undefined);
@@ -231,7 +230,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     // Items B: one claim triple per entry in activeGame.claims
     // Also track the first claim's triple id for Item C (context-nested)
     let firstKnownClaimTripleId: string | null = null;
-    let firstClaimLabel = claims[0].label;
+    const firstClaimLabel = claims[0].label;
     for (const claim of claims) {
       const claimExists = await checkTripleExists(
         BigInt(accountAtomId), BigInt(isId), BigInt(claim.atomId)
@@ -242,7 +241,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         knownClaimTripleId = `0x${id.toString(16)}`;
         if (firstKnownClaimTripleId === null) {
           firstKnownClaimTripleId = knownClaimTripleId;
-          setFairplayTripleId(knownClaimTripleId);
         }
       }
       if (claimExists && knownClaimTripleId) {
@@ -354,7 +352,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setSelectedExistingAlias('');
     setExistingItems([]);
     setToCreateItems([]);
-    setFairplayTripleId(null);
     setIsInitializing(false);
     setCurrentInitIndex(0);
     setInitError(undefined);
@@ -471,7 +468,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       await batchCreateTriple(triplesToCreate);
 
       // Mark all as created; tag each claim triple with its resolved triple id
-      setFairplayTripleId(resolvedFirstClaimTripleId);
       setToCreateItems(prev => prev.map(i => {
         if (!batchedIds.includes(i.id)) return i;
         if (i.id.startsWith('claim-')) {

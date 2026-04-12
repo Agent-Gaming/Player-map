@@ -109,7 +109,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     connections: myConnections,
     loading: sidebarLoading,
     error: sidebarError,
-  } = useSidebarData(walletAddress, Network.MAINNET, constants);
+  } = useSidebarData(walletAddress, Network.MAINNET);
 
   // Étend isLoading pour attendre le sidebar si le player est confirmé (évite flash du form)
   const isProfileLoading = hasConfirmedPlayer && sidebarLoading;

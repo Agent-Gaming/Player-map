@@ -5,7 +5,7 @@ import { fetchTriplesForAgent, fetchFollowsAndFollowers } from '../api/sidebarQu
 import { usePlayerAliases } from './usePlayerAliases';
 import { usePositions } from './usePositions';
 import { fetchTriplesByTermIds } from '../api/fetchTriplesByTermIds';
-import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
+import { PREDICATES } from '../utils/constants';
 
 interface SidebarData {
   atomDetails: any | null;
@@ -22,8 +22,7 @@ interface SidebarData {
 
 export const useSidebarData = (
   walletAddress: string | undefined,
-  network: Network = Network.MAINNET,
-  constants: DefaultPlayerMapConstants
+  network: Network = Network.MAINNET
 ): SidebarData => {
   const [triples, setTriples] = useState<any[]>([]);
   const [connections, setConnections] = useState<{ follows: any[]; followers: any[] }>({
@@ -31,13 +30,10 @@ export const useSidebarData = (
     followers: []
   });
 
-  const { COMMON_IDS } = constants;
-
   // Récupère les alias du joueur — le primary alias donne le pseudo + image
   // playerAtomId est le term_id de l'account atom (sujet du triple has alias)
   const { aliases, playerAtomId, isLoading: aliasesLoading } = usePlayerAliases({
     walletAddress,
-    constants,
     network,
   });
 
@@ -65,10 +61,10 @@ export const useSidebarData = (
   // Collect subject_ids of IN-predicate positions to resolve their quality atoms
   const inSubjectIds = useMemo(() => {
     return positions
-      .filter(p => p.term?.triple?.predicate_id === COMMON_IDS.IN)
+      .filter(p => p.term?.triple?.predicate_id === PREDICATES.IN)
       .map(p => p.term.triple.subject_id as string)
       .filter(Boolean);
-  }, [positions, COMMON_IDS.IN]);
+  }, [positions, PREDICATES.IN]);
 
   const { data: qualityTriples } = useQuery({
     queryKey: ['triplesByTermIds', inSubjectIds, network],
@@ -95,10 +91,10 @@ export const useSidebarData = (
   //         resolved via second fetch of the IS triple
   const activities = useMemo(() => {
     const relevantPredicates = new Set([
-      COMMON_IDS.IS_PLAYER_OF,
-      COMMON_IDS.IS_MEMBER_OF,
-      COMMON_IDS.IS,
-      COMMON_IDS.IN,
+      PREDICATES.IS_PLAYER_OF,
+      PREDICATES.IS_MEMBER_OF,
+      PREDICATES.IS,
+      PREDICATES.IN,
     ]);
     const seen = new Set<string>();
     return positions
@@ -107,7 +103,7 @@ export const useSidebarData = (
         if (!triple || !relevantPredicates.has(triple.predicate_id)) return false;
         // For IS predicate, only include triples where the user's account atom is the subject
         // (own quality attestations), not triples from voting on other players' qualities
-        if (triple.predicate_id === COMMON_IDS.IS && playerAtomId) {
+        if (triple.predicate_id === PREDICATES.IS && playerAtomId) {
           return triple.subject_id === playerAtomId;
         }
         return true;
@@ -123,11 +119,11 @@ export const useSidebarData = (
 
         // Nested quality: [[X][IS][quality]] [IN] [context]
         // Resolve quality atom from the fetched IS triple
-        if (triple.predicate_id === COMMON_IDS.IN) {
+        if (triple.predicate_id === PREDICATES.IN) {
           const qualityObject = qualityBySubjectId.get(triple.subject_id) ?? null;
           return {
             term_id: triple.term_id,
-            predicate_id: COMMON_IDS.IS,
+            predicate_id: PREDICATES.IS,
             object_id: qualityObject?.term_id ?? triple.subject_id,
             object: qualityObject,
             term: p.term,
@@ -145,7 +141,7 @@ export const useSidebarData = (
         };
       })
       .filter(a => a.object != null);
-  }, [positions, COMMON_IDS, qualityBySubjectId, playerAtomId]);
+  }, [positions, qualityBySubjectId, playerAtomId]);
 
   const { data: triplesData } = useQuery({
     queryKey: ['triplesForAgent', walletAddress, network],
@@ -156,8 +152,8 @@ export const useSidebarData = (
   });
 
   const { data: connectionsData } = useQuery({
-    queryKey: ['followsAndFollowers', COMMON_IDS.FOLLOWS, walletAddress, network],
-    queryFn: () => fetchFollowsAndFollowers(COMMON_IDS.FOLLOWS, walletAddress!, network),
+    queryKey: ['followsAndFollowers', PREDICATES.FOLLOWS, walletAddress, network],
+    queryFn: () => fetchFollowsAndFollowers(PREDICATES.FOLLOWS, walletAddress!, network),
     enabled: Boolean(walletAddress),
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,

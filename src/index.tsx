@@ -35,7 +35,7 @@ export {
 
 // Exporter les types pour le composant de vote
 export { VoteDirection, type Claim, type VoteItem, type DepositResponse } from './types/vote';
-export { UNIT_VALUE } from './utils/constants';
+export { UNIT_VALUE, PREDICATES } from './utils/constants';
 
 // Exporter la configuration avec types explicites
 export const PlayerMapConfig = {
@@ -72,6 +72,12 @@ export { useCreateAlias } from './hooks/useCreateAlias';
 export { useRegisterPlayer } from './hooks/useRegisterPlayer';
 export type { PlayerAlias, AliasCreationStep, RegistrationPhase, IdentityCreationStep, InitItem } from './types/alias';
 // AliasCreationState and IdentityCreationState are internal — not exported publicly
+
+// New public API — PlayerMap component + GameContext
+export { default as PlayerMap } from './PlayerMap';
+export { GameContextProvider, useGameContext } from './contexts/GameContext';
+export type { ResolvedGame, ResolvedClaim, ResolvedGuild, GameContextValue } from './contexts/GameContext';
+export type { GameConfig, ClaimConfig, GuildConfig, PlayerMapProps } from './types/PlayerMapConfig';
 
 // Exporter un composant par défaut
 export default PlayerMapHome;

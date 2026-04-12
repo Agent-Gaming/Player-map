@@ -31,6 +31,7 @@ interface GraphComponentProps {
   onClose?: () => void;
   onCreatePlayer?: () => void;
   onConnectWallet?: () => void;
+  initialProfile?: string;
 }
 
 const GraphComponentInner: React.FC<GraphComponentProps> = ({

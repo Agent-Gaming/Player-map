@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { DefaultPlayerMapConstants } from '../types/PlayerMapConfig';
 import { AliasCreationState, AliasCreationStep } from '../types/alias';
 import { useAtomCreation } from './useAtomCreation';
 import { useBatchCreateTriple } from './useBatchCreateTriple';
+import { PREDICATES } from '../utils/constants';
 
 interface UseCreateAliasProps {
   walletConnected?: any;
   walletAddress?: string;
-  constants: DefaultPlayerMapConstants;
   publicClient?: any;
   // The player's existing atom term_id — subject of the [has alias] triple.
   // Obtain from usePlayerAliases().playerAtomId.
@@ -18,7 +17,6 @@ interface UseCreateAliasProps {
 export const useCreateAlias = ({
   walletConnected,
   walletAddress,
-  constants,
   publicClient,
   playerAtomId,
 }: UseCreateAliasProps) => {
@@ -29,18 +27,13 @@ export const useCreateAlias = ({
     walletConnected,
     walletAddress,
     publicClient,
-    constants,
   });
 
   const createAlias = async (pseudo: string) => {
     if (!walletConnected || !walletAddress || !playerAtomId) return;
     if (!pseudo.trim()) return;
 
-    const predicateId = constants.HAS_ALIAS_PREDICATE_ID;
-    if (!predicateId || predicateId.startsWith('<')) {
-      setState({ step: 'error', error: 'HAS_ALIAS_PREDICATE_ID is not configured — set it in your PlayerMapConstants' });
-      return;
-    }
+    const predicateId = PREDICATES.HAS_ALIAS;
 
     try {
       // Step 1 — create pseudo atom

@@ -2,7 +2,6 @@ import React from "react";
 import { VoteItem, VoteDirection } from "../../types/vote";
 import { ClaimItem } from "./ClaimItem";
 import { Network } from "../../hooks/useAtomData";
-import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
 import styles from "./ClaimList.module.css";
 
 interface ClaimListProps {
@@ -16,7 +15,6 @@ interface ClaimListProps {
   ) => boolean;
   walletAddress?: string;
   network?: Network;
-  constants: DefaultPlayerMapConstants; // Constantes injectées
 }
 
 export const ClaimList: React.FC<ClaimListProps> = ({
@@ -27,7 +25,6 @@ export const ClaimList: React.FC<ClaimListProps> = ({
   isVoteDirectionAllowed,
   walletAddress = "",
   network = Network.MAINNET,
-  constants,
 }) => {
   if (isLoading) {
     const progressText = loadingProgress
@@ -59,7 +56,6 @@ export const ClaimList: React.FC<ClaimListProps> = ({
           isVoteDirectionAllowed={isVoteDirectionAllowed}
           walletAddress={walletAddress}
           network={network}
-          constants={constants} // Passer les constantes personnalisées !
         />
       ))}
     </div>

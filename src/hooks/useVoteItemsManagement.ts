@@ -1,27 +1,25 @@
 import { useState, useEffect } from "react";
 import { VoteItem, VoteDirection } from "../types/vote";
-import { DefaultPlayerMapConstants } from "../types/PlayerMapConfig";
 import { Network, API_URLS } from "./useAtomData";
+import { useGameContext } from '../contexts/GameContext';
 import { useFetchTripleDetails, TripleDetails } from "./useFetchTripleDetails";
 
 interface UseVoteItemsManagementProps {
   network?: Network;
   walletAddress?: string;
   onError?: (message: string) => void;
-  constants: DefaultPlayerMapConstants; // Constantes injectées
 }
 
 export const useVoteItemsManagement = ({
   network = Network.MAINNET,
   walletAddress = "",
   onError,
-  constants
 }: UseVoteItemsManagementProps) => {
   const [voteItems, setVoteItems] = useState<VoteItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Utiliser les constantes passées en paramètre
-  const { PREDEFINED_CLAIM_IDS } = constants;
+
+  const { activeGame } = useGameContext();
+  const PREDEFINED_CLAIM_IDS = activeGame?.claims.map(c => c.atomId) ?? [];
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
   const [hasLoadedTripleDetails, setHasLoadedTripleDetails] = useState(false);

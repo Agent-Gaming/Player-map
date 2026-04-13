@@ -1,7 +1,8 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FaUser, FaArrowLeft, FaArrowRight, FaProjectDiagram } from "react-icons/fa";
 import { SmartSearchInterface } from "playermap_graph";
-import { isIpfsUrl, ipfsToHttpUrl } from "../utils/pinata";
+import { useGameContext } from "../contexts/GameContext";
+import { ipfsToHttpUrl } from "../utils/pinata";
 import SafeImage from "./SafeImage";
 import searchIconUrl from "../assets/img/search.svg";
 import agentLogoUrl from "../assets/img/agent.svg";
@@ -53,13 +54,25 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   onPanelModeChange,
   myAtomDetails,
 }) => {
-  // Resolve avatar URL (supports IPFS)
+  // Game context
+  const { games, activeGame, setActiveGameId } = useGameContext();
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!selectorOpen) return;
+    const handleOutside = (e: MouseEvent) => {
+      if (selectorRef.current && !selectorRef.current.contains(e.target as Node)) {
+        setSelectorOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  }, [selectorOpen]);
+
+  // Resolve avatar URL (supports IPFS and proxies external URLs in Discord mode)
   const rawImage = myAtomDetails?.image as string | undefined;
-  const avatarUrl = rawImage
-    ? isIpfsUrl(rawImage)
-      ? ipfsToHttpUrl(rawImage)
-      : rawImage
-    : undefined;
+  const avatarUrl = rawImage ? ipfsToHttpUrl(rawImage) : undefined;
   const userName = myAtomDetails?.label as string | undefined;
   const [searchOpen, setSearchOpen] = useState(false);
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
@@ -69,6 +82,53 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
     <nav className={styles.nav}>
       {/* ── Agent logo ─────────────────────────────── */}
       <img src={agentLogoUrl} alt="Agent" className={styles.agentLogo} />
+
+      {/* ── Game selector ───────────────────────────── */}
+      {games.length >= 2 && (
+        <div ref={selectorRef} className={styles.gameSelectorWrapper}>
+          <button
+            className={styles.gameSelectorBtn}
+            onClick={() => setSelectorOpen(v => !v)}
+            aria-haspopup="listbox"
+            aria-expanded={selectorOpen}
+          >
+            {activeGame?.imageUrl && (
+              <img
+                src={ipfsToHttpUrl(activeGame.imageUrl)}
+                alt=""
+                className={styles.gameSelectorIcon}
+              />
+            )}
+            <span className={styles.gameSelectorLabel}>
+              {activeGame?.label?.toUpperCase() ?? ''}
+            </span>
+            <span className={`${styles.gameSelectorChevron} ${selectorOpen ? styles.gameSelectorChevronOpen : ''}`}>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 4.5L7 9.5L12 4.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </span>
+          </button>
+
+          {selectorOpen && (
+            <div className={styles.gameSelectorDropdown} role="listbox">
+              {games.map(g => (
+                <button
+                  key={g.atomId}
+                  role="option"
+                  aria-selected={g.atomId === activeGame?.atomId}
+                  className={`${styles.gameSelectorOption} ${g.atomId === activeGame?.atomId ? styles.gameSelectorOptionActive : ''}`}
+                  onClick={() => { setActiveGameId(g.atomId); setSelectorOpen(false); }}
+                >
+                  {g.imageUrl && (
+                    <img src={ipfsToHttpUrl(g.imageUrl)} alt="" className={styles.gameSelectorIcon} />
+                  )}
+                  <span>{g.label?.toUpperCase()}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Reset graph ─────────────────────────────── */}
       <button

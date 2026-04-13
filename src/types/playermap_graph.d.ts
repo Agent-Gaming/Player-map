@@ -18,6 +18,7 @@ declare module 'playermap_graph' {
     onLoadingChange?: (isLoading: boolean) => void;
     walletAddress?: string;
     gamesId?: string;
+    config?: { constants?: any };
     disableNodeDetailsSidebar?: boolean;
     hideNavigationBar?: boolean;
     onControlsReady?: (controls: GraphControls) => void;

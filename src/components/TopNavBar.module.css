@@ -24,6 +24,97 @@
   padding-top: 10px;
 }
 
+/* ─── Game Selector ───────────────────────────────────────────── */
+.gameSelectorWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.gameSelectorBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  padding: 6px 14px 6px 10px;
+  cursor: pointer;
+  color: #ffffff;
+  outline: none;
+}
+
+.gameSelectorBtn:hover {
+  border-color: rgba(49, 49, 49, 0.55);
+}
+
+.gameSelectorIcon {
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.gameSelectorLabel {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.gameSelectorChevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  transition: transform 0.2s ease;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+.gameSelectorChevronOpen {
+  transform: rotate(180deg);
+}
+
+.gameSelectorDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: var(--color-background-primary);
+  border: 2px solid rgba(66, 66, 66, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 300;
+  min-width: 100%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.gameSelectorOption {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  white-space: nowrap;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.gameSelectorOption:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gameSelectorOptionActive {
+  color: var(--color-primary);
+}
+
 /* ─── Bouton icône (base commune) ────────────────────────────── */
 .iconBtn {
   color: var(--color-primary);

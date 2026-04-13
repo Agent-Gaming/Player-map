@@ -8,7 +8,8 @@ import { ClaimList } from "./ClaimList";
 import { TransactionStatusDisplay } from "./TransactionStatus";
 import { ConnectWalletModal, CreatePlayerModal } from "../modals";
 import { usePositions } from "../../hooks/usePositions";
-import { DefaultPlayerMapConstants } from "../../types/PlayerMapConfig";
+import { useGameContext } from "../../contexts/GameContext";
+import { PREDICATES } from "../../utils/constants";
 import { useNetworkCheck } from '../../shared/hooks/useNetworkCheck';
 import { NetworkSwitchMessage } from '../../shared/components/NetworkSwitchMessage';
 import styles from "./ClaimVoting.module.css";
@@ -23,7 +24,6 @@ interface ClaimVotingProps {
   onCreatePlayer?: () => void;
   wagmiConfig?: any;
   walletHooks?: any;
-  constants: DefaultPlayerMapConstants; // Constantes injectées directement
 }
 
 export const ClaimVoting: React.FC<ClaimVotingProps> = ({
@@ -36,7 +36,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   onCreatePlayer,
   wagmiConfig,
   walletHooks,
-  constants,
 }) => {
   // État pour gérer l'affichage de la modale CreatePlayerModal
   const [showCreatePlayerModal, setShowCreatePlayerModal] = useState(false);
@@ -44,19 +43,20 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   // Vérifier si le wallet est connecté
   const [isWalletReady, setIsWalletReady] = useState(false);
 
-  // Utiliser les constantes passées en paramètre
-  const { PLAYER_TRIPLE_TYPES } = constants;
+  // Récupérer le jeu actif depuis le contexte
+  const { activeGame } = useGameContext();
+  const gameAtomId = activeGame?.atomId;
 
-  // Vérifier si l'utilisateur a le nested triple "is player of Bossfighters" via ses positions
+  // Vérifier si l'utilisateur a le nested triple "is player of [game]" via ses positions
   const { positions: activePositions, loading: positionsLoading } =
     usePositions(walletAddress || undefined, network);
 
   const hasPlayerAtom = useMemo(
     () => activePositions.some((p: any) =>
-      p.term?.triple?.predicate_id === PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
-      p.term?.triple?.object_id === PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
+      p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
+      p.term?.triple?.object_id === gameAtomId
     ),
-    [activePositions, PLAYER_TRIPLE_TYPES],
+    [activePositions, gameAtomId],
   );
 
   // Mettre à jour isWalletReady quand walletAddress change
@@ -93,7 +93,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
         message
       });
     },
-    constants // Passer les constantes personnalisées !
   });
 
   // Use hook for submitting votes
@@ -181,7 +180,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
           isVoteDirectionAllowed={isVoteDirectionAllowed}
           walletAddress={walletAddress}
           network={network}
-          constants={constants}
         />
       </div>
 

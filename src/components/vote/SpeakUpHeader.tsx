@@ -80,7 +80,7 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
   const { gameName, gameImage, gameTermId, totalGuilds, totalPlayers, totalVotes, totalAttestations, loading } = stats;
   const [showTooltip, setShowTooltip] = useState(false);
 
-  const imageUrl = gameImage ? (isIpfsUrl(gameImage) ? ipfsToHttpUrl(gameImage) : gameImage) : null;
+  const imageUrl = gameImage ? ipfsToHttpUrl(gameImage) : null;
   const verification = gameTermId ? getAtomVerificationStatus(gameTermId) : null;
 
   return (

@@ -8,14 +8,9 @@ export enum Network {
 
 // URLs des API GraphQL
 // En développement, utilise le proxy pour éviter les erreurs CORS
-const isDev = import.meta.env.DEV;
 export const API_URLS = {
-  [Network.MAINNET]: isDev 
-    ? '/graphql' 
-    : (import.meta.env.VITE_INTUITION_GRAPHQL_URL ?? "https://mainnet.intuition.sh/v1/graphql"),
-  [Network.TESTNET]: isDev
-    ? '/graphql'
-    : "https://testnet.intuition.sh/v1/graphql"
+  [Network.MAINNET]: import.meta.env.VITE_INTUITION_GRAPHQL_URL ?? '/graphql',
+  [Network.TESTNET]: '/graphql'
 };
 
 // Fonction pour créer un client avec le réseau approprié

@@ -1,5 +1,8 @@
 import React, { useState, useEffect, CSSProperties } from 'react';
+import { ipfsToHttpUrl } from '../utils/pinata';
 import styles from './SafeImage.module.css';
+
+const normalizeSrc = (src?: string) => src ? ipfsToHttpUrl(src) : src;
 
 interface SafeImageProps {
   src?: string;
@@ -28,13 +31,13 @@ const SafeImage: React.FC<SafeImageProps> = ({
   placeholderText = '?',
   placeholderElement,
 }) => {
-  const [imgSrc, setImgSrc] = useState<string | undefined>(src);
+  const [imgSrc, setImgSrc] = useState<string | undefined>(normalizeSrc(src));
   const [hasError, setHasError] = useState(false);
   const [fallbackIndex, setFallbackIndex] = useState(-1);
 
   // Réinitialiser quand src change (changement d'atom)
   useEffect(() => {
-    setImgSrc(src);
+    setImgSrc(normalizeSrc(src));
     setHasError(false);
     setFallbackIndex(-1);
   }, [src]);

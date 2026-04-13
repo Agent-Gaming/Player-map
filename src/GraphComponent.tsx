@@ -15,11 +15,8 @@ import { ConnectWalletModal } from "./components/modals";
 import TopNavBar, { RightPanelMode, GraphControls } from "./components/TopNavBar";
 import RightPanel from "./components/RightPanel";
 import { PlayerMapQueryClientProvider, useQueryClientContext } from "./contexts/QueryClientContext";
-import {
-  PlayerMapConfig,
-  DefaultPlayerMapConstants,
-} from "./types/PlayerMapConfig";
-import { usePlayerConstants } from "./hooks/usePlayerConstants";
+import { useGameContext } from "./contexts/GameContext";
+import { PREDICATES } from "./utils/constants";
 import initGraphql from "./config/graphql";
 import { apiCache } from "./utils/apiCache";
 import IntuitionLogo from "./assets/img/Intuition-logo.svg";
@@ -34,7 +31,7 @@ interface GraphComponentProps {
   onClose?: () => void;
   onCreatePlayer?: () => void;
   onConnectWallet?: () => void;
-  config?: PlayerMapConfig;
+  initialProfile?: string;
 }
 
 const GraphComponentInner: React.FC<GraphComponentProps> = ({
@@ -45,12 +42,12 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   onClose,
   onCreatePlayer,
   onConnectWallet,
-  config,
 }) => {
   // ── Init ──────────────────────────────────────────────────────────────────────
   useEffect(() => { initGraphql(); }, []);
 
-  const constants: DefaultPlayerMapConstants = usePlayerConstants(config);
+  const { isLoading: gameLoading, activeGame } = useGameContext();
+
   const [network] = useState<Network>(Network.MAINNET);
 
   // ── Wallet ────────────────────────────────────────────────────────────────────
@@ -70,20 +67,20 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const hasConfirmedPlayer = useMemo(
     () => {
       const match = activePositions.some((p: any) =>
-        p.term?.triple?.predicate_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId &&
-        p.term?.triple?.object_id === constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId
+        p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
+        p.term?.triple?.object_id === activeGame?.atomId
       );
       console.log('[PlayerMap] hasConfirmedPlayer:', match);
       console.log('[PlayerMap] activePositions count:', activePositions.length);
-      console.log('[PlayerMap] PLAYER_GAME predicateId:', constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.predicateId);
-      console.log('[PlayerMap] PLAYER_GAME objectId:', constants.PLAYER_TRIPLE_TYPES.PLAYER_GAME.objectId);
+      console.log('[PlayerMap] PREDICATES.IS_PLAYER_OF:', PREDICATES.IS_PLAYER_OF);
+      console.log('[PlayerMap] activeGame?.atomId:', activeGame?.atomId);
       console.log('[PlayerMap] positions with triples:', activePositions
         .filter((p: any) => p.term?.triple)
         .map((p: any) => ({ predicate_id: p.term.triple.predicate_id, object_id: p.term.triple.object_id }))
       );
       return match;
     },
-    [activePositions, constants],
+    [activePositions, activeGame],
   );
 
   // Pendant le chargement des positions, on ne sait pas encore si le player est confirmé.
@@ -109,7 +106,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     connections: myConnections,
     loading: sidebarLoading,
     error: sidebarError,
-  } = useSidebarData(walletAddress, Network.MAINNET, constants);
+  } = useSidebarData(walletAddress, Network.MAINNET);
 
   // Étend isLoading pour attendre le sidebar si le player est confirmé (évite flash du form)
   const isProfileLoading = hasConfirmedPlayer && sidebarLoading;
@@ -175,6 +172,16 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     );
   }
 
+  // ── Chargement game context ───────────────────────────────────────────────────
+  if (gameLoading && !activeGame) {
+    return (
+      <div className={styles.errorContainer}>
+        <div className={styles.spinner} />
+        <p className={styles.mutedText}>Loading game data…</p>
+      </div>
+    );
+  }
+
   // ── Chargement ────────────────────────────────────────────────────────────────
   if (isLoading || isProfileLoading) {
     return (
@@ -200,7 +207,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             walletAddress={walletAddress}
             wagmiConfig={wagmiConfig}
             walletHooks={walletHooks}
-            constants={constants}
             hasConfirmedPlayer={hasConfirmedPlayer}
             onCreatePlayer={handleCreatePlayer}
             onRegistrationComplete={handleRegistrationComplete}
@@ -226,8 +232,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             <div className={styles.graphPane}>
               <PlayerMapGraph
                 walletAddress={walletAddress}
-                constants={constants}
-                gamesId={constants.COMMON_IDS.GAMES_ID}
                 onNodeSelect={handleNodeSelect}
                 onControlsReady={setGraphControls}
                 onSpeakUpClick={() => handlePanelModeChange(rightPanelMode === "speakup" ? "atom" : "speakup")}
@@ -242,7 +246,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
                 walletAddress={walletAddress}
                 walletConnected={walletConnected}
                 wagmiConfig={wagmiConfig}
-                constants={constants}
                 myAtomDetails={myAtomDetails}
                 myTriples={myTriples}
                 myPositions={myPositions}

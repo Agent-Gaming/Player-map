@@ -1,4 +1,5 @@
 import React from "react";
+import { ipfsToHttpUrl } from "../../utils/pinata";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
@@ -89,12 +90,12 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
         {activityComponents.type === 'triple' ? (
           <>
             <div title={subjectLabel} className={styles.pill}>
-              {subjectImage && <img src={subjectImage} alt="" className={styles.pillImg} />}
+              {subjectImage && <img src={ipfsToHttpUrl(subjectImage)} alt="" className={styles.pillImg} />}
               <span className={styles.pillLabel}>{subjectLabel}</span>
             </div>
             <span className={styles.predicate}>{predicateLabel}</span>
             <div title={objectLabel} className={styles.pill}>
-              {objectImage && <img src={objectImage} alt="" className={styles.pillImg} />}
+              {objectImage && <img src={ipfsToHttpUrl(objectImage)} alt="" className={styles.pillImg} />}
               <span className={styles.pillLabel}>{objectLabel}</span>
             </div>
           </>

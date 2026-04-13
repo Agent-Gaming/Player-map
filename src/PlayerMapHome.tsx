@@ -433,51 +433,58 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       );
       const resolvedFirstClaimTripleId = `0x${computedFirstClaimId.toString(16)}`;
 
-      // Build the batch from all to-create items
-      const triplesToCreate: TripleToCreate[] = [];
-      const batchedIds: string[] = [];
+      // ── Batch 1: claims + game-nested + guild-nested ──────────────────────
+      // context-nested is excluded here because its subject (the first claim triple)
+      // may not yet exist on-chain and must be created first.
+      const batch1: TripleToCreate[] = [];
+      const batch1Ids: string[] = [];
 
       for (const item of pending) {
         if (item.id.startsWith('claim-')) {
-          // find the matching claim by atomId suffix
           const claimAtomId = item.id.slice('claim-'.length);
-          triplesToCreate.push({ subjectId: BigInt(accountAtomId), predicateId: BigInt(isId), objectId: BigInt(claimAtomId) });
-          batchedIds.push(item.id);
+          batch1.push({ subjectId: BigInt(accountAtomId), predicateId: BigInt(isId), objectId: BigInt(claimAtomId) });
+          batch1Ids.push(item.id);
         } else if (item.id === 'game-nested') {
-          triplesToCreate.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isPlayerOfId), objectId: BigInt(gamesId) });
-          batchedIds.push(item.id);
-        } else if (item.id === 'context-nested') {
-          triplesToCreate.push({ subjectId: BigInt(resolvedFirstClaimTripleId), predicateId: BigInt(inId), objectId: BigInt(gamesId) });
-          batchedIds.push(item.id);
+          batch1.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isPlayerOfId), objectId: BigInt(gamesId) });
+          batch1Ids.push(item.id);
         } else if (item.id === 'guild-nested' && selectedGuild) {
-          triplesToCreate.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isMemberOfId), objectId: BigInt(selectedGuild) });
-          batchedIds.push(item.id);
+          batch1.push({ subjectId: BigInt(aliasTripleId), predicateId: BigInt(isMemberOfId), objectId: BigInt(selectedGuild) });
+          batch1Ids.push(item.id);
         }
       }
 
-      if (triplesToCreate.length === 0) {
+      const hasContextNested = pending.some(i => i.id === 'context-nested');
+
+      if (batch1.length === 0 && !hasContextNested) {
         setIsInitializing(false);
         setRegistrationPhase('complete');
         return;
       }
 
-      // Mark all as creating
-      setToCreateItems(prev => prev.map(i => batchedIds.includes(i.id) ? { ...i, status: 'creating' } : i));
+      if (batch1.length > 0) {
+        setToCreateItems(prev => prev.map(i => batch1Ids.includes(i.id) ? { ...i, status: 'creating' } : i));
+        await batchCreateTriple(batch1);
+        setToCreateItems(prev => prev.map(i => {
+          if (!batch1Ids.includes(i.id)) return i;
+          if (i.id.startsWith('claim-')) {
+            const claimAtomId = i.id.slice('claim-'.length);
+            const resultTripleId = claimAtomId === claims[0].atomId ? resolvedFirstClaimTripleId : undefined;
+            return { ...i, status: 'created', ...(resultTripleId ? { resultTripleId } : {}) };
+          }
+          return { ...i, status: 'created' };
+        }));
+      }
 
-      // Single transaction — one wallet confirmation for all triples
-      await batchCreateTriple(triplesToCreate);
-
-      // Mark all as created; tag each claim triple with its resolved triple id
-      setToCreateItems(prev => prev.map(i => {
-        if (!batchedIds.includes(i.id)) return i;
-        if (i.id.startsWith('claim-')) {
-          const claimAtomId = i.id.slice('claim-'.length);
-          // reuse computeTripleId synchronously — but it returns a Promise, so we store resolvedFirstClaimTripleId only for the first claim
-          const resultTripleId = claimAtomId === claims[0].atomId ? resolvedFirstClaimTripleId : undefined;
-          return { ...i, status: 'created', ...(resultTripleId ? { resultTripleId } : {}) };
-        }
-        return { ...i, status: 'created' };
-      }));
+      // ── Batch 2: context-nested (requires claim triple to be on-chain) ────
+      if (hasContextNested) {
+        setToCreateItems(prev => prev.map(i => i.id === 'context-nested' ? { ...i, status: 'creating' } : i));
+        await batchCreateTriple([{
+          subjectId: BigInt(resolvedFirstClaimTripleId),
+          predicateId: BigInt(inId),
+          objectId: BigInt(gamesId),
+        }]);
+        setToCreateItems(prev => prev.map(i => i.id === 'context-nested' ? { ...i, status: 'created' } : i));
+      }
 
       setIsInitializing(false);
       setRegistrationPhase('complete');

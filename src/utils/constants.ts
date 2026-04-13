@@ -12,6 +12,7 @@ export const PREDICATES = {
   IN:           '0xb0d3de9abeebc79e74504814f69d38eae809410c9759678855f79d1b4c7405cb',
   ACCEPTED:     '0x69b32b0ec575de94fea50d8ed84f198d46ab1590b6ec10d6527a1cc93c2c2dc1',
   FOLLOWS:      '0x8f9b5dc2e7b8bd12f6762c839830672f1d13c08e72b5f09f194cafc153f2df8a',
+  CREATED_BY:   '0xf08c4615f44c4700519ec874b6d72e4bd990beea9fc301325c91b650784ee971',
 } as const
 
 // Fixed amount in wei for each voting unit — library constant, not game-specific

@@ -3,6 +3,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from "react";
 import { Network } from "./hooks/useAtomData";
 import { usePositions } from "./hooks/usePositions";
@@ -46,7 +47,11 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Init ──────────────────────────────────────────────────────────────────────
   useEffect(() => { initGraphql(); }, []);
 
-  const { isLoading: gameLoading, activeGame } = useGameContext();
+  const { isLoading: gameLoading, activeGame, setActiveGameId } = useGameContext();
+
+  // Track the last game the user had full access to — used to go back when switching
+  // to a game without a player profile. useState (not ref) so the value is correct at render time.
+  const [lastAccessibleGameId, setLastAccessibleGameId] = useState<string | null>(null);
 
   const [network] = useState<Network>(Network.MAINNET);
 
@@ -113,6 +118,20 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // Accès complet au map : triple "is player of" + alias existant, ou juste après inscription
   const canAccessMap = justRegistered || (hasConfirmedPlayer && !!myAtomDetails);
   console.log('[PlayerMap] canAccessMap:', canAccessMap, '| myAtomDetails:', !!myAtomDetails, '| sidebarLoading:', sidebarLoading);
+
+  // Keep the last accessible game ID up-to-date.
+  // Using atomId (string) as dep so the effect only fires when the game actually changes.
+  useEffect(() => {
+    if (canAccessMap && activeGame?.atomId) {
+      setLastAccessibleGameId(activeGame.atomId);
+    }
+  }, [canAccessMap, activeGame?.atomId]);
+
+  const handleBackToGraph = useCallback(() => {
+    if (lastAccessibleGameId) {
+      setActiveGameId(lastAccessibleGameId);
+    }
+  }, [lastAccessibleGameId, setActiveGameId]);
 
   // ── Données atom sélectionné ──────────────────────────────────────────────────
   const { atomDetails: selectedAtomDetails, loading: selectedLoading, error: selectedError } =
@@ -210,6 +229,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             hasConfirmedPlayer={hasConfirmedPlayer}
             onCreatePlayer={handleCreatePlayer}
             onRegistrationComplete={handleRegistrationComplete}
+            onBack={lastAccessibleGameId && lastAccessibleGameId !== activeGame?.atomId ? handleBackToGraph : undefined}
           />
         </div>
       )}

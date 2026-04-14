@@ -25,6 +25,14 @@ export const useVoteItemsManagement = ({
   const [hasLoadedTripleDetails, setHasLoadedTripleDetails] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
+  // Reset when the active game changes so the claim list reloads for the new game.
+  useEffect(() => {
+    setHasLoadedTripleDetails(false);
+    setVoteItems([]);
+    setUserPositionsData(null);
+    setIsLoading(true);
+  }, [activeGame?.atomId]);
+
   const refreshPositions = () => {
     setHasLoadedTripleDetails(false);
     setUserPositionsData(null);

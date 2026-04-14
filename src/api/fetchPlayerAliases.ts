@@ -255,6 +255,57 @@ export const fetchAliasesByWalletPosition = async (
 };
 
 /**
+ * Looks up the on-chain term_id of the triple (accountAtomId → IS → fairplayAtomId).
+ * This triple is created during player registration and is shared across games —
+ * a returning player already has it from their first game registration.
+ * Returns the term_id string if found, or null if the triple doesn't exist yet.
+ */
+export const fetchFirstClaimTripleId = async (
+  accountAtomId: string,
+  predicateId: string,
+  fairplayAtomId: string,
+  network: Network = Network.MAINNET
+): Promise<string | null> => {
+  try {
+    const apiUrl = API_URLS[network];
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: `
+          query GetFirstClaimTriple($subjectId: String!, $predicateId: String!, $objectId: String!) {
+            triples(where: {
+              subject_id: { _eq: $subjectId },
+              predicate_id: { _eq: $predicateId },
+              object_id: { _eq: $objectId }
+            }, limit: 1) {
+              term_id
+            }
+          }
+        `,
+        variables: {
+          subjectId: accountAtomId,
+          predicateId,
+          objectId: fairplayAtomId,
+        },
+      }),
+    });
+
+    const data = await response.json();
+    if (data.errors) {
+      console.error('GraphQL errors (fetchFirstClaimTripleId):', data.errors);
+      return null;
+    }
+
+    const triples = data.data?.triples || [];
+    return triples.length > 0 ? triples[0].term_id : null;
+  } catch (error) {
+    console.error('Error fetching first claim triple:', error);
+    return null;
+  }
+};
+
+/**
  * Used at form load to skip consent steps for users who already accepted terms v1.0.
  * Returns exists: false (not called) when accountAtomId is undefined (new user).
  */

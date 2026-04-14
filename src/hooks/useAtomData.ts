@@ -7,9 +7,10 @@ export enum Network {
 }
 
 // URLs des API GraphQL
-// En développement, utilise le proxy pour éviter les erreurs CORS
+// Discord intercepte cette URL et la redirige vers /.proxy/graphql (CSP oblige)
+// En dev standalone: proxy.agent-bossfighters.com accepte CORS depuis toutes origines
 export const API_URLS = {
-  [Network.MAINNET]: import.meta.env.VITE_INTUITION_GRAPHQL_URL ?? '/graphql',
+  [Network.MAINNET]: import.meta.env.VITE_INTUITION_GRAPHQL_URL ?? 'https://proxy.agent-bossfighters.com/graphql',
   [Network.TESTNET]: '/graphql'
 };
 

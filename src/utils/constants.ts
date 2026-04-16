@@ -15,5 +15,14 @@ export const PREDICATES = {
   CREATED_BY:   '0xf08c4615f44c4700519ec874b6d72e4bd990beea9fc301325c91b650784ee971',
 } as const
 
+/**
+ * Canonical atom IDs for well-known Intuition concepts used across all games.
+ * FAIRPLAY: the "fairplay" quality atom — subject of (Account → IS → fairplay) registration triples.
+ * This matches PLAYER_QUALITY_1.objectId in PlayerMapGraph.tsx.
+ */
+export const ATOMS = {
+  FAIRPLAY: '0xe8c70540064241818928054f9d655b79a9fc06fad93967db766347d9ed678795',
+} as const
+
 // Fixed amount in wei for each voting unit — library constant, not game-specific
 export const UNIT_VALUE = 10000000000000000n

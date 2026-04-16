@@ -44,7 +44,7 @@ export const useBatchCreateTriple = ({ walletConnected, walletAddress, publicCli
       const exists = await readClient.readContract({
         address: ATOM_CONTRACT_ADDRESS,
         abi: atomABI,
-        functionName: 'isTriple',
+        functionName: 'isTermCreated',
         args: [termId],
       });
 

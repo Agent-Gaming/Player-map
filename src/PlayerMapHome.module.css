@@ -408,48 +408,6 @@
   margin-bottom: 8px;
 }
 
-.aliasModeButtons {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-  align-self: flex-start;
-}
-
-.aliasModeBtn {
-  padding: 10px 16px;
-  border: 1px solid #444;
-  border-radius: 4px;
-  font-size: 0.82em;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  background-color: #1e1e30;
-  color: #888;
-  outline: none;
-}
-
-.aliasModeBtn:focus {
-  outline: none;
-}
-
-.aliasModeActive {
-  background-color: var(--color-primary);
-  color: #000;
-  border-color: var(--color-primary);
-  font-weight: bold;
-}
-
-.aliasModeInactive {
-  background-color: #2a2710;
-  color: #7a7050;
-  border-color: #3a3620;
-}
-
-.aliasModeInactive:hover {
-  border-color: var(--color-primary);
-  color: #888;
-}
-
 .radioLabel {
   display: flex;
   align-items: center;
@@ -493,5 +451,5 @@
 }
 
 .consentLink:hover {
-  color: #000000;
+  color: #c5c5c5;
 }

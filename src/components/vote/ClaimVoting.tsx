@@ -44,7 +44,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   const [isWalletReady, setIsWalletReady] = useState(false);
 
   // Récupérer le jeu actif depuis le contexte
-  const { activeGame } = useGameContext();
+  const { activeGame, isLoading: gameLoading } = useGameContext();
   const gameAtomId = activeGame?.atomId;
 
   // Vérifier si l'utilisateur a le nested triple "is player of [game]" via ses positions
@@ -67,12 +67,12 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
 
   // Mettre à jour l'affichage de la modale CreatePlayerModal
   useEffect(() => {
-    if (isWalletReady && !hasPlayerAtom && !positionsLoading) {
+    if (isWalletReady && !hasPlayerAtom && !positionsLoading && !gameLoading && gameAtomId) {
       setShowCreatePlayerModal(true);
     } else {
       setShowCreatePlayerModal(false);
     }
-  }, [isWalletReady, hasPlayerAtom, positionsLoading]);
+  }, [isWalletReady, hasPlayerAtom, positionsLoading, gameLoading, gameAtomId]);
 
   // Use the vote items management hook
   const {

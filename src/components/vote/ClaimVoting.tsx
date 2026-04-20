@@ -6,7 +6,7 @@ import { TransactionInfo } from "./TransactionInfo";
 import { VotingHeader } from "./VotingHeader";
 import { ClaimList } from "./ClaimList";
 import { TransactionStatusDisplay } from "./TransactionStatus";
-import { ConnectWalletModal, CreatePlayerModal } from "../modals";
+import { ConnectWalletModal } from "../modals";
 import { usePositions } from "../../hooks/usePositions";
 import { useGameContext } from "../../contexts/GameContext";
 import { PREDICATES } from "../../utils/constants";
@@ -37,9 +37,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   wagmiConfig,
   walletHooks,
 }) => {
-  // État pour gérer l'affichage de la modale CreatePlayerModal
-  const [showCreatePlayerModal, setShowCreatePlayerModal] = useState(false);
-
   // Vérifier si le wallet est connecté
   const [isWalletReady, setIsWalletReady] = useState(false);
 
@@ -65,14 +62,13 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     setIsWalletReady(hasConnectedWallet);
   }, [walletAddress]);
 
-  // Mettre à jour l'affichage de la modale CreatePlayerModal
+  // Redirect to player creation when no player found for the current game.
+  // GraphComponent handles the actual redirect via canAccessMap — this is a fallback trigger.
   useEffect(() => {
     if (isWalletReady && !hasPlayerAtom && !positionsLoading && !gameLoading && gameAtomId) {
-      setShowCreatePlayerModal(true);
-    } else {
-      setShowCreatePlayerModal(false);
+      if (onCreatePlayer) onCreatePlayer();
     }
-  }, [isWalletReady, hasPlayerAtom, positionsLoading, gameLoading, gameAtomId]);
+  }, [isWalletReady, hasPlayerAtom, positionsLoading, gameLoading, gameAtomId, onCreatePlayer]);
 
   // Use the vote items management hook
   const {
@@ -115,24 +111,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     await submitVotes(voteItems);
   };
 
-  // Fonction pour gérer le clic sur le bouton "Create Player"
-  const handleCreatePlayer = () => {
-    setShowCreatePlayerModal(false);
-    if (onCreatePlayer) {
-      onCreatePlayer();
-    }
-  };
-
-  // Fonction pour fermer la modale CreatePlayerModal et tout le composant de vote
-  const handleCloseCreatePlayerModal = () => {
-    setShowCreatePlayerModal(false);
-    
-    // Fermer tout le composant de vote en appelant onClose
-    if (onClose) {
-      onClose();
-    }
-  };
-
   const { isCorrectNetwork, currentChainId, targetChainId, allowedChainIds } = useNetworkCheck({
     walletConnected,
     publicClient
@@ -150,17 +128,9 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     );
   }
 
-  // Si l'utilisateur a connecté son wallet mais n'a pas de player
+  // Pas encore de player pour ce jeu — le parent (GraphComponent) redirige via canAccessMap.
   if (isWalletReady && !hasPlayerAtom && !positionsLoading) {
-    return (
-      <div className={styles.playerPrompt}>
-        <CreatePlayerModal
-          isOpen={true}
-          onCreatePlayer={handleCreatePlayer}
-          onClose={handleCloseCreatePlayerModal}
-        />
-      </div>
-    );
+    return null;
   }
 
   // Affichage normal si wallet connecté et player existe

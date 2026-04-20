@@ -1,4 +1,3 @@
-import axios from 'axios'
 import { getPinataConstants } from './globalConstants'
 
 interface PinataResponse {
@@ -8,33 +7,28 @@ interface PinataResponse {
 }
 
 export const uploadToPinata = async (file: File): Promise<string> => {
-  try {
-    // Récupérer les constantes Pinata
-    const constants = getPinataConstants();
-    if (!constants?.PINATA_CONFIG?.JWT_KEY) {
-      throw new Error("Configuration Pinata manquante. Appelez setPinataConstants() avec PINATA_CONFIG");
-    }
-
-    const PINATA_JWT = constants.PINATA_CONFIG.JWT_KEY;
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await axios.post<PinataResponse>(
-      'https://api.pinata.cloud/pinning/pinFileToIPFS',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${PINATA_JWT}`
-        }
-      }
-    )
-
-    return `ipfs://${response.data.IpfsHash}`
-  } catch (error) {
-    console.error('Erreur lors du téléversement vers Pinata:', error)
-    throw new Error("Échec du téléversement de l'image vers IPFS")
+  const constants = getPinataConstants();
+  if (!constants?.PINATA_CONFIG?.JWT_KEY) {
+    throw new Error("Configuration Pinata manquante. Appelez setPinataConstants() avec PINATA_CONFIG");
   }
+
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${constants.PINATA_CONFIG.JWT_KEY}` },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '')
+    console.error('Pinata upload error:', response.status, text)
+    throw new Error(`Échec du téléversement de l'image vers IPFS (${response.status}: ${text.slice(0, 120)})`)
+  }
+
+  const data: PinataResponse = await response.json()
+  return `ipfs://${data.IpfsHash}`
 }
 
 export const isIpfsUrl = (url: string | undefined): boolean => {

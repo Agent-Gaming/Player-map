@@ -119,6 +119,12 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const canAccessMap = justRegistered || (hasConfirmedPlayer && !!myAtomDetails);
   console.log('[PlayerMap] canAccessMap:', canAccessMap, '| myAtomDetails:', !!myAtomDetails, '| sidebarLoading:', sidebarLoading);
 
+  // Reset justRegistered when the user switches to a different game — otherwise canAccessMap
+  // stays true from the previous registration and the new game bypasses the player check.
+  useEffect(() => {
+    setJustRegistered(false);
+  }, [activeGame?.atomId]);
+
   // Keep the last accessible game ID up-to-date.
   // Using atomId (string) as dep so the effect only fires when the game actually changes.
   useEffect(() => {

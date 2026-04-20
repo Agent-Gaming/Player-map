@@ -17,13 +17,16 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   activities,
   title,
 }) => {
-  const { activeGame } = useGameContext();
+  const { games: allGames } = useGameContext();
 
   // ── IDs de prédicats ─────────────────────────────────────────────────────────
   const IS_PLAYER_OF_ID = PREDICATES.IS_PLAYER_OF;
   const IS_MEMBER_OF_ID = PREDICATES.IS_MEMBER_OF;
   const IS_ID = PREDICATES.IS;
-  const guildIds = new Set((activeGame?.guilds || []).map((g) => g.atomId));
+
+  // All guild atomIds across every registered game — used to exclude old-format
+  // "IS_PLAYER_OF → guild" triples that predate the nested IS_MEMBER_OF structure.
+  const allGuildIds = new Set(allGames.flatMap((g) => g.guilds.map((guild) => guild.atomId)));
 
   // ── Groupes de claims ────────────────────────────────────────────────────────
   const isPlayerOfClaims = activities.filter((a) =>
@@ -38,11 +41,11 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
     IS_ID ? a.predicate_id === IS_ID : a.predicate?.label === "is"
   );
 
-  const games = isPlayerOfClaims.filter((a) => !guildIds.has(a.object_id));
-  const guilds = [
-    ...isPlayerOfClaims.filter((a) => guildIds.has(a.object_id)),
-    ...isMemberOfClaims,
-  ];
+  // Games: IS_PLAYER_OF where the object is not a guild in any registered game.
+  // Old "IS_PLAYER_OF → guild" triples are excluded regardless of active game.
+  const games = isPlayerOfClaims.filter((a) => !allGuildIds.has(a.object_id));
+  // Guilds: only the current nested IS_MEMBER_OF format.
+  const guilds = [...isMemberOfClaims];
 
   // Player qualities — group IS claims by quality atom, sum votes across all games
   const qualityMap = new Map<string, { object: { label: string; image?: string }; forCount: number; againstCount: number }>();

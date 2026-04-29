@@ -49,6 +49,12 @@ const proxyIfDiscord = (url: string): string => {
 export const ipfsToHttpUrl = (ipfsUrl: string): string => {
   if (!ipfsUrl) return ipfsUrl
 
+  // Atoms created in Discord mode may have stored proxy URLs — decode them back
+  if (ipfsUrl.startsWith('/.proxy/img-proxy?url=')) {
+    const embedded = decodeURIComponent(ipfsUrl.slice('/.proxy/img-proxy?url='.length))
+    return proxyIfDiscord(embedded)
+  }
+
   // Convert ipfs:// to HTTP
   if (isIpfsUrl(ipfsUrl)) {
     const hash = ipfsUrl.replace("ipfs://", "")

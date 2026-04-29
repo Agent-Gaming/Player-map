@@ -453,3 +453,36 @@
 .consentLink:hover {
   color: #c5c5c5;
 }
+
+/* ── Alias mode toggle buttons ──────────────────────────────────────────────── */
+
+.aliasModeButtons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+  width: 360px;
+  flex-shrink: 0;
+}
+
+.aliasModeBtn {
+  flex: 0 0 168px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  border: 2px solid var(--color-primary);
+  white-space: nowrap;
+}
+
+.aliasModeActive {
+  background-color: var(--color-primary);
+  color: #000;
+}
+
+.aliasModeInactive {
+  background-color: transparent;
+  color: var(--color-primary);
+}

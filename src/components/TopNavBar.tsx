@@ -19,7 +19,7 @@ const DISCLAIMER_TEXT = {
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-export type RightPanelMode = "speakup" | "atom" | "profile";
+export type RightPanelMode = "speakup" | "atom" | "profile" | "player-profile";
 
 export interface GraphControls {
   goBack: () => void;

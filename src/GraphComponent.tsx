@@ -8,6 +8,7 @@ import React, {
 import { Network } from "./hooks/useAtomData";
 import { usePositions } from "./hooks/usePositions";
 import { useSidebarData } from "./hooks/useSidebarData";
+import { useOtherPlayerProfile } from "./hooks/useOtherPlayerProfile";
 import { useSelectedAtomData } from "./hooks/useSelectedAtomData";
 import { useSelectedAtomClaims } from "./hooks/useSelectedAtomClaims";
 import PlayerMapHome from "./PlayerMapHome";
@@ -102,6 +103,10 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Nœud sélectionné ─────────────────────────────────────────────────────────
   const [selectedNode, setSelectedNode] = useState<any>(null);
 
+  // ── Profil autre joueur ───────────────────────────────────────────────────────
+  const [selectedPlayerAccountId, setSelectedPlayerAccountId] = useState<string | null>(null);
+  const [selectedPlayerPseudo, setSelectedPlayerPseudo] = useState<{ label: string; image: string }>({ label: '', image: '' });
+
   // ── Données sidebar "mon profil" ──────────────────────────────────────────────
   const {
     atomDetails: myAtomDetails,
@@ -146,15 +151,43 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const { claims: selectedClaims, loading: selectedClaimsLoading, error: selectedClaimsError } =
     useSelectedAtomClaims(selectedNode, Network.MAINNET);
 
+  // ── Profil autre joueur ───────────────────────────────────────────────────────
+  const {
+    atomDetails: otherPlayerAtomDetails,
+    walletAddress: otherPlayerWallet,
+    positions: otherPlayerPositions,
+    activities: otherPlayerActivities,
+    loading: otherPlayerLoading,
+    error: otherPlayerError,
+  } = useOtherPlayerProfile(
+    selectedPlayerAccountId,
+    selectedPlayerPseudo.label,
+    selectedPlayerPseudo.image,
+    Network.MAINNET,
+  );
+
   // ── Quand un nœud est cliqué → changer de mode ────────────────────────────────
   const handleNodeSelect = useCallback(
     (node: any) => {
       setSelectedNode(node);
       if (!node) return;
-      // Si c'est le nœud de l'utilisateur → profil, sinon → atom
-      const isMyNode =
-        node?.id === myAtomDetails?.id || node?.id === myAtomDetails?.term_id;
-      setRightPanelMode(isMyNode ? "profile" : "atom");
+      const accountId: string | undefined = node.accountId;
+      if (accountId) {
+        // Nœud joueur (pseudo résolu depuis account)
+        const isMyNode = accountId === myAtomDetails?.term_id;
+        if (isMyNode) {
+          setRightPanelMode("profile");
+        } else {
+          setSelectedPlayerAccountId(accountId);
+          setSelectedPlayerPseudo({ label: node.label || '', image: node.image || '' });
+          setRightPanelMode("player-profile");
+        }
+      } else {
+        // Nœud atom générique
+        const isMyNode =
+          node?.id === myAtomDetails?.id || node?.id === myAtomDetails?.term_id;
+        setRightPanelMode(isMyNode ? "profile" : "atom");
+      }
     },
     [myAtomDetails],
   );
@@ -283,6 +316,12 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
                 selectedClaims={selectedClaims}
                 selectedLoading={selectedLoading || selectedClaimsLoading}
                 selectedError={selectedError || selectedClaimsError}
+                otherPlayerAtomDetails={otherPlayerAtomDetails}
+                otherPlayerWallet={otherPlayerWallet}
+                otherPlayerPositions={otherPlayerPositions}
+                otherPlayerActivities={otherPlayerActivities}
+                otherPlayerLoading={otherPlayerLoading}
+                otherPlayerError={otherPlayerError}
               />
             </div>
           </div>

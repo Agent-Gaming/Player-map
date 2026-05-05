@@ -5,7 +5,7 @@ import {
   createAtomFromIpfsUpload,
 } from '@0xintuition/sdk';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
-import { ipfsToHttpUrl, isIpfsUrl } from '../utils/pinata';
+import { isIpfsUrl } from '../utils/pinata';
 import { getPinataConstants } from '../utils/globalConstants';
 import type { Address } from 'viem';
 
@@ -37,7 +37,7 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       throw new Error('Wallet not connected');
     }
     const imageUrl = input.image && isIpfsUrl(input.image)
-      ? ipfsToHttpUrl(input.image)
+      ? `https://ipfs.io/ipfs/${input.image.replace('ipfs://', '')}`
       : input.image;
 
     console.log('[createAtom] ▶ name:', input.name, '| image:', imageUrl ?? '(none)');

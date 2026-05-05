@@ -46,6 +46,7 @@ export const useGameStats = (
       try {
         const apiUrl = API_URLS[network];
 
+        // Step 1: fetch game atom, player triple subjects, and votes
         const response = await fetch(apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -57,26 +58,14 @@ export const useGameStats = (
                   label
                   image
                 }
-                players: triples_aggregate(where: {
+                playerTriples: triples(where: {
                   predicate_id: { _eq: $isPlayerOfId }
                   object_id: { _eq: $gamesId }
-                }) {
-                  aggregate { count }
+                }, limit: 1000) {
+                  subject_id
                 }
                 votes: positions_aggregate(where: {
-                  term: {
-                    triple: { object_id: { _in: $claimAtomIds } }
-                  }
-                  shares: { _gt: 0 }
-                }) {
-                  aggregate { count }
-                }
-                attestations: positions_aggregate(where: {
-                  term: {
-                    triple: {
-                      object_id: { _eq: $gamesId }
-                    }
-                  }
+                  term_id: { _in: $claimAtomIds }
                   shares: { _gt: 0 }
                 }) {
                   aggregate { count }
@@ -95,16 +84,40 @@ export const useGameStats = (
           return;
         }
 
-        const { gameAtom, players, votes, attestations } = result.data ?? {};
+        const { gameAtom, playerTriples, votes } = result.data ?? {};
 
         if (gameAtom?.[0]) {
           setGameName(gameAtom[0].label ?? "");
           setGameImage(gameAtom[0].image ?? null);
         }
 
-        setTotalPlayers(players?.aggregate?.count ?? 0);
         setTotalVotes(votes?.aggregate?.count ?? 0);
-        setTotalAttestations(attestations?.aggregate?.count ?? 0);
+
+        // Step 2: count nested player triples (subject_id is itself a triple term_id)
+        const subjectIds: string[] = (playerTriples ?? []).map((t: any) => t.subject_id).filter(Boolean);
+        if (subjectIds.length > 0) {
+          const nestedResponse = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              query: `
+                query NestedPlayers($subjectIds: [String!]!) {
+                  nestedCount: triples_aggregate(where: { term_id: { _in: $subjectIds } }) {
+                    aggregate { count }
+                  }
+                }
+              `,
+              variables: { subjectIds },
+            }),
+          });
+          const nestedResult = await nestedResponse.json();
+          setTotalPlayers(nestedResult.data?.nestedCount?.aggregate?.count ?? 0);
+        } else {
+          setTotalPlayers(0);
+        }
+
+        // Attestations = number of claims in the game JSON (not a GraphQL count)
+        setTotalAttestations(claimAtomIds.length);
       } catch (err) {
         console.error("useGameStats error:", err);
         setError("Network error");

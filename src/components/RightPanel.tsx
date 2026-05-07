@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
+import FollowButton from "./graph/FollowButton";
 import { RightPanelMode } from "./TopNavBar";
 import { ClaimVoting } from "./vote/ClaimVoting";
 import { SpeakUpHeader } from "./vote/SpeakUpHeader";
@@ -304,7 +305,11 @@ const OtherPlayerProfileContent: React.FC<{
   walletAddress?: string | null;
   loading?: boolean;
   error?: string | null;
-}> = ({ atomDetails, activities, positions = [], walletAddress, loading, error }) => {
+  myAccountAtomId?: string | null;
+  walletConnected?: any;
+  publicClient?: any;
+  currentWalletAddress?: string;
+}> = ({ atomDetails, activities, positions = [], walletAddress, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress }) => {
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
@@ -336,6 +341,15 @@ const OtherPlayerProfileContent: React.FC<{
           walletAddress={undefined}
           showDescription={false}
           placeholderElement={<FaUser size={60} color="#ffd32a" />}
+          actionElement={
+            <FollowButton
+              walletConnected={walletConnected}
+              walletAddress={currentWalletAddress}
+              publicClient={publicClient}
+              myAccountAtomId={myAccountAtomId ?? null}
+              otherAccountAtomId={atomDetails?.term_id ?? null}
+            />
+          }
         />
       </div>
 
@@ -469,6 +483,10 @@ const RightPanel: React.FC<RightPanelProps> = ({
             walletAddress={otherPlayerWallet}
             loading={otherPlayerLoading}
             error={otherPlayerError}
+            myAccountAtomId={myAtomDetails?.term_id ?? null}
+            walletConnected={walletConnected}
+            publicClient={wagmiConfig?.publicClient}
+            currentWalletAddress={walletAddress}
           />
         </div>
       )}

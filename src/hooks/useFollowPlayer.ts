@@ -4,7 +4,7 @@ import { Network, API_URLS } from './useAtomData';
 import { useBatchCreateTriple } from './useBatchCreateTriple';
 import { useRedeemBatch } from './useRedeemBatch';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
-import { PREDICATES } from '../utils/constants';
+import { PREDICATES, ATOMS } from '../utils/constants';
 import { apiCache } from '../utils/apiCache';
 
 export type FollowState = 'idle' | 'loading' | 'not-following' | 'following';
@@ -28,6 +28,9 @@ interface UseFollowPlayerResult {
   unfollow: () => Promise<void>;
 }
 
+// Triple structure: (I, follow, otherAccountAtomId)
+// The "I" atom is the universal subject — the player signals follow by depositing into this triple's vault.
+
 export const useFollowPlayer = ({
   walletConnected,
   walletAddress,
@@ -46,7 +49,8 @@ export const useFollowPlayer = ({
   const { batchCreateTriple } = useBatchCreateTriple({ walletConnected, walletAddress, publicClient });
   const { redeemBatch } = useRedeemBatch({ walletConnected, walletAddress });
 
-  // Check current follow state via GraphQL
+  // Triple is (I, follow, otherAccountAtomId).
+  // Check if it exists, and if so whether the current wallet has shares > 0 in its vault.
   const checkFollowState = useCallback(async () => {
     if (!myAccountAtomId || !otherAccountAtomId || !walletAddress) {
       setFollowState('idle');
@@ -60,21 +64,24 @@ export const useFollowPlayer = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: `
-            query CheckFollow($subject: String!, $predicate: String!, $object: String!, $wallet: String!) {
+            query CheckFollow($iAtom: String!, $predicate: String!, $object: String!, $wallet: String!) {
               triples(where: {
-                subject_id: { _eq: $subject },
+                subject_id: { _eq: $iAtom },
                 predicate_id: { _eq: $predicate },
                 object_id: { _eq: $object }
               }, limit: 1) {
                 term_id
-                positions(where: { account_id: { _ilike: $wallet }, shares: { _gt: "0" } }) {
-                  shares
+                term {
+                  positions(where: { account_id: { _ilike: $wallet }, shares: { _gt: "0" } }) {
+                    shares
+                    account_id
+                  }
                 }
               }
             }
           `,
           variables: {
-            subject: myAccountAtomId,
+            iAtom: ATOMS.I,
             predicate: PREDICATES.FOLLOWS,
             object: otherAccountAtomId,
             wallet: walletAddress.toLowerCase(),
@@ -92,7 +99,7 @@ export const useFollowPlayer = ({
       } else {
         const triple = triples[0];
         setTripleId(triple.term_id);
-        const positions = triple.positions || [];
+        const positions = triple.term?.positions || [];
         if (positions.length > 0) {
           setUserShares(BigInt(positions[0].shares));
           setFollowState('following');
@@ -110,19 +117,19 @@ export const useFollowPlayer = ({
   useEffect(() => { checkFollowState(); }, [checkFollowState]);
 
   const follow = async () => {
-    if (!myAccountAtomId || !otherAccountAtomId || !walletAddress || !walletConnected) return;
+    if (!otherAccountAtomId || !walletAddress || !walletConnected) return;
     setTxLoading(true);
     setError(null);
     try {
       if (!tripleId) {
-        // Triple doesn't exist — create it (includes initial deposit)
+        // Triple (I, follow, otherAccount) doesn't exist yet — create it (requires ~0.11 TRUST)
         await batchCreateTriple([{
-          subjectId: BigInt(myAccountAtomId),
+          subjectId: BigInt(ATOMS.I),
           predicateId: BigInt(PREDICATES.FOLLOWS),
           objectId: BigInt(otherAccountAtomId),
         }]);
       } else {
-        // Triple exists — deposit into it
+        // Triple exists — deposit into its vault to signal follow
         const depositAmount = BigInt(import.meta.env.VITE_VALUE_PER_TRIPLE || '10000000000000000');
         await walletConnected.writeContract({
           address: ATOM_CONTRACT_ADDRESS,
@@ -141,14 +148,15 @@ export const useFollowPlayer = ({
       }
       apiCache.clear();
       await queryClient.invalidateQueries({ queryKey: ['positions'] });
-      // Re-check state to get new tripleId + shares
       await checkFollowState();
     } catch (err: any) {
       console.error('[useFollowPlayer] follow error:', err);
-      const isRejected =
-        err?.name === 'UserRejectedRequestError' ||
-        (err?.message ?? '').toLowerCase().includes('user rejected');
-      setError(isRejected ? 'User rejected the request.' : (err?.shortMessage ?? err?.message ?? String(err)));
+      const msg = (err?.message ?? err?.shortMessage ?? String(err)).toLowerCase();
+      const isRejected = err?.name === 'UserRejectedRequestError' || msg.includes('user rejected');
+      const isInsufficient = msg.includes('insufficient funds') || msg.includes('exceeds the balance');
+      if (isRejected) setError('Transaction cancelled.');
+      else if (isInsufficient) setError('Insufficient TRUST. First follow requires ~0.11 TRUST, subsequent follows 0.01 TRUST.');
+      else setError(err?.shortMessage ?? err?.message ?? String(err));
     } finally {
       setTxLoading(false);
     }
@@ -171,10 +179,10 @@ export const useFollowPlayer = ({
       await checkFollowState();
     } catch (err: any) {
       console.error('[useFollowPlayer] unfollow error:', err);
-      const isRejected =
-        err?.name === 'UserRejectedRequestError' ||
-        (err?.message ?? '').toLowerCase().includes('user rejected');
-      setError(isRejected ? 'User rejected the request.' : (err?.shortMessage ?? err?.message ?? String(err)));
+      const msg = (err?.message ?? err?.shortMessage ?? String(err)).toLowerCase();
+      const isRejected = err?.name === 'UserRejectedRequestError' || msg.includes('user rejected');
+      if (isRejected) setError('Transaction cancelled.');
+      else setError(err?.shortMessage ?? err?.message ?? String(err));
     } finally {
       setTxLoading(false);
     }

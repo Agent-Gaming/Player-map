@@ -232,6 +232,12 @@ export const fetchAliasesByWalletPosition = async (
     }
 
     const triples = data.data?.triples || [];
+    console.log('[DIAG][fetchAliasesByWalletPosition] walletAddress:', walletAddress);
+    console.log('[DIAG][fetchAliasesByWalletPosition] predicateId (HAS_ALIAS):', predicateId);
+    console.log('[DIAG][fetchAliasesByWalletPosition] raw triples found:', triples.length, triples);
+    if (triples.length === 0) {
+      console.warn('[DIAG][fetchAliasesByWalletPosition] ⚠️ No HAS_ALIAS triples found for creator_id:', walletAddress);
+    }
     return triples.map((t: any): RawAliasWithSubject => {
       const rawImage: string | undefined = t.object?.image ?? undefined;
       const image = rawImage

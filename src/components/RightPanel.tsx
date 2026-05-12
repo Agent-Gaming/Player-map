@@ -44,6 +44,7 @@ interface RightPanelProps {
   otherPlayerWallet?: string | null;
   otherPlayerPositions?: any[];
   otherPlayerActivities?: any[];
+  otherPlayerConnections?: { followingCount: number; followersCount: number };
   otherPlayerLoading?: boolean;
   otherPlayerError?: string | null;
 }
@@ -249,6 +250,10 @@ const ProfileContent: React.FC<{
         showDescription={false}
         placeholderElement={<FaUser size={60} color="#ffd32a" />}
       />
+      <div className={styles.followStats}>
+        <span><strong>{connections.follows.length}</strong> Following</span>
+        <span><strong>{connections.followers.length}</strong> Followers</span>
+      </div>
       </div>
 
       {/* ── Bloc de stats ──────────────────────────────────────────────────── */}
@@ -303,13 +308,14 @@ const OtherPlayerProfileContent: React.FC<{
   activities: any[];
   positions?: any[];
   walletAddress?: string | null;
+  connections?: { followingCount: number; followersCount: number };
   loading?: boolean;
   error?: string | null;
   myAccountAtomId?: string | null;
   walletConnected?: any;
   publicClient?: any;
   currentWalletAddress?: string;
-}> = ({ atomDetails, activities, positions = [], walletAddress, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress }) => {
+}> = ({ atomDetails, activities, positions = [], walletAddress, connections, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress }) => {
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
@@ -351,6 +357,12 @@ const OtherPlayerProfileContent: React.FC<{
             />
           }
         />
+        {connections && (
+          <div className={styles.followStats}>
+            <span><strong>{connections.followingCount}</strong> Following</span>
+            <span><strong>{connections.followersCount}</strong> Followers</span>
+          </div>
+        )}
       </div>
 
       <div className={styles.profileHeader}>
@@ -436,6 +448,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   otherPlayerWallet,
   otherPlayerPositions = [],
   otherPlayerActivities = [],
+  otherPlayerConnections,
   otherPlayerLoading,
   otherPlayerError,
 }) => {
@@ -481,6 +494,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             activities={otherPlayerActivities}
             positions={otherPlayerPositions}
             walletAddress={otherPlayerWallet}
+            connections={otherPlayerConnections}
             loading={otherPlayerLoading}
             error={otherPlayerError}
             myAccountAtomId={myAtomDetails?.term_id ?? null}

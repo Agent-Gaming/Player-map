@@ -22,6 +22,7 @@ export const PREDICATES = {
  */
 export const ATOMS = {
   FAIRPLAY: '0xe8c70540064241818928054f9d655b79a9fc06fad93967db766347d9ed678795',
+  I:        '0x7ab197b346d386cd5926dbfeeb85dade42f113c7ed99ff2046a5123bb5cd016b',
 } as const
 
 // Fixed amount in wei for each voting unit — library constant, not game-specific

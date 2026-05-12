@@ -42,16 +42,25 @@ export const useSidebarData = (
   // - label   = pseudo de l'alias primaire
   // - image   = image de l'alias primaire
   const atomDetails = useMemo(() => {
-    if (!playerAtomId) return null;
+    console.log('[DIAG][useSidebarData] walletAddress:', walletAddress);
+    console.log('[DIAG][useSidebarData] aliasesLoading:', aliasesLoading);
+    console.log('[DIAG][useSidebarData] playerAtomId:', playerAtomId);
+    console.log('[DIAG][useSidebarData] aliases count:', aliases.length, aliases);
+    if (!playerAtomId) {
+      console.warn('[DIAG][useSidebarData] ⚠️ playerAtomId is null — HAS_ALIAS triple not found for this wallet');
+      return null;
+    }
     const primary = aliases.find(a => a.isPrimary) ?? aliases[0] ?? null;
     let pseudoLabel = primary?.pseudo ?? '';
     try { pseudoLabel = JSON.parse(pseudoLabel).name || pseudoLabel; } catch { /* use raw */ }
-    return {
+    const result = {
       term_id: playerAtomId,
       label: pseudoLabel,
       image: primary?.image ?? '',
     };
-  }, [playerAtomId, aliases]);
+    console.log('[DIAG][useSidebarData] atomDetails resolved:', result);
+    return result;
+  }, [playerAtomId, aliases, walletAddress, aliasesLoading]);
 
   const { positions, loading: positionsLoading, error: positionsError } = usePositions(
     walletAddress,
@@ -152,8 +161,8 @@ export const useSidebarData = (
   });
 
   const { data: connectionsData } = useQuery({
-    queryKey: ['followsAndFollowers', PREDICATES.FOLLOWS, walletAddress, network],
-    queryFn: () => fetchFollowsAndFollowers(PREDICATES.FOLLOWS, walletAddress!, network),
+    queryKey: ['followsAndFollowers', PREDICATES.FOLLOWS, walletAddress, playerAtomId, network],
+    queryFn: () => fetchFollowsAndFollowers(PREDICATES.FOLLOWS, walletAddress!, network, playerAtomId ?? undefined),
     enabled: Boolean(walletAddress),
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,

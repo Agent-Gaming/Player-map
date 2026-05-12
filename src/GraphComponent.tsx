@@ -122,7 +122,18 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const isProfileLoading = hasConfirmedPlayer && sidebarLoading;
   // Accès complet au map : triple "is player of" + alias existant, ou juste après inscription
   const canAccessMap = justRegistered || (hasConfirmedPlayer && !!myAtomDetails);
-  console.log('[PlayerMap] canAccessMap:', canAccessMap, '| myAtomDetails:', !!myAtomDetails, '| sidebarLoading:', sidebarLoading);
+
+  console.log('[DIAG][GraphComponent] ─────────────────────────────');
+  console.log('[DIAG] walletAddress:', walletAddress);
+  console.log('[DIAG] isWalletReady:', isWalletReady);
+  console.log('[DIAG] justRegistered:', justRegistered);
+  console.log('[DIAG] hasConfirmedPlayer:', hasConfirmedPlayer);
+  console.log('[DIAG] myAtomDetails:', myAtomDetails);
+  console.log('[DIAG] sidebarLoading:', sidebarLoading);
+  console.log('[DIAG] sidebarError:', sidebarError);
+  console.log('[DIAG] canAccessMap:', canAccessMap);
+  console.log('[DIAG] rightPanelMode:', rightPanelMode);
+  console.log('[DIAG] activeGame:', activeGame?.atomId, activeGame?.label);
 
   // Reset justRegistered when the user switches to a different game — otherwise canAccessMap
   // stays true from the previous registration and the new game bypasses the player check.
@@ -157,6 +168,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     walletAddress: otherPlayerWallet,
     positions: otherPlayerPositions,
     activities: otherPlayerActivities,
+    connections: otherPlayerConnections,
     loading: otherPlayerLoading,
     error: otherPlayerError,
   } = useOtherPlayerProfile(
@@ -320,6 +332,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
                 otherPlayerWallet={otherPlayerWallet}
                 otherPlayerPositions={otherPlayerPositions}
                 otherPlayerActivities={otherPlayerActivities}
+                otherPlayerConnections={otherPlayerConnections}
                 otherPlayerLoading={otherPlayerLoading}
                 otherPlayerError={otherPlayerError}
               />

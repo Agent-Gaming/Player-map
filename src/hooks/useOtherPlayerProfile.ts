@@ -1,19 +1,72 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Network } from './useAtomData';
+import { Network, API_URLS } from './useAtomData';
 import { usePositions } from './usePositions';
 import { fetchAtomDetails } from '../api/fetchAtomDetails';
 import { fetchTriplesByTermIds } from '../api/fetchTriplesByTermIds';
-import { PREDICATES } from '../utils/constants';
+import { PREDICATES, ATOMS } from '../utils/constants';
 
 interface OtherPlayerProfile {
   atomDetails: { term_id: string; label: string; image: string } | null;
   walletAddress: string | null;
   positions: any[];
   activities: any[];
+  connections: { followingCount: number; followersCount: number };
   loading: boolean;
   error: string | null;
 }
+
+// Triple structure: (I, follow, accountAtomId)
+// following = positions held by player's wallet in (I, follow, *) triples
+// followers = positions by anyone in (I, follow, playerAccountAtomId) triple
+const fetchFollowCounts = async (
+  accountAtomId: string,
+  walletAddress: string | null,
+  network: Network
+) => {
+  const apiUrl = API_URLS[network];
+  const res = await fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `
+        query FollowCounts($iAtom: String!, $predicate: String!, $objectId: String!, $wallet: String!) {
+          followers: positions_aggregate(where: {
+            shares: { _gt: "0" }
+            vault: { term: { triple: {
+              subject_id: { _eq: $iAtom }
+              predicate_id: { _eq: $predicate }
+              object_id: { _eq: $objectId }
+            }}}
+          }) {
+            aggregate { count }
+          }
+          following: positions_aggregate(where: {
+            account_id: { _ilike: $wallet }
+            shares: { _gt: "0" }
+            vault: { term: { triple: {
+              subject_id: { _eq: $iAtom }
+              predicate_id: { _eq: $predicate }
+            }}}
+          }) {
+            aggregate { count }
+          }
+        }
+      `,
+      variables: {
+        iAtom: ATOMS.I,
+        predicate: PREDICATES.FOLLOWS,
+        objectId: accountAtomId,
+        wallet: walletAddress?.toLowerCase() ?? '',
+      },
+    }),
+  });
+  const data = await res.json();
+  return {
+    followingCount: data.data?.following?.aggregate?.count ?? 0,
+    followersCount: data.data?.followers?.aggregate?.count ?? 0,
+  };
+};
 
 export const useOtherPlayerProfile = (
   accountAtomId: string | null,
@@ -21,7 +74,6 @@ export const useOtherPlayerProfile = (
   pseudoImage: string,
   network: Network = Network.MAINNET
 ): OtherPlayerProfile => {
-  // Fetch account atom to get the wallet address (creator_id)
   const { data: accountAtom, isLoading: atomLoading } = useQuery({
     queryKey: ['otherPlayerAccountAtom', accountAtomId, network],
     queryFn: () => fetchAtomDetails(accountAtomId!, network),
@@ -41,12 +93,24 @@ export const useOtherPlayerProfile = (
     };
   }, [accountAtomId, pseudoLabel, pseudoImage]);
 
+  const { data: followCounts } = useQuery({
+    queryKey: ['otherPlayerFollowCounts', accountAtomId, walletAddress, network],
+    queryFn: () => fetchFollowCounts(accountAtomId!, walletAddress, network),
+    enabled: Boolean(accountAtomId),
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const connections = useMemo(() => ({
+    followingCount: followCounts?.followingCount ?? 0,
+    followersCount: followCounts?.followersCount ?? 0,
+  }), [followCounts]);
+
   const { positions, loading: positionsLoading, error: positionsError } = usePositions(
     walletAddress ?? undefined,
     network
   );
 
-  // Resolve IS triples nested in IN positions (same logic as useSidebarData)
   const inSubjectIds = useMemo(() => {
     return positions
       .filter(p => p.term?.triple?.predicate_id === PREDICATES.IN)
@@ -123,6 +187,7 @@ export const useOtherPlayerProfile = (
     walletAddress,
     positions,
     activities,
+    connections,
     loading: atomLoading || positionsLoading,
     error: positionsError ? (positionsError as Error).message : null,
   };

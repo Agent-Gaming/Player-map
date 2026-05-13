@@ -99,13 +99,10 @@ const PositionCard: React.FC<PositionCardProps> = ({
       redemptionType === "CounterTriple" ||
       redemptionType === "CounterAtom");
   
-  // Get the active term based on the position
-  const isAtomActivity = !term?.triple; // If no triple, it's an atom activity
-  const activeTerm = isAtomActivity
-    ? term
-    : isFor
-    ? term
-    : term?.triple?.counter_term;
+  // For counter-triple (against) positions, term.triple is null — use _originalTriple
+  const effectiveTriple = term?.triple ?? term?._originalTriple;
+  const isAtomActivity = !effectiveTriple;
+  const activeTerm = term;
   const positionType = isFor ? "For" : "Against";
   
   // Get position description components for visual display
@@ -113,8 +110,8 @@ const PositionCard: React.FC<PositionCardProps> = ({
     id ? id.slice(0, 6) + '…' + id.slice(-4) : '?';
 
   const getPositionComponents = () => {
-    if (activeTerm?.triple) {
-      const t = activeTerm.triple;
+    if (effectiveTriple) {
+      const t = effectiveTriple;
       const inner = t._innerTriple ?? (!t.subject?.label && t.subject_term?.triple);
       if (!t.subject?.label && inner) {
         return {
@@ -141,12 +138,8 @@ const PositionCard: React.FC<PositionCardProps> = ({
     return { type: "unknown" };
   };
   
-  // Convert shares to TTRUST percentage - use the correct term for calculation
-  const calculationTerm = isAtomActivity
-    ? term
-    : isFor
-    ? term
-    : term?.triple?.counter_term;
+  // For calculation, always use term (it holds the correct vault id and market cap)
+  const calculationTerm = term;
 
   // Calculate TRUST amount using previewRedeem to get the amount after fees
   useEffect(() => {
@@ -313,8 +306,8 @@ const PositionCard: React.FC<PositionCardProps> = ({
       : positionComponents.type === "atom"
       ? positionComponents.label
       : "Unknown";
-  const subjectImage = activeTerm?.triple?.subject?.image;
-  const objectImage = (positionComponents as any).objectImage ?? activeTerm?.triple?.object?.image;
+  const subjectImage = effectiveTriple?.subject?.image;
+  const objectImage = (positionComponents as any).objectImage ?? effectiveTriple?.object?.image;
 
   return (
     <div className={styles.cardRow}>

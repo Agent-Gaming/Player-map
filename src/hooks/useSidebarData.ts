@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Network } from './useAtomData';
 import { fetchTriplesForAgent, fetchFollowsAndFollowers } from '../api/sidebarQueries';
@@ -83,14 +83,27 @@ export const useSidebarData = (
     gcTime: 10 * 60 * 1000,
   });
 
-  // Map: subject_id (IS triple term_id) → quality atom { label, image }
-  const qualityBySubjectId = useMemo(() => {
+  // Map: IS_triple_term_id → quality atom { label, image }
+  // Map: IS_triple_term_id → subject_id (player atom) — for IN-predicate ownership check
+  const qualityBySubjectIdRaw = useMemo(() => {
     const map = new Map<string, { term_id: string; label: string; image?: string }>();
     for (const t of qualityTriples ?? []) {
       if (t.object) map.set(t.term_id, t.object);
     }
     return map;
   }, [qualityTriples]);
+
+  const qualityOwnerByTermId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const t of qualityTriples ?? []) {
+      if (t.subject_id) map.set(t.term_id, t.subject_id);
+    }
+    return map;
+  }, [qualityTriples]);
+
+  const stableQualityRef = useRef(qualityBySubjectIdRaw);
+  if (qualityBySubjectIdRaw.size > 0) stableQualityRef.current = qualityBySubjectIdRaw;
+  const qualityBySubjectId = stableQualityRef.current;
 
   // Derive attestation activities from positions:
   // - IS_PLAYER_OF → games
@@ -114,6 +127,22 @@ export const useSidebarData = (
         // (own quality attestations), not triples from voting on other players' qualities
         if (triple.predicate_id === PREDICATES.IS && playerAtomId) {
           return triple.subject_id === playerAtomId;
+        }
+        // IS_PLAYER_OF and IS_MEMBER_OF: nested triple pattern.
+        // Inner subject (player atom) must match current user.
+        if (
+          (triple.predicate_id === PREDICATES.IS_PLAYER_OF ||
+            triple.predicate_id === PREDICATES.IS_MEMBER_OF) &&
+          playerAtomId
+        ) {
+          const innerSubjectId = triple._innerTriple?.subject?.term_id;
+          return innerSubjectId === playerAtomId;
+        }
+        // IN predicate: [[playerAtom, IS, quality], IN, context].
+        // Verify the IS triple's subject is the current user.
+        if (triple.predicate_id === PREDICATES.IN && playerAtomId) {
+          const isTripleSubject = qualityOwnerByTermId.get(triple.subject_id);
+          if (isTripleSubject) return isTripleSubject === playerAtomId;
         }
         return true;
       })
@@ -150,7 +179,7 @@ export const useSidebarData = (
         };
       })
       .filter(a => a.object != null);
-  }, [positions, qualityBySubjectId, playerAtomId]);
+  }, [positions, qualityBySubjectId, qualityOwnerByTermId, playerAtomId]);
 
   const { data: triplesData } = useQuery({
     queryKey: ['triplesForAgent', walletAddress, network],

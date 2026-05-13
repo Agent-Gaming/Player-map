@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { PositionBubble } from "./index";
 import SafeImage from "../SafeImage";
 import { useGameContext } from "../../contexts/GameContext";
 import { PREDICATES } from "../../utils/constants";
+import ClaimActionRow from "./ClaimActionRow";
 import styles from "./ClaimsSection.module.css";
 
 interface ClaimsSectionProps {
@@ -11,13 +12,33 @@ interface ClaimsSectionProps {
   walletAddress?: string;
   walletConnected?: any;
   publicClient?: any;
+  myPositions?: any[];
 }
 
 const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   activities,
   title,
+  walletAddress,
+  walletConnected,
+  publicClient,
+  myPositions = [],
 }) => {
   const { games: allGames } = useGameContext();
+  const isInteractive = Boolean(walletAddress && walletConnected);
+
+  const positionsByTermId = useMemo(() => {
+    const map = new Map<string, { shares: bigint; curveId: bigint }>();
+    for (const p of myPositions) {
+      const termId = (p.term_id ?? '').toLowerCase();
+      if (termId) {
+        map.set(termId, {
+          shares: BigInt(p.shares ?? 0),
+          curveId: BigInt(p.curve_id ?? 1),
+        });
+      }
+    }
+    return map;
+  }, [myPositions]);
 
   // ── IDs de prédicats ─────────────────────────────────────────────────────────
   const IS_PLAYER_OF_ID = PREDICATES.IS_PLAYER_OF;
@@ -47,23 +68,37 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   // Guilds: only the current nested IS_MEMBER_OF format.
   const guilds = [...isMemberOfClaims];
 
-  // Player qualities — group IS claims by quality atom, sum votes across all games
-  const qualityMap = new Map<string, { object: { label: string; image?: string }; forCount: number; againstCount: number }>();
-  for (const claim of isClaims) {
-    const key = claim.object_id;
-    if (!key || !claim.object) continue;
-    const forCount = claim.term?.positions_aggregate?.aggregate?.count || 0;
-    const againstCount = claim.counter_term?.positions_aggregate?.aggregate?.count || 0;
-    const existing = qualityMap.get(key);
-    if (existing) {
-      existing.forCount += forCount;
-      existing.againstCount += againstCount;
-    } else {
-      qualityMap.set(key, { object: claim.object, forCount, againstCount });
+  // Player qualities:
+  // - Interactive mode: individual claims (each has term_id for position lookup)
+  // - Static mode: aggregated by quality atom (sum votes, dedup)
+  const playerQualities = useMemo(() => {
+    if (isInteractive) {
+      const seenObjectIds = new Set<string>();
+      return isClaims
+        .filter(a => a.object != null)
+        .filter(a => {
+          const key = a.object_id ?? a.object?.term_id ?? a.object?.label;
+          if (!key || seenObjectIds.has(key)) return false;
+          seenObjectIds.add(key);
+          return true;
+        });
     }
-  }
-  // Only display qualities that have at least one vote
-  const playerQualities = Array.from(qualityMap.values()).filter(q => q.forCount + q.againstCount > 0);
+    const qualityMap = new Map<string, { object: { label: string; image?: string }; forCount: number; againstCount: number }>();
+    for (const claim of isClaims) {
+      const key = claim.object_id;
+      if (!key || !claim.object) continue;
+      const forCount = claim.term?.positions_aggregate?.aggregate?.count || 0;
+      const againstCount = claim.counter_term?.positions_aggregate?.aggregate?.count || 0;
+      const existing = qualityMap.get(key);
+      if (existing) {
+        existing.forCount += forCount;
+        existing.againstCount += againstCount;
+      } else {
+        qualityMap.set(key, { object: claim.object, forCount, againstCount });
+      }
+    }
+    return Array.from(qualityMap.values()).filter(q => q.forCount + q.againstCount > 0);
+  }, [isClaims, isInteractive]);
 
   // ── Composant : une ligne de claim ──────────────────────────────────────────
   const ClaimRow = ({ claim }: { claim: any }) => {
@@ -119,9 +154,20 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
         {showCount ? `${items.length} ` : ""}
         {label}
       </div>
-      {items.map((claim, idx) => (
-        <ClaimRow key={claim.term_id ?? claim.object?.term_id ?? claim.object?.label ?? idx} claim={claim} />
-      ))}
+      {items.map((claim, idx) =>
+        isInteractive ? (
+          <ClaimActionRow
+            key={claim.term_id ?? claim.object?.term_id ?? claim.object?.label ?? idx}
+            claim={claim}
+            walletAddress={walletAddress!}
+            walletConnected={walletConnected}
+            publicClient={publicClient}
+            positionsByTermId={positionsByTermId}
+          />
+        ) : (
+          <ClaimRow key={claim.term_id ?? claim.object?.term_id ?? claim.object?.label ?? idx} claim={claim} />
+        )
+      )}
     </div>
   );
 

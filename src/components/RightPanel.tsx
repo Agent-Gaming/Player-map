@@ -285,9 +285,6 @@ const ProfileContent: React.FC<{
       <ClaimsSection
         activities={activities}
         title=""
-        walletAddress={walletAddress}
-        walletConnected={walletConnected}
-        publicClient={publicClient}
       />
       </div>
 
@@ -315,7 +312,8 @@ const OtherPlayerProfileContent: React.FC<{
   walletConnected?: any;
   publicClient?: any;
   currentWalletAddress?: string;
-}> = ({ atomDetails, activities, positions = [], walletAddress, connections, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress }) => {
+  myPositions?: any[];
+}> = ({ atomDetails, activities, positions = [], walletAddress, connections, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress, myPositions = [] }) => {
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
@@ -392,9 +390,10 @@ const OtherPlayerProfileContent: React.FC<{
         <ClaimsSection
           activities={activities}
           title=""
-          walletAddress={undefined}
-          walletConnected={undefined}
-          publicClient={undefined}
+          walletAddress={currentWalletAddress}
+          walletConnected={walletConnected}
+          publicClient={publicClient}
+          myPositions={myPositions}
         />
       </div>
     </div>
@@ -501,6 +500,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             walletConnected={walletConnected}
             publicClient={wagmiConfig?.publicClient}
             currentWalletAddress={walletAddress}
+            myPositions={myPositions}
           />
         </div>
       )}

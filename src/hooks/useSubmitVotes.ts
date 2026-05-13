@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { VoteItem, VoteDirection, DepositResponse } from "../types/vote";
 import { useDepositTriple } from "./useDepositTriple";
 import { Network } from "./useAtomData";
@@ -28,6 +28,17 @@ export const useSubmitVotes = ({
     status: "idle",
     message: "",
   });
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const setTransactionStatusWithAutoDismiss = useCallback((status: TransactionStatus) => {
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    setTransactionStatus(status);
+    if (status.status === "success" || status.status === "error") {
+      dismissTimerRef.current = setTimeout(() => {
+        setTransactionStatus({ status: "idle", message: "" });
+      }, 5000);
+    }
+  }, []);
 
   const { depositTriple, isLoading: isDepositLoading } = useDepositTriple({
     walletConnected,
@@ -39,7 +50,7 @@ export const useSubmitVotes = ({
   const submitVotes = async (voteItems: VoteItem[]) => {
     const hasVotes = voteItems.some((item) => item.units > 0);
     if (!hasVotes) {
-      setTransactionStatus({
+      setTransactionStatusWithAutoDismiss({
         status: "error",
         message: "Please place at least one vote.",
       });
@@ -47,7 +58,7 @@ export const useSubmitVotes = ({
     }
 
     if (!walletConnected || !walletAddress) {
-      setTransactionStatus({
+      setTransactionStatusWithAutoDismiss({
         status: "error",
         message: "Wallet not connected.",
       });
@@ -70,11 +81,11 @@ export const useSubmitVotes = ({
         units: vote.units,
         direction: vote.direction
       }));
-      
+
       const result = await depositTriple(votes);
 
       if (result.success) {
-        setTransactionStatus({
+        setTransactionStatusWithAutoDismiss({
           status: "success",
           message: `Transaction successful! Hash: ${result.hash?.substring(0, 10)}...`,
         });
@@ -88,12 +99,12 @@ export const useSubmitVotes = ({
         let errorMessage = result.error || "An error occurred.";
 
         if (errorMessage.includes("user rejected")) {
-          setTransactionStatus({
+          setTransactionStatusWithAutoDismiss({
             status: "error",
             message: "Transaction cancelled: User rejected the request.",
           });
         } else {
-          setTransactionStatus({
+          setTransactionStatusWithAutoDismiss({
             status: "error",
             message: `Error: ${errorMessage}`,
           });
@@ -103,7 +114,7 @@ export const useSubmitVotes = ({
       }
     } catch (error) {
       console.error("Error submitting votes:", error);
-      setTransactionStatus({
+      setTransactionStatusWithAutoDismiss({
         status: "error",
         message: error instanceof Error ? error.message : "An error occurred.",
       });

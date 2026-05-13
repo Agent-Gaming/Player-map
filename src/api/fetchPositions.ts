@@ -140,6 +140,7 @@ export const fetchPositions = async (
               };
             });
             allPositions.push(...remapped);
+
             
             if (positions.length < batchSize) {
               hasMore = false;
@@ -155,7 +156,57 @@ export const fetchPositions = async (
           }
         }
 
-    return allPositions;
+      // Reverse-lookup original triples for counter-triple positions
+      const counterTermIds = allPositions
+        .filter(p => {
+          const vt = p.vault?.deposits?.[0]?.vault_type ?? p.vault?.redemptions?.[0]?.vault_type;
+          return vt === 'CounterTriple' && !p.term?.triple;
+        })
+        .map(p => p.term?.id ?? p.term_id)
+        .filter(Boolean);
+
+      if (counterTermIds.length > 0) {
+        const ctRes = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `
+              query OriginalTriples($ids: [String!]!) {
+                triples(where: { counter_term_id: { _in: $ids } }) {
+                  term_id counter_term_id subject_id predicate_id object_id
+                  subject { term_id label image }
+                  predicate { term_id label }
+                  object { term_id label image }
+                  subject_term {
+                    id
+                    triple { subject { label term_id } predicate { label } object { label image term_id } }
+                  }
+                  counter_term {
+                    id
+                    positions_aggregate(where: { shares: { _gt: 0 } }) { aggregate { count } }
+                  }
+                }
+              }
+            `,
+            variables: { ids: counterTermIds },
+          }),
+        });
+        const ctData = await ctRes.json();
+        const originalMap = new Map<string, any>();
+        for (const t of ctData.data?.triples ?? []) {
+          if (t.counter_term_id) originalMap.set(t.counter_term_id, t);
+        }
+        for (const p of allPositions) {
+          const termId = p.term?.id ?? p.term_id;
+          const orig = termId ? originalMap.get(termId) : undefined;
+          if (orig) {
+            const inner = (!orig.subject?.label && orig.subject_term?.triple) ? orig.subject_term.triple : null;
+            p.term._originalTriple = { ...orig, _innerTriple: inner };
+          }
+        }
+      }
+
+      return allPositions;
       } catch (error) {
         console.error('Error fetching active positions:', error);
         return [];

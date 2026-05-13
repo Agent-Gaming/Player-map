@@ -2,6 +2,7 @@ import { Network, API_URLS } from '../hooks/useAtomData';
 
 export interface TripleObjectDetail {
   term_id: string;
+  subject_id: string;
   object: {
     term_id: string;
     label: string;
@@ -30,6 +31,7 @@ export const fetchTriplesByTermIds = async (
   const query = `query GetTriplesByTermIds($termIds: [String!]!) {
     triples(where: { term_id: { _in: $termIds } }) {
       term_id
+      subject_id
       object {
         term_id
         label

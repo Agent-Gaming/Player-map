@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Network, API_URLS } from './useAtomData';
 import { usePositions } from './usePositions';
@@ -126,13 +126,19 @@ export const useOtherPlayerProfile = (
     gcTime: 10 * 60 * 1000,
   });
 
-  const qualityBySubjectId = useMemo(() => {
+  const qualityBySubjectIdRaw = useMemo(() => {
     const map = new Map<string, { term_id: string; label: string; image?: string }>();
     for (const t of qualityTriples ?? []) {
       if (t.object) map.set(t.term_id, t.object);
     }
     return map;
   }, [qualityTriples]);
+
+  // Stable ref — never resets to empty while a previous non-empty map exists.
+  // Prevents IN-predicate claims from briefly losing their quality object during refetch.
+  const stableQualityRef = useRef(qualityBySubjectIdRaw);
+  if (qualityBySubjectIdRaw.size > 0) stableQualityRef.current = qualityBySubjectIdRaw;
+  const qualityBySubjectId = stableQualityRef.current;
 
   const activities = useMemo(() => {
     const relevantPredicates = new Set([

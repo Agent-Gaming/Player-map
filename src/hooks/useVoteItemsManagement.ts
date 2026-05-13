@@ -377,13 +377,16 @@ export const useVoteItemsManagement = ({
                   id
                   total_market_cap
                   total_assets
+                  positions_aggregate(where: { shares: { _gt: 0 } }) {
+                    aggregate { count }
+                  }
                 }
               }
             `,
             variables: { termIds: allTermIds }
           })
         });
-        
+
         const termsData = await termsResponse.json();
         if (!termsData.errors) {
           termsMap = new Map(
@@ -392,40 +395,12 @@ export const useVoteItemsManagement = ({
         }
       }
 
-      // ✅ OPTIMISATION Sprint 3: Batch fetch positions count
-      // Avant: 1 requête par term_id (N requêtes)
-      // Après: 1 seule requête + comptage local
-      let positionsCountMap = new Map<string, number>();
-      if (allTermIds.length > 0) {
-        const positionsResponse = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query GetAllPositionsCounts($termIds: [String!]!) {
-                positions(where: { term_id: { _in: $termIds }, shares: { _gt: 0 } }) {
-                  term_id
-                }
-              }
-            `,
-            variables: { termIds: allTermIds }
-          })
-        });
-
-        const positionsData = await positionsResponse.json();
-        if (!positionsData.errors && positionsData.data?.positions) {
-          // Compter les positions par term_id localement
-          const positions = positionsData.data.positions;
-          const counts = new Map<string, number>();
-          
-          positions.forEach((p: any) => {
-            const count = counts.get(p.term_id) || 0;
-            counts.set(p.term_id, count + 1);
-          });
-          
-          positionsCountMap = counts;
-        }
-      }
+      const positionsCountMap = new Map<string, number>(
+        [...termsMap.entries()].map(([id, term]) => [
+          id,
+          term.positions_aggregate?.aggregate?.count ?? 0,
+        ])
+      );
 
       const results = new Map<string, TripleDetails | null>();
       for (const triple of triples) {

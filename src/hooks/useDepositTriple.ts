@@ -187,7 +187,6 @@ export const useDepositTriple = ({
 
       setIsLoading(false);
 
-      // Invalider les caches pour forcer le rechargement des positions et de l'activité
       apiCache.clear();
       await queryClient.invalidateQueries({ queryKey: ['positions'] });
       await queryClient.invalidateQueries({ queryKey: ['claimsBySubject'] });

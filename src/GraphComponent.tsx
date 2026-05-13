@@ -135,10 +135,10 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   console.log('[DIAG] rightPanelMode:', rightPanelMode);
   console.log('[DIAG] activeGame:', activeGame?.atomId, activeGame?.label);
 
-  // Reset justRegistered when the user switches to a different game — otherwise canAccessMap
-  // stays true from the previous registration and the new game bypasses the player check.
+  // Reset justRegistered and show speakup page when switching games.
   useEffect(() => {
     setJustRegistered(false);
+    setRightPanelMode("speakup");
   }, [activeGame?.atomId]);
 
   // Keep the last accessible game ID up-to-date.

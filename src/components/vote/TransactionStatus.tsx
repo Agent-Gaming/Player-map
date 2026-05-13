@@ -8,10 +8,12 @@ type TransactionStatusType = {
 
 interface TransactionStatusDisplayProps {
   transactionStatus: TransactionStatusType;
+  onDismiss?: () => void;
 }
 
 export const TransactionStatusDisplay: React.FC<TransactionStatusDisplayProps> = ({
   transactionStatus,
+  onDismiss,
 }) => {
   if (transactionStatus.status === "idle" || transactionStatus.status === "whitelist_error") {
     return null;
@@ -26,9 +28,10 @@ export const TransactionStatusDisplay: React.FC<TransactionStatusDisplayProps> =
 
   return (
     <div className={`${styles.txStatus} ${statusClass}`}>
-      <div>
-        {transactionStatus.message}
-      </div>
+      <span>{transactionStatus.message}</span>
+      {onDismiss && (
+        <button className={styles.txStatusClose} onClick={onDismiss} aria-label="Dismiss">×</button>
+      )}
     </div>
   );
 }; 

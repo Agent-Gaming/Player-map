@@ -18,16 +18,18 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
   const isFor = vaultType === "Triple" || vaultType === "Atom";
   const isAgainst = vaultType === "CounterTriple" || vaultType === "CounterAtom";
   
-  const isAtomActivity = !term?.triple;
-  const activeTerm = isAtomActivity ? term : (isFor ? term : term?.triple?.counter_term);
+  // For counter-triple (against) activities, term.triple is null — use _originalTriple
+  const effectiveTriple = term?.triple ?? term?._originalTriple;
+  const isAtomActivity = !effectiveTriple;
+  const activeTerm = term;
   
   // Get activity description components for visual display
   const truncateId = (id?: string) =>
     id ? id.slice(0, 6) + '…' + id.slice(-4) : '?';
 
   const getActivityComponents = () => {
-    if (activeTerm?.triple) {
-      const t = activeTerm.triple;
+    if (effectiveTriple) {
+      const t = effectiveTriple;
       const inner = t._innerTriple ?? (!t.subject?.label && t.subject_term?.triple);
       if (!t.subject?.label && inner) {
         return {
@@ -70,8 +72,8 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
     : activityComponents.type === 'atom'
     ? activityComponents.label
     : 'Unknown';
-  const subjectImage = activeTerm?.triple?.subject?.image;
-  const objectImage = (activityComponents as any).objectImage ?? activeTerm?.triple?.object?.image;
+  const subjectImage = effectiveTriple?.subject?.image;
+  const objectImage = (activityComponents as any).objectImage ?? effectiveTriple?.object?.image;
 
   // Date courte
   const isRedeem = activity.activity_type === 'redemption';

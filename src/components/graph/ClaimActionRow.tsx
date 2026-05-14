@@ -61,9 +61,10 @@ const ClaimActionRow: React.FC<ClaimActionRowProps> = ({
   const handleForClick = async () => {
     if (isLoading) return;
     setError(null);
+    const claimId = claim.term_id ?? claim.term?.id;
     try {
       if (hasVotedFor && forPosition) {
-        // Redeem from for vault
+        // Toggle off: redeem from for vault
         await redeemBatch({
           receiver: walletAddress as `0x${string}`,
           termIds: [forTermId as `0x${string}`],
@@ -71,9 +72,17 @@ const ClaimActionRow: React.FC<ClaimActionRowProps> = ({
           shares: [forPosition.shares],
           minAssets: [0n],
         });
+      } else if (hasVotedAgainst && againstPosition) {
+        // Switch: redeem against, then deposit for
+        await redeemBatch({
+          receiver: walletAddress as `0x${string}`,
+          termIds: [againstTermId as `0x${string}`],
+          curveIds: [againstPosition.curveId],
+          shares: [againstPosition.shares],
+          minAssets: [0n],
+        });
+        await depositTriple([{ claimId: String(claimId), units: 1, direction: VoteDirection.For }]);
       } else {
-        // Deposit for
-        const claimId = claim.term_id ?? claim.term?.id;
         await depositTriple([{ claimId: String(claimId), units: 1, direction: VoteDirection.For }]);
       }
     } catch (err: any) {
@@ -86,9 +95,10 @@ const ClaimActionRow: React.FC<ClaimActionRowProps> = ({
   const handleAgainstClick = async () => {
     if (isLoading) return;
     setError(null);
+    const claimId = claim.term_id ?? claim.term?.id;
     try {
       if (hasVotedAgainst && againstPosition) {
-        // Redeem from against vault
+        // Toggle off: redeem from against vault
         await redeemBatch({
           receiver: walletAddress as `0x${string}`,
           termIds: [againstTermId as `0x${string}`],
@@ -96,9 +106,17 @@ const ClaimActionRow: React.FC<ClaimActionRowProps> = ({
           shares: [againstPosition.shares],
           minAssets: [0n],
         });
+      } else if (hasVotedFor && forPosition) {
+        // Switch: redeem for, then deposit against
+        await redeemBatch({
+          receiver: walletAddress as `0x${string}`,
+          termIds: [forTermId as `0x${string}`],
+          curveIds: [forPosition.curveId],
+          shares: [forPosition.shares],
+          minAssets: [0n],
+        });
+        await depositTriple([{ claimId: String(claimId), units: 1, direction: VoteDirection.Against }]);
       } else {
-        // Deposit against
-        const claimId = claim.term_id ?? claim.term?.id;
         await depositTriple([{ claimId: String(claimId), units: 1, direction: VoteDirection.Against }]);
       }
     } catch (err: any) {

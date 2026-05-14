@@ -51,41 +51,28 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   const hasAgainstPosition = userHasPosition && userPositionDirection === VoteDirection.Against;
   const hasAnyPosition = userHasPosition && userPositionDirection !== VoteDirection.None;
 
-  const canVoteFor = isVoteDirectionAllowed(id, VoteDirection.For);
-  const canVoteAgainst = isVoteDirectionAllowed(id, VoteDirection.Against);
-
   const handleUpClick = () => {
     if (isSelectedFor) {
-      // Désélectionner
       onChangeUnits(id, VoteDirection.None, 0);
-    } else if (!isSelectedAgainst && canVoteFor) {
+    } else if (!hasForPosition) {
+      // New vote FOR, or switch from AGAINST to FOR
       onChangeUnits(id, VoteDirection.For, 1);
     }
   };
 
   const handleDownClick = () => {
     if (isSelectedAgainst) {
-      // Désélectionner
       onChangeUnits(id, VoteDirection.None, 0);
-    } else if (!isSelectedFor && canVoteAgainst) {
+    } else if (!hasAgainstPosition) {
+      // New vote AGAINST, or switch from FOR to AGAINST
       onChangeUnits(id, VoteDirection.Against, 1);
     }
   };
 
-  const upDisabled = !isSelectedFor && (hasForPosition || isSelectedAgainst || hasAgainstPosition || !canVoteFor);
-  const downDisabled = !isSelectedAgainst && (hasAgainstPosition || isSelectedFor || hasForPosition || !canVoteAgainst);
-
-  const rowBg = isSelectedFor
-    ? "rgba(0, 111, 232, 0.15)"
-    : isSelectedAgainst
-    ? "rgba(255, 149, 0, 0.15)"
-    : "transparent";
-
-  const rowBorder = isSelectedFor
-    ? "1px solid rgba(0, 111, 232, 0.6)"
-    : isSelectedAgainst
-    ? "1px solid rgba(255, 149, 0, 0.6)"
-    : "1px solid rgba(255, 255, 255, 0)";
+  // Up: locked when user already has FOR on-chain, or currently selecting against
+  const upDisabled = hasForPosition || isSelectedAgainst;
+  // Down: locked when user already has AGAINST on-chain, or currently selecting for
+  const downDisabled = hasAgainstPosition || isSelectedFor;
 
   return (
     <div

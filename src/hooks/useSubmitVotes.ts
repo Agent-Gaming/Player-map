@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { VoteItem, VoteDirection, DepositResponse } from "../types/vote";
 import { useDepositTriple } from "./useDepositTriple";
+import { useRedeemBatch } from "./useRedeemBatch";
 import { Network } from "./useAtomData";
 
 type TransactionStatus = {
@@ -47,6 +48,8 @@ export const useSubmitVotes = ({
     network,
   });
 
+  const { redeemBatch } = useRedeemBatch({ walletConnected, walletAddress });
+
   const submitVotes = async (voteItems: VoteItem[]) => {
     const hasVotes = voteItems.some((item) => item.units > 0);
     if (!hasVotes) {
@@ -75,7 +78,28 @@ export const useSubmitVotes = ({
 
       const votesToProcess = voteItems.filter((item) => item.units > 0);
 
-      // Process each vote individually with depositTriple
+      // Collect switch items: user had a position in the opposite direction
+      const switchItems = votesToProcess.filter(
+        item =>
+          item.userHasPosition &&
+          item.userPositionDirection !== VoteDirection.None &&
+          item.userPositionDirection !== item.direction &&
+          item.userPositionTermId &&
+          item.userShares &&
+          item.userShares > 0n
+      );
+
+      // Redeem existing opposite positions before depositing
+      if (switchItems.length > 0) {
+        await redeemBatch({
+          receiver: walletAddress as `0x${string}`,
+          termIds: switchItems.map(item => item.userPositionTermId as `0x${string}`),
+          curveIds: switchItems.map(item => item.userCurveId ?? 1n),
+          shares: switchItems.map(item => item.userShares!),
+          minAssets: switchItems.map(() => 0n),
+        });
+      }
+
       const votes = votesToProcess.map(vote => ({
         claimId: `0x${vote.id.toString(16).padStart(64, '0')}`,
         units: vote.units,

@@ -22,6 +22,7 @@ export const useVoteItemsManagement = ({
   const PREDEFINED_CLAIM_IDS = activeGame?.claims.map(c => c.atomId) ?? [];
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
+  const [userSharesMap, setUserSharesMap] = useState<Record<string, { termId: string; shares: bigint; curveId: bigint }>>({});
   const [hasLoadedTripleDetails, setHasLoadedTripleDetails] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -60,8 +61,7 @@ export const useVoteItemsManagement = ({
       try {
         setLoadingPositions(true);
         const apiUrl = API_URLS[network];
-        
-        // Fetch triples first
+
         const query = `
           query BatchUserPositions($tripleIds: [String!]!) {
             triples(where: { term_id: { _in: $tripleIds } }) {
@@ -76,35 +76,30 @@ export const useVoteItemsManagement = ({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query,
-            variables: {
-              tripleIds: PREDEFINED_CLAIM_IDS.map(id => id.toString())
-            }
+            variables: { tripleIds: PREDEFINED_CLAIM_IDS.map(id => id.toString()) }
           })
         });
 
-        if (!response.ok) {
-          throw new Error(`GraphQL request failed with status ${response.status}`);
-        }
-
+        if (!response.ok) throw new Error(`GraphQL request failed with status ${response.status}`);
         const result = await response.json();
+        if (result.errors) throw new Error(result.errors[0].message);
 
-        if (result.errors) {
-          console.error("GraphQL Errors:", result.errors);
-          throw new Error(result.errors[0].message);
-        }
-
-        // Fetch term positions separately
         const triples = result.data?.triples || [];
         const termIds = [...new Set(triples.map((t: any) => t.term_id).filter(Boolean))];
         const counterTermIds = [...new Set(triples.map((t: any) => t.counter_term_id).filter(Boolean))];
         const allTermIds = [...new Set([...termIds, ...counterTermIds])];
 
         let termPositionsMap = new Map();
+        // Map term_id → { shares, curve_id } for the current user's positions
+        const positionSharesMap = new Map<string, { shares: string; curve_id: string }>();
+
         if (allTermIds.length > 0) {
           const positionsQuery = `
             query GetTermPositions($termIds: [String!]!, $walletAddress: String!) {
               positions(where: { term_id: { _in: $termIds }, account_id: { _ilike: $walletAddress }, shares: { _gt: 0 } }) {
                 term_id
+                shares
+                curve_id
               }
             }
           `;
@@ -114,10 +109,7 @@ export const useVoteItemsManagement = ({
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               query: positionsQuery,
-              variables: {
-                termIds: allTermIds,
-                walletAddress: walletAddress.toLowerCase()
-              }
+              variables: { termIds: allTermIds, walletAddress: walletAddress.toLowerCase() }
             })
           });
 
@@ -127,35 +119,44 @@ export const useVoteItemsManagement = ({
             (positionsResult.data?.positions || []).forEach((pos: any) => {
               const count = positionsByTermId.get(pos.term_id) || 0;
               positionsByTermId.set(pos.term_id, count + 1);
+              if (!positionSharesMap.has(pos.term_id)) {
+                positionSharesMap.set(pos.term_id, { shares: pos.shares, curve_id: pos.curve_id ?? '1' });
+              }
             });
             positionsByTermId.forEach((count, termId) => {
               termPositionsMap.set(termId, {
                 term_id: termId,
-                positions_aggregate: {
-                  aggregate: { count }
-                }
+                positions_aggregate: { aggregate: { count } }
               });
             });
           }
         }
 
-        // Traiter les résultats
         const positionsData: any = { triples: [] };
-        
+
         triples.forEach((triple: any) => {
           const termPositions = termPositionsMap.get(triple.term_id);
           const counterTermPositions = termPositionsMap.get(triple.counter_term_id);
-          
+
           const hasTermPositions = (termPositions?.positions_aggregate?.aggregate?.count || 0) > 0;
           const hasCounterTermPositions = (counterTermPositions?.positions_aggregate?.aggregate?.count || 0) > 0;
-          
+
+          // Determine which vault holds the user's current position (for redeem on switch)
+          const termSharesInfo = positionSharesMap.get(triple.term_id);
+          const counterTermSharesInfo = positionSharesMap.get(triple.counter_term_id);
+          const userPositionTermId = hasTermPositions ? triple.term_id : hasCounterTermPositions ? triple.counter_term_id : undefined;
+          const sharesInfo = hasTermPositions ? termSharesInfo : hasCounterTermPositions ? counterTermSharesInfo : undefined;
+
           positionsData.triples.push({
             term_id: triple.term_id,
             id: triple.term_id,
             hasTermPosition: hasTermPositions,
             hasCounterTermPosition: hasCounterTermPositions,
             term: termPositions,
-            counter_term: counterTermPositions
+            counter_term: counterTermPositions,
+            userPositionTermId,
+            userSharesRaw: sharesInfo?.shares,
+            userCurveIdRaw: sharesInfo?.curve_id,
           });
         });
 
@@ -175,105 +176,51 @@ export const useVoteItemsManagement = ({
   useEffect(() => {
     if (userPositionsData && !loadingPositions && walletAddress) {
       const positions: Record<string, VoteDirection> = {};
+      const sharesRecord: Record<string, { termId: string; shares: bigint; curveId: bigint }> = {};
 
-      // Méthode 1: Vérifier si les positions sont dans le format attendu
-      if (userPositionsData.positions && Array.isArray(userPositionsData.positions)) {
-        userPositionsData.positions.forEach((position: any) => {
-          if (!position.triple_id) return;
-          const tripleId = position.triple_id;
-          // Si la position a une propriété is_for ou similar pour indiquer la direction
-          if (position.is_for !== undefined) {
-            const direction = position.is_for ? VoteDirection.For : VoteDirection.Against;
-            positions[String(tripleId)] = direction;
-          } else if (position.term_id && position.counter_term_id) {
-            // Si la position a des term_id qui peuvent indiquer la direction
-            // Logique à déterminer en fonction de la structure exacte
-          }
-        });
-      }
-
-      // Méthode 2: Rechercher dans le format triples avec positions imbriquées (format batch optimisé)
       if (userPositionsData.triples && Array.isArray(userPositionsData.triples)) {
         userPositionsData.triples.forEach((triple: any) => {
-          // Utiliser term_id (venant du batch) ou id (fallback pour compatibilité)
           const tripleId = triple.term_id || triple.id;
-          if (!tripleId) {
-            return;
-          }
+          if (!tripleId) return;
 
-          // Utiliser la logique de useCheckSpecificTriplePosition : vérifier hasTermPosition et hasCounterTermPosition
-          // qui viennent directement de la requête batch optimisée
           if (triple.hasTermPosition) {
             positions[String(tripleId)] = VoteDirection.For;
           } else if (triple.hasCounterTermPosition) {
             positions[String(tripleId)] = VoteDirection.Against;
           }
 
-          // Fallback pour compatibilité avec ancien format (si les données viennent d'ailleurs)
-          if (!triple.hasTermPosition && !triple.hasCounterTermPosition) {
-            // Vérifier dans les positions imbriquées si disponibles
-            const termPositions = triple.term?.positions || [];
-            const counterTermPositions = triple.counter_term?.positions || [];
-            
-            const userTermPosition = termPositions.find((position: any) => {
-              return position.account?.id?.toLowerCase() === walletAddress.toLowerCase();
-            });
-            
-            const userCounterTermPosition = counterTermPositions.find((position: any) => {
-              return position.account?.id?.toLowerCase() === walletAddress.toLowerCase();
-            });
-            
-            if (userTermPosition) {
-              positions[String(tripleId)] = VoteDirection.For;
-            } else if (userCounterTermPosition) {
-              positions[String(tripleId)] = VoteDirection.Against;
-            }
-          }
-        });
-      }
-
-      // Méthode 3: Vérifier également dans des structures alternatives
-      if (userPositionsData.position_triples && Array.isArray(userPositionsData.position_triples)) {
-        userPositionsData.position_triples.forEach((item: any) => {
-          if (!item.triple_id && !item.triple?.id) return;
-
-          const tripleId = item.triple_id || item.triple?.id;
-
-          if (item.is_for !== undefined) {
-            positions[String(tripleId)] = item.is_for ? VoteDirection.For : VoteDirection.Against;
-          } else if (item.term_id && item.triple?.term_id === item.term_id) {
-            positions[String(tripleId)] = VoteDirection.For;
-          } else if (item.term_id && item.triple?.counter_term_id === item.term_id) {
-            positions[String(tripleId)] = VoteDirection.Against;
+          if (triple.userPositionTermId && triple.userSharesRaw) {
+            sharesRecord[String(tripleId)] = {
+              termId: triple.userPositionTermId,
+              shares: BigInt(triple.userSharesRaw),
+              curveId: BigInt(triple.userCurveIdRaw ?? '1'),
+            };
           }
         });
       }
 
       setUserPositions(positions);
+      setUserSharesMap(sharesRecord);
 
-      // Update existing vote items with user position information (si déjà chargés)
       setVoteItems(prevItems => {
-        if (prevItems.length === 0) return prevItems; // Si pas encore chargés, ne pas les mettre à jour
-        
+        if (prevItems.length === 0) return prevItems;
         return prevItems.map(item => {
-          // Essayer plusieurs formats d'ID pour correspondance : term_id (plus fiable) ou id brut
           const normalizedItemId = item.term_id || String(item.id);
-          const positionDirection = positions[normalizedItemId] || 
-                                   positions[String(item.id)] || 
-                                   VoteDirection.None;
-          const hasPosition = positionDirection !== VoteDirection.None;
+          const positionDirection = positions[normalizedItemId] || positions[String(item.id)] || VoteDirection.None;
+          const sharesInfo = sharesRecord[normalizedItemId] || sharesRecord[String(item.id)];
           return {
             ...item,
-            userHasPosition: hasPosition,
-            userPositionDirection: positionDirection
+            userHasPosition: positionDirection !== VoteDirection.None,
+            userPositionDirection: positionDirection,
+            userPositionTermId: sharesInfo?.termId,
+            userShares: sharesInfo?.shares,
+            userCurveId: sharesInfo?.curveId,
           };
         });
       });
 
-      // Appeler loadTripleDetails directement ici avec les positions mises à jour
-      // pour éviter le problème de timing entre les useEffect
       if (!hasLoadedTripleDetails) {
-        loadTripleDetails(positions).then(() => {
+        loadTripleDetails(positions, sharesRecord).then(() => {
           setHasLoadedTripleDetails(true);
         }).catch((error) => {
           console.error("Error in loadTripleDetails:", error);
@@ -281,7 +228,7 @@ export const useVoteItemsManagement = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userPositionsData, loadingPositions, walletAddress, hasLoadedTripleDetails]); // hasLoadedTripleDetails dans les deps pour éviter double appel
+  }, [userPositionsData, loadingPositions, walletAddress, hasLoadedTripleDetails]);
 
   // Update total units when voteItems change
   useEffect(() => {
@@ -443,15 +390,18 @@ export const useVoteItemsManagement = ({
   };
 
   // Function to load triple details from the blockchain - OPTIMISÉ avec batch fetch
-  const loadTripleDetails = async (currentUserPositions?: Record<string, VoteDirection>) => {
+  const loadTripleDetails = async (
+    currentUserPositions?: Record<string, VoteDirection>,
+    currentSharesMap?: Record<string, { termId: string; shares: bigint; curveId: bigint }>
+  ) => {
     setIsLoading(true);
 
     try {
       // ÉTAPE 1: Fetch tous les détails en une seule requête batch (au lieu de 29 requêtes individuelles)
       const triplesDetailsMap = await fetchTriplesDetailsBatch(PREDEFINED_CLAIM_IDS);
 
-      // Utiliser currentUserPositions si fourni, sinon utiliser le state userPositions
       const positionsToUse = currentUserPositions || userPositions;
+      const sharesToUse = currentSharesMap || userSharesMap;
 
       // ÉTAPE 2: Transformer les résultats en VoteItems
       const loadedItems: VoteItem[] = PREDEFINED_CLAIM_IDS.map((id) => {
@@ -489,6 +439,8 @@ export const useVoteItemsManagement = ({
           console.log(`[loadTripleDetails] Trouvé dans positionsToUse:`, positionsToUse[normalizedId]);
         }
 
+        const sharesInfo = sharesToUse[normalizedId] || sharesToUse[String(id)];
+
         return {
           id: BigInt(details.id),
           subject: details.subject?.label || `Subject ${id}`,
@@ -504,6 +456,9 @@ export const useVoteItemsManagement = ({
           counter_term_position_count: details.counter_term_position_count || 0,
           userHasPosition: userPositionDirection !== VoteDirection.None,
           userPositionDirection,
+          userPositionTermId: sharesInfo?.termId,
+          userShares: sharesInfo?.shares,
+          userCurveId: sharesInfo?.curveId,
         } as VoteItem;
       });
 
@@ -524,42 +479,11 @@ export const useVoteItemsManagement = ({
 
   // Function to change units and direction for a claim
   const handleChangeUnits = (id: bigint, direction: VoteDirection, units: number) => {
-    // Vérifier d'abord si le vote est autorisé avec la fonction isVoteDirectionAllowed
-    if (direction !== VoteDirection.None) {
-      const allowed = isVoteDirectionAllowed(id, direction);
-      if (!allowed) {
-        // Récupérer l'item pour obtenir la direction de la position existante
-        const item = voteItems.find(item => item.id === id);
-        if (item && item.userHasPosition && item.userPositionDirection !== VoteDirection.None) {
-          if (onError) {
-            onError(`Cannot vote ${direction === VoteDirection.For ? "for" : "against"} this claim as you already have an ${item.userPositionDirection === VoteDirection.For ? "affirmative" : "opposing"} position on it.`);
-          }
-          return; // Sortir de la fonction sans modifier l'état
-        }
-      }
-    }
-
     setVoteItems((prevItems) =>
       prevItems.map((item) => {
-        if (item.id === id) {
-          // Double vérification au cas où la première aurait échoué
-          if (item.userHasPosition && item.userPositionDirection !== VoteDirection.None &&
-            direction !== VoteDirection.None && item.userPositionDirection !== direction) {
-            // User is trying to vote in the opposite direction of their existing position
-            return item; // Don't change anything
-          }
-
-          if (item.direction !== direction && item.direction !== VoteDirection.None) {
-            return { ...item, units, direction };
-          }
-
-          if (units === 0) {
-            return { ...item, units: 0, direction: VoteDirection.None };
-          }
-
-          return { ...item, units, direction };
-        }
-        return item;
+        if (item.id !== id) return item;
+        if (units === 0) return { ...item, units: 0, direction: VoteDirection.None };
+        return { ...item, units, direction };
       })
     );
   };
@@ -578,15 +502,8 @@ export const useVoteItemsManagement = ({
   // Calculate number of transactions that will be executed
   const numberOfTransactions = voteItems.filter(item => item.units > 0).length;
 
-  // Check if a vote in the given direction is allowed for the given triple ID
-  const isVoteDirectionAllowed = (tripleId: bigint, direction: VoteDirection) => {
-    const item = voteItems.find(item => item.id === tripleId);
-    if (!item || !item.userHasPosition) return true;
-
-    // If user has no position or wants to vote in the same direction, it's allowed
-    const allowed = item.userPositionDirection === VoteDirection.None || item.userPositionDirection === direction;
-    return allowed;
-  };
+  // All directions allowed — switching redeems existing position on submit
+  const isVoteDirectionAllowed = (_tripleId: bigint, _direction: VoteDirection) => true;
 
   return {
     voteItems,

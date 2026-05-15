@@ -166,6 +166,7 @@ export const useSidebarData = (
             object: qualityObject,
             term: p.term,
             counter_term: triple.counter_term,
+            context_game_id: triple.object_id, // game atom the quality is scoped to
           };
         }
 

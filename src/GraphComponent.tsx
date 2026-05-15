@@ -75,7 +75,12 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const [graphControls, setGraphControls] = useState<GraphControls | null>(null);
 
   // ── Mode du panneau droit ─────────────────────────────────────────────────────
-  const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>("speakup");
+  // Restore persisted mode on refresh — only stateless modes (speakup/profile) survive
+  const PANEL_STORAGE_KEY = 'playermap_rightPanelMode';
+  const persistedMode = localStorage.getItem(PANEL_STORAGE_KEY) as RightPanelMode | null;
+  const initialPanelMode: RightPanelMode =
+    persistedMode === 'profile' || persistedMode === 'speakup' ? persistedMode : 'speakup';
+  const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>(initialPanelMode);
 
   // ── Nœud sélectionné ─────────────────────────────────────────────────────────
   const [selectedNode, setSelectedNode] = useState<any>(null);
@@ -222,6 +227,9 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Bouton profil dans la navbar change le mode ───────────────────────────────
   const handlePanelModeChange = useCallback((mode: RightPanelMode) => {
     setRightPanelMode(mode);
+    if (mode === 'speakup' || mode === 'profile') {
+      localStorage.setItem(PANEL_STORAGE_KEY, mode);
+    }
   }, []);
 
   // ── Inscription ───────────────────────────────────────────────────────────────

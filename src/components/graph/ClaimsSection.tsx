@@ -23,7 +23,7 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   publicClient,
   myPositions = [],
 }) => {
-  const { games: allGames } = useGameContext();
+  const { games: allGames, activeGame } = useGameContext();
   const isInteractive = Boolean(walletAddress && walletConnected);
 
   const positionsByTermId = useMemo(() => {
@@ -69,19 +69,42 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   const guilds = [...isMemberOfClaims];
 
   // Player qualities:
-  // - Interactive mode: individual claims (each has term_id for position lookup)
+  // - Interactive mode: aggregate total for/against counts across ALL games (same quality),
+  //   but use the context-nested triple scoped to the active game as the voting target.
+  //   Falls back to bare IS triple if no context-scoped triple exists for this game.
   // - Static mode: aggregated by quality atom (sum votes, dedup)
   const playerQualities = useMemo(() => {
     if (isInteractive) {
-      const seenObjectIds = new Set<string>();
-      return isClaims
-        .filter(a => a.object != null)
-        .filter(a => {
-          const key = a.object_id ?? a.object?.term_id ?? a.object?.label;
-          if (!key || seenObjectIds.has(key)) return false;
-          seenObjectIds.add(key);
-          return true;
-        });
+      const activeGameId = activeGame?.atomId;
+
+      // Group all IS claims (bare + context-remapped) by quality object_id
+      const groupsByObjectId = new Map<string, { claims: any[]; totalFor: number; totalAgainst: number }>();
+      for (const a of isClaims) {
+        const key: string = a.object_id ?? a.object?.term_id ?? a.object?.label;
+        if (!key || !a.object) continue;
+        const forCount  = a.term?.positions_aggregate?.aggregate?.count ?? 0;
+        const againstCount = a.counter_term?.positions_aggregate?.aggregate?.count ?? 0;
+        const entry = groupsByObjectId.get(key);
+        if (entry) {
+          entry.claims.push(a);
+          entry.totalFor     += forCount;
+          entry.totalAgainst += againstCount;
+        } else {
+          groupsByObjectId.set(key, { claims: [a], totalFor: forCount, totalAgainst: againstCount });
+        }
+      }
+
+      // For each quality group: pick context-scoped claim for active game as voting target
+      // (falls back to bare IS), override counts with aggregated totals
+      return Array.from(groupsByObjectId.values())
+        .map(({ claims, totalFor, totalAgainst }) => {
+          const contextClaim = activeGameId
+            ? claims.find((c: any) => c.context_game_id === activeGameId)
+            : null;
+          const votingClaim = contextClaim ?? claims.find((c: any) => !c.context_game_id) ?? claims[0];
+          return { ...votingClaim, forCount: totalFor, againstCount: totalAgainst };
+        })
+        .filter((a: any) => a.object != null);
     }
     const qualityMap = new Map<string, { object: { label: string; image?: string }; forCount: number; againstCount: number }>();
     for (const claim of isClaims) {

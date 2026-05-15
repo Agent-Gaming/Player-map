@@ -68,29 +68,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const { positions: activePositions, loading: positionsLoading } =
     usePositions(isWalletReady ? walletAddress : undefined, network);
 
-  // Detect "is player of Bossfighters" via a nested triple in active positions
-  // (the subject of this triple is the alias triple, not an atom — creator_id is not accessible)
-  const hasConfirmedPlayer = useMemo(
-    () => {
-      const match = activePositions.some((p: any) =>
-        p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
-        p.term?.triple?.object_id === activeGame?.atomId
-      );
-      console.log('[PlayerMap] hasConfirmedPlayer:', match);
-      console.log('[PlayerMap] activePositions count:', activePositions.length);
-      console.log('[PlayerMap] PREDICATES.IS_PLAYER_OF:', PREDICATES.IS_PLAYER_OF);
-      console.log('[PlayerMap] activeGame?.atomId:', activeGame?.atomId);
-      console.log('[PlayerMap] positions with triples:', activePositions
-        .filter((p: any) => p.term?.triple)
-        .map((p: any) => ({ predicate_id: p.term.triple.predicate_id, object_id: p.term.triple.object_id }))
-      );
-      return match;
-    },
-    [activePositions, activeGame],
-  );
-
-  // Pendant le chargement des positions, on ne sait pas encore si le player est confirmé.
-  // Si hasConfirmedPlayer=true, on attend aussi le sidebar pour savoir si l'alias existe.
   const isLoading = positionsLoading;
   const hasError = null;
 
@@ -118,6 +95,37 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     error: sidebarError,
   } = useSidebarData(walletAddress, Network.MAINNET);
 
+  // Any IS_PLAYER_OF position for this game — fallback while sidebar loads.
+  const hasAnyIsPlayerOf = useMemo(
+    () => activePositions.some((p: any) =>
+      p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
+      p.term?.triple?.object_id === activeGame?.atomId
+    ),
+    [activePositions, activeGame],
+  );
+
+  // Strict check:
+  // 1. inner subject must be MY account atom (avoids false positives from other players' IS_PLAYER_OF)
+  // 2. user must also hold a position on the alias-triple (avoids access after redeeming alias-triple)
+  const hasConfirmedPlayer = useMemo(
+    () => {
+      if (!myAtomDetails?.term_id) return hasAnyIsPlayerOf; // fallback while sidebar loads
+      const myAtomId = myAtomDetails.term_id;
+      const isPlayerOfPositions = activePositions.filter((p: any) =>
+        p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
+        p.term?.triple?.object_id === activeGame?.atomId
+      );
+      return isPlayerOfPositions.some((p: any) => {
+        const triple = p.term?.triple;
+        if (triple._innerTriple?.subject?.term_id !== myAtomId) return false;
+        const aliasTripleTermId: string | undefined = triple.subject_term?.id;
+        if (!aliasTripleTermId) return true; // data missing — grant access
+        return activePositions.some((ap: any) => ap.term_id === aliasTripleTermId);
+      });
+    },
+    [activePositions, activeGame, myAtomDetails, hasAnyIsPlayerOf],
+  );
+
   // Étend isLoading pour attendre le sidebar si le player est confirmé (évite flash du form)
   const isProfileLoading = hasConfirmedPlayer && sidebarLoading;
   // Accès complet au map : triple "is player of" + alias existant, ou juste après inscription
@@ -134,6 +142,13 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   console.log('[DIAG] canAccessMap:', canAccessMap);
   console.log('[DIAG] rightPanelMode:', rightPanelMode);
   console.log('[DIAG] activeGame:', activeGame?.atomId, activeGame?.label);
+  console.log('[DIAG] activePositions (IS_PLAYER_OF):', (activePositions as any[]).filter((p: any) =>
+    p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF
+  ).map((p: any) => ({
+    term_id: p.term_id,
+    innerSubject: p.term?.triple?._innerTriple?.subject?.term_id,
+    subjectTermId: p.term?.triple?.subject_term?.id,
+  })));
 
   // Reset justRegistered and show speakup page when switching games.
   useEffect(() => {

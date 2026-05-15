@@ -7,7 +7,7 @@ import styles from "./PlayerMapHome.module.css";
 import { usePlayerAliases } from "./hooks/usePlayerAliases";
 import { fetchAccountConsent, fetchFirstClaimTripleId } from './api/fetchPlayerAliases';
 import { fetchAtomDetails } from './api/fetchAtomDetails';
-import { Network } from './hooks/useAtomData';
+import { Network, API_URLS } from './hooks/useAtomData';
 import { useRegisterPlayer } from "./hooks/useRegisterPlayer";
 import { useBatchCreateTriple, TripleToCreate } from "./hooks/useBatchCreateTriple";
 import { useNetworkCheck } from "./shared/hooks/useNetworkCheck";
@@ -70,6 +70,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   // ─── Phase 2 state ──────────────────────────────────────────────────────────
   const [existingItems, setExistingItems] = useState<InitItem[]>([]);
   const [toCreateItems, setToCreateItems] = useState<InitItem[]>([]);
+  const [toDepositItems, setToDepositItems] = useState<InitItem[]>([]);
   const [isInitializing, setIsInitializing] = useState(false);
   const [currentInitIndex, setCurrentInitIndex] = useState(0);
   const [initError, setInitError] = useState<string | undefined>(undefined);
@@ -102,10 +103,11 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     chainId: publicClient?.chain?.id,
   });
 
-  const { batchCreateTriple, checkTripleExists, computeTripleId } = useBatchCreateTriple({
+  const { batchCreateTriple, checkTripleExists, computeTripleId, depositOnVaultsWithoutPosition } = useBatchCreateTriple({
     walletConnected,
     walletAddress,
     publicClient,
+    network: Network.MAINNET,
   });
 
   const { isCorrectNetwork, currentChainId, targetChainId, switchNetwork } = useNetworkCheck({
@@ -232,8 +234,17 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     const isId = PREDICATES.IS;
     const inId = PREDICATES.IN;
 
+    // Maps item.id → term_id for existing triples that need position checks
+    const depositCheckMap = new Map<string, string>();
+
+    // alias-triple: (account → HAS_ALIAS → pseudo) — phase-1 triple, user must hold shares
+    const aliasTermId = `0x${(await computeTripleId(BigInt(accountAtomId), BigInt(PREDICATES.HAS_ALIAS), BigInt(pseudoAtomId))).toString(16).padStart(64, '0')}`;
+    depositCheckMap.set('alias-triple', aliasTermId);
+
     // game-nested: (alias triple) → is player of → game
     if (gameExists) {
+      const termId = `0x${(await computeTripleId(BigInt(aliasTripleId), BigInt(isPlayerOfId), BigInt(gamesId))).toString(16).padStart(64, '0')}`;
+      depositCheckMap.set('game-nested', termId);
       existing.push({
         id: 'game-nested', type: 'nested-triple',
         label: `(has alias) is player of ${gameLabel}`,
@@ -271,6 +282,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
       if (existingFirstClaimTripleId) {
         // Triple exists from a previous registration (same or another game)
+        const fairplayTermId = `0x${(await computeTripleId(BigInt(accountAtomId), BigInt(isId), BigInt(fairplayAtomId))).toString(16).padStart(64, '0')}`;
+        depositCheckMap.set('fairplay', fairplayTermId);
         existing.push({
           id: 'fairplay', type: 'triple',
           label: fairplayLabel,                                // used by getItemChunks 'fairplay' case
@@ -283,6 +296,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
           BigInt(existingFirstClaimTripleId), BigInt(inId), BigInt(gamesId)
         );
         if (contextExists) {
+          const contextTermId = `0x${(await computeTripleId(BigInt(existingFirstClaimTripleId), BigInt(inId), BigInt(gamesId))).toString(16).padStart(64, '0')}`;
+          depositCheckMap.set('context-nested', contextTermId);
           existing.push({
             id: 'context-nested', type: 'nested-triple',
             label: fairplayLabel,                             // used by getItemChunks 'context-nested' case as claimLabel
@@ -317,11 +332,51 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       }
     }
 
+    // ── Batch check positions for existing phase-2 triples ─────────────────────
+    // Items where the triple exists but user has 0 shares need a deposit.
+    const toDeposit: InitItem[] = [];
+    if (depositCheckMap.size > 0 && walletAddress) {
+      const termIds = [...depositCheckMap.values()];
+      const apiUrl = API_URLS[Network.MAINNET];
+      try {
+        const posRes = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            query: `query CheckPositions($termIds: [String!]!, $account: String!) {
+              positions(where: { term_id: { _in: $termIds }, account_id: { _ilike: $account }, shares: { _gt: 0 } }) {
+                term_id
+              }
+            }`,
+            variables: { termIds, account: walletAddress.toLowerCase() },
+          }),
+        });
+        const posData = await posRes.json();
+        const withPos = new Set<string>(
+          (posData.data?.positions ?? []).map((p: any) => (p.term_id as string).toLowerCase())
+        );
+
+        for (const [itemId, termId] of depositCheckMap) {
+          if (!withPos.has(termId.toLowerCase())) {
+            const item = existing.find(e => e.id === itemId);
+            if (item) {
+              toDeposit.push({ ...item, status: 'to-deposit' });
+              const idx = existing.findIndex(e => e.id === itemId);
+              if (idx !== -1) existing.splice(idx, 1);
+            }
+          }
+        }
+      } catch {
+        // Position check failed — treat all as having positions (safe fallback: deposit step will catch it)
+      }
+    }
+
+    setToDepositItems(toDeposit);
     setExistingItems(existing);
     setToCreateItems(toCreate);
     setRegistrationPhase('ready-to-initialize');
   }, [accountAtomId, aliasTripleId, pseudoAtomId, pseudo, selectedGuild, aliases, activeGame, guilds,
-      checkTripleExists, computeTripleId]);
+      walletAddress, checkTripleExists, computeTripleId]);
 
   // ─── Trigger existence checks when entering loading-existing ──────────────────
   useEffect(() => {
@@ -360,6 +415,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     setSelectedExistingAlias('');
     setExistingItems([]);
     setToCreateItems([]);
+    setToDepositItems([]);
     setIsInitializing(false);
     setCurrentInitIndex(0);
     setInitError(undefined);
@@ -417,10 +473,6 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
     if (!gamesId) return;
 
     const pending = toCreateItems.filter(i => i.status === 'to-create');
-    if (pending.length === 0) {
-      setRegistrationPhase('complete');
-      return;
-    }
 
     setIsInitializing(true);
     setInitError(undefined);
@@ -453,11 +505,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
 
       const hasContextNested = pending.some(i => i.id === 'context-nested');
 
-      if (batch1.length === 0 && !hasContextNested) {
-        setIsInitializing(false);
-        setRegistrationPhase('complete');
-        return;
-      }
+      // No new triples to create — skip directly to deposit step below
 
       if (batch1.length > 0) {
         setToCreateItems(prev => prev.map(i => batch1Ids.includes(i.id) ? { ...i, status: 'creating' } : i));
@@ -481,6 +529,27 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
         setToCreateItems(prev => prev.map(i => i.id === 'context-nested' ? { ...i, status: 'created' } : i));
       }
 
+      // ── Deposit step: ensure user has position on all initialization vaults ───
+      // Collects term_ids of all relevant triples and deposits on those without position.
+      const aliasTermId = `0x${(await computeTripleId(BigInt(accountAtomId), BigInt(PREDICATES.HAS_ALIAS), BigInt(pseudoAtomId!!))).toString(16).padStart(64, '0')}`;
+      const isPlayerOfTermId = `0x${(await computeTripleId(BigInt(aliasTripleId), BigInt(isPlayerOfId), BigInt(gamesId))).toString(16).padStart(64, '0')}`;
+      const vaultsToCheck: string[] = [aliasTermId, isPlayerOfTermId];
+
+      if (selectedGuild) {
+        const isMemberOfTermId = `0x${(await computeTripleId(BigInt(aliasTripleId), BigInt(isMemberOfId), BigInt(selectedGuild))).toString(16).padStart(64, '0')}`;
+        vaultsToCheck.push(isMemberOfTermId);
+      }
+
+      if (firstClaim) {
+        const fairplayTripleTermId = `0x${(await computeTripleId(BigInt(accountAtomId), BigInt(isId), BigInt(ATOMS.FAIRPLAY))).toString(16).padStart(64, '0')}`;
+        const contextTripleTermId = `0x${(await computeTripleId(BigInt(fairplayTripleTermId), BigInt(inId), BigInt(gamesId))).toString(16).padStart(64, '0')}`;
+        vaultsToCheck.push(fairplayTripleTermId, contextTripleTermId);
+      }
+
+      setToDepositItems(prev => prev.map(i => ({ ...i, status: 'depositing' as const })));
+      await depositOnVaultsWithoutPosition(vaultsToCheck);
+      setToDepositItems(prev => prev.map(i => ({ ...i, status: 'deposited' as const })));
+
       setIsInitializing(false);
       setRegistrationPhase('complete');
     } catch (err) {
@@ -490,7 +559,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
       setRegistrationPhase('ready-to-initialize');
     }
   }, [accountAtomId, aliasTripleId, toCreateItems, selectedGuild, activeGame,
-      batchCreateTriple, computeTripleId]);
+      batchCreateTriple, computeTripleId, depositOnVaultsWithoutPosition]);
 
   const isValidateDisabled =
     (useExistingAlias ? !selectedExistingAlias : !pseudoInput.trim()) ||
@@ -804,6 +873,7 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                     : undefined}
                   existingItems={existingItems}
                   toCreateItems={toCreateItems}
+                  toDepositItems={toDepositItems}
                   onInitialize={handleInitialize}
                   isInitializing={isInitializing}
                   currentInitIndex={currentInitIndex}

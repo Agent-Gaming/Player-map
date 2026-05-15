@@ -33,6 +33,7 @@ interface PlayerCreationProgressProps {
   // Phase 2 — Player Initialization
   existingItems: InitItem[];
   toCreateItems: InitItem[];
+  toDepositItems: InitItem[];
   onInitialize: () => void;
   isInitializing: boolean;
   currentInitIndex: number;
@@ -200,6 +201,7 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
   aliasesLoading,
   existingItems,
   toCreateItems,
+  toDepositItems,
   onInitialize,
   isInitializing,
   currentInitIndex,
@@ -266,7 +268,10 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
 
   // ─── Phases: ready-to-initialize + creating-claims ────────────────────────
   if (registrationPhase === 'ready-to-initialize' || registrationPhase === 'creating-claims') {
-    const pendingCount = toCreateItems.filter(i => i.status === 'to-create').length;
+    const pendingCount        = toCreateItems.filter(i => i.status === 'to-create').length;
+    const pendingDepositCount = toDepositItems.filter(i => i.status === 'to-deposit').length;
+    const totalPending        = pendingCount + pendingDepositCount;
+    const isDepositing        = toDepositItems.some(i => i.status === 'depositing');
 
     return (
       <div>
@@ -302,12 +307,60 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
           </div>
         )}
 
-        {/* Zone 2 — To create */}
+        {/* Zone 2 — Deposit necessary */}
+        {toDepositItems.length > 0 && (
+          <div className={styles.initZone}>
+            <p className={styles.initZoneLabel}>Deposit necessary</p>
+            <div className={styles.initItemList}>
+              {toDepositItems.map((item: InitItem) => {
+                const isActive = item.status === 'depositing';
+                const isDone   = item.status === 'deposited';
+                return (
+                  <div
+                    key={item.id}
+                    className={[
+                      styles.initItem,
+                      isDone   ? styles.initItemDone   : '',
+                      isActive ? styles.initItemActive : '',
+                    ].join(' ')}
+                  >
+                    <span className={[
+                      styles.initItemIcon,
+                      isDone   ? styles.initItemIconDone   : '',
+                      isActive ? styles.initItemIconActive : '',
+                    ].join(' ')}>
+                      {isDone ? '✓' : isActive ? '⟳' : '◎'}
+                    </span>
+                    <div className={styles.tripleRow}>
+                      {getItemChunks(item, pseudo, guildName, gameLabel, resolvedClaims).map((chunk, i) =>
+                        chunk.kind === 'atom' ? (
+                          <span key={i} className={styles.atomChip}>
+                            {chunk.image
+                              ? <img src={chunk.image} alt={chunk.label} className={styles.atomChipImage} />
+                              : chunk.circle
+                              ? <span className={styles.atomChipCircle} />
+                              : <span className={styles.atomChipSquare} />
+                            }
+                            <span>{chunk.label}</span>
+                          </span>
+                        ) : (
+                          <span key={i} className={styles.predicateLabel}>{chunk.label}</span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Zone 3 — To create */}
         {toCreateItems.length > 0 && (
           <div className={styles.initZone}>
             <p className={styles.initZoneLabel}>To create</p>
             <div className={styles.initItemList}>
-              {toCreateItems.map((item, idx) => {
+              {toCreateItems.map((item: InitItem, idx: number) => {
                 const isActive = isInitializing && idx === currentInitIndex;
                 const isDone   = item.status === 'created';
                 const isErr    = item.status === 'error';
@@ -360,19 +413,26 @@ const PlayerCreationProgress: React.FC<PlayerCreationProgressProps> = ({
             <button
               className={styles.btnCreateClaims}
               onClick={onInitialize}
-              disabled={toCreateItems.length > 0 && pendingCount === 0 && !initError}
+              disabled={
+                (toCreateItems.length > 0 || toDepositItems.length > 0) &&
+                pendingCount === 0 && pendingDepositCount === 0 &&
+                !initError
+              }
             >
               {initError
                 ? 'Retry'
-                : pendingCount > 0
-                  ? `Validate (${pendingCount})`
+                : totalPending > 0
+                  ? `Validate (${totalPending})`
                   : 'Continue'}
             </button>
           </div>
         )}
         {isInitializing && (
           <p className={styles.statusText}>
-            Creating {currentInitIndex + 1} / {toCreateItems.length}...
+            {isDepositing
+              ? 'Depositing...'
+              : `Creating ${currentInitIndex + 1} / ${toCreateItems.length}...`
+            }
           </p>
         )}
       </div>

@@ -134,6 +134,15 @@ export const useOtherPlayerProfile = (
     return map;
   }, [qualityTriples]);
 
+  // IS triple term_id → subject atom id (the player who owns the quality)
+  const qualityOwnerByTermId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const t of qualityTriples ?? []) {
+      if (t.subject_id) map.set(t.term_id, t.subject_id);
+    }
+    return map;
+  }, [qualityTriples]);
+
   // Stable ref — never resets to empty while a previous non-empty map exists.
   // Prevents IN-predicate claims from briefly losing their quality object during refetch.
   const stableQualityRef = useRef(qualityBySubjectIdRaw);
@@ -152,8 +161,23 @@ export const useOtherPlayerProfile = (
       .filter(p => {
         const triple = p.term?.triple;
         if (!triple || !relevantPredicates.has(triple.predicate_id)) return false;
+        // IS: subject must be this player's account atom
         if (triple.predicate_id === PREDICATES.IS && accountAtomId) {
           return triple.subject_id === accountAtomId;
+        }
+        // IS_PLAYER_OF / IS_MEMBER_OF: inner subject must be this player's account atom
+        if (
+          (triple.predicate_id === PREDICATES.IS_PLAYER_OF ||
+            triple.predicate_id === PREDICATES.IS_MEMBER_OF) &&
+          accountAtomId
+        ) {
+          const innerSubjectId = triple._innerTriple?.subject?.term_id;
+          return innerSubjectId === accountAtomId;
+        }
+        // IN: IS triple's subject must be this player's account atom
+        if (triple.predicate_id === PREDICATES.IN && accountAtomId) {
+          const isTripleSubject = qualityOwnerByTermId.get(triple.subject_id);
+          if (isTripleSubject) return isTripleSubject === accountAtomId;
         }
         return true;
       })
@@ -187,7 +211,7 @@ export const useOtherPlayerProfile = (
         };
       })
       .filter(a => a.object != null);
-  }, [positions, qualityBySubjectId, accountAtomId]);
+  }, [positions, qualityBySubjectId, qualityOwnerByTermId, accountAtomId]);
 
   return {
     atomDetails,

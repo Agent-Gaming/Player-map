@@ -4,6 +4,7 @@ import { useDepositTriple } from "../../hooks/useDepositTriple";
 import { useRedeemBatch } from "../../hooks/useRedeemBatch";
 import { Network } from "../../hooks/useAtomData";
 import { VoteDirection } from "../../types/vote";
+import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
@@ -126,9 +127,12 @@ const ClaimActionRow: React.FC<ClaimActionRowProps> = ({
     }
   };
 
+  const objectVerif = getAtomVerificationStatus(claim.object_id ?? claim.object?.term_id);
+  const showObjectImage = claim.object?.image && objectVerif.status !== 'not-verified';
+
   return (
     <div className={styles.claimRow}>
-      {claim.object?.image ? (
+      {showObjectImage ? (
         <SafeImage
           src={claim.object.image}
           alt={claim.object?.label || ""}

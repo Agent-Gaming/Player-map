@@ -148,6 +148,8 @@ export const useFollowPlayer = ({
       }
       apiCache.clear();
       await queryClient.invalidateQueries({ queryKey: ['positions'] });
+      await queryClient.invalidateQueries({ queryKey: ['otherPlayerFollowCounts'] });
+      await queryClient.invalidateQueries({ queryKey: ['followsAndFollowers'] });
       await checkFollowState();
     } catch (err: any) {
       console.error('[useFollowPlayer] follow error:', err);
@@ -176,6 +178,8 @@ export const useFollowPlayer = ({
       });
       apiCache.clear();
       await queryClient.invalidateQueries({ queryKey: ['positions'] });
+      await queryClient.invalidateQueries({ queryKey: ['otherPlayerFollowCounts'] });
+      await queryClient.invalidateQueries({ queryKey: ['followsAndFollowers'] });
       await checkFollowState();
     } catch (err: any) {
       console.error('[useFollowPlayer] unfollow error:', err);

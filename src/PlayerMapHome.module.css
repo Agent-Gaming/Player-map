@@ -88,6 +88,38 @@
   text-align: center;
 }
 
+.walletAddressDisplay {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.walletAddressLabel {
+  font-size: 13px;
+  color: var(--color-muted, #aaa);
+  white-space: nowrap;
+}
+
+.walletAddressValue {
+  font-size: 13px;
+  font-family: monospace;
+  color: #ddd;
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.walletAddressValue:hover {
+  color: #fff;
+}
+
+.copiedBadge {
+  color: #22c55e;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
 .createBtn {
   display: flex;
   align-items: center;

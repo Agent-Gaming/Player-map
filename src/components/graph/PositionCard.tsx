@@ -8,6 +8,7 @@ import { TripleBubble, AtomBubble, PositionBubble } from "./index";
 import { ATOM_CONTRACT_ADDRESS, atomABI } from "../../abi";
 import SafeImage from "../SafeImage";
 import { ipfsToHttpUrl } from "../../utils/pinata";
+import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import styles from "./Positions.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
@@ -307,7 +308,10 @@ const PositionCard: React.FC<PositionCardProps> = ({
       ? positionComponents.label
       : "Unknown";
   const subjectImage = effectiveTriple?.subject?.image;
-  const objectImage = (positionComponents as any).objectImage ?? effectiveTriple?.object?.image;
+  const rawObjectImage = (positionComponents as any).objectImage ?? effectiveTriple?.object?.image;
+  const objectTermId = effectiveTriple?.object?.term_id;
+  const objectVerif = getAtomVerificationStatus(objectTermId);
+  const objectImage = objectVerif.status === 'not-verified' ? undefined : rawObjectImage;
 
   return (
     <div className={styles.cardRow}>

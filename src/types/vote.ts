@@ -30,6 +30,8 @@ export interface VoteItem extends Claim {
   userCurveId?: bigint; // Curve id for the current position vault
   subject_image?: string | null; // Image URL for the subject atom
   object_image?: string | null;  // Image URL for the object atom
+  subject_term_id?: string | null;
+  object_term_id?: string | null;
 }
 
 // Response structure after a transaction

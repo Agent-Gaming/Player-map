@@ -2,6 +2,7 @@ import React from "react";
 import { VoteItem, VoteDirection } from "../../types/vote";
 import { Network } from "../../hooks/useAtomData";
 import { ipfsToHttpUrl } from "../../utils/pinata";
+import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import styles from "./ClaimItem.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
@@ -33,6 +34,8 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     object,
     subject_image,
     object_image,
+    subject_term_id,
+    object_term_id,
     units = 0,
     direction = VoteDirection.None,
     term_position_count = 0,
@@ -40,6 +43,11 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     userHasPosition = false,
     userPositionDirection = VoteDirection.None,
   } = voteItem;
+
+  const showSubjectImage = subject_image &&
+    getAtomVerificationStatus(subject_term_id ?? undefined).status !== 'not-verified';
+  const showObjectImage = object_image &&
+    getAtomVerificationStatus(object_term_id ?? undefined).status !== 'not-verified';
 
   // Sélection en cours (non soumise)
   const isSelectedFor = direction === VoteDirection.For && units > 0;
@@ -84,9 +92,9 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           title={subject}
           className={styles.pill}
         >
-          {subject_image && (
+          {showSubjectImage && (
             <img
-              src={ipfsToHttpUrl(subject_image)}
+              src={ipfsToHttpUrl(subject_image!)}
               alt=""
               className={styles.pillImage}
             />
@@ -105,9 +113,9 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           title={object}
           className={styles.pill}
         >
-          {object_image && (
+          {showObjectImage && (
             <img
-              src={ipfsToHttpUrl(object_image)}
+              src={ipfsToHttpUrl(object_image!)}
               alt=""
               className={styles.pillImage}
             />
@@ -133,11 +141,13 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               className={styles.voteIcon}
             />
           </button>
-          <span
-            className={`${styles.voteCount} ${(isSelectedFor || hasForPosition) ? styles.voteCountFor : styles.voteCountDefault}`}
-          >
-            {term_position_count}
-          </span>
+          {hasAnyPosition && (
+            <span
+              className={`${styles.voteCount} ${(isSelectedFor || hasForPosition) ? styles.voteCountFor : styles.voteCountDefault}`}
+            >
+              {term_position_count}
+            </span>
+          )}
         </div>
 
         {/* DOWN */}
@@ -153,11 +163,13 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               className={styles.voteIcon}
             />
           </button>
-          <span
-            className={`${styles.voteCount} ${(isSelectedAgainst || hasAgainstPosition) ? styles.voteCountAgainst : styles.voteCountDefault}`}
-          >
-            {counter_term_position_count}
-          </span>
+          {hasAnyPosition && (
+            <span
+              className={`${styles.voteCount} ${(isSelectedAgainst || hasAgainstPosition) ? styles.voteCountAgainst : styles.voteCountDefault}`}
+            >
+              {counter_term_position_count}
+            </span>
+          )}
         </div>
       </div>
     </div>

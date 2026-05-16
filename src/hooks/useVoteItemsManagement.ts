@@ -448,6 +448,8 @@ export const useVoteItemsManagement = ({
           object: details.object?.label || `Object ${id}`,
           subject_image: (details.subject as any)?.image || null,
           object_image: (details.object as any)?.image || null,
+          subject_term_id: (details.subject as any)?.term_id || null,
+          object_term_id: (details.object as any)?.term_id || null,
           units: 0,
           direction: VoteDirection.None,
           term_id: details.term_id,

@@ -71,6 +71,8 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
   const [existingItems, setExistingItems] = useState<InitItem[]>([]);
   const [toCreateItems, setToCreateItems] = useState<InitItem[]>([]);
   const [toDepositItems, setToDepositItems] = useState<InitItem[]>([]);
+  const [walletAddrCopied, setWalletAddrCopied] = useState(false);
+  const [walletAddrExpanded, setWalletAddrExpanded] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
   const [currentInitIndex, setCurrentInitIndex] = useState(0);
   const [initError, setInitError] = useState<string | undefined>(undefined);
@@ -658,6 +660,25 @@ const PlayerMapHome: React.FC<PlayerMapHomeProps> = ({
                 </button>
 
                 <p className={styles.title2}>CREATE YOUR PLAYER</p>
+
+                {walletAddress && (
+                  <p className={styles.walletAddressDisplay}>
+                    <span className={styles.walletAddressLabel}>Your Address</span>
+                    <span
+                      onClick={() => {
+                        navigator.clipboard.writeText(walletAddress);
+                        setWalletAddrCopied(true);
+                        setTimeout(() => setWalletAddrCopied(false), 2000);
+                        setWalletAddrExpanded(true);
+                      }}
+                      className={styles.walletAddressValue}
+                      title="Click to copy"
+                    >
+                      {walletAddress}
+                      {walletAddrCopied && <span className={styles.copiedBadge}> ✓ Copied</span>}
+                    </span>
+                  </p>
+                )}
 
                 {/* Username row — with alias select when user has existing aliases */}
                 <div className={styles.formRow}>

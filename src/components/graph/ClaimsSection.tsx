@@ -4,6 +4,7 @@ import SafeImage from "../SafeImage";
 import { useGameContext } from "../../contexts/GameContext";
 import { PREDICATES } from "../../utils/constants";
 import ClaimActionRow from "./ClaimActionRow";
+import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import styles from "./ClaimsSection.module.css";
 
 interface ClaimsSectionProps {
@@ -127,10 +128,12 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   const ClaimRow = ({ claim }: { claim: any }) => {
     const forCount = claim.forCount ?? claim.term?.positions_aggregate?.aggregate?.count ?? 0;
     const againstCount = claim.againstCount ?? claim.counter_term?.positions_aggregate?.aggregate?.count ?? 0;
+    const objectVerif = getAtomVerificationStatus(claim.object_id ?? claim.object?.term_id);
+    const showObjectImage = claim.object?.image && objectVerif.status !== 'not-verified';
     return (
     <div className={styles.claimRow}>
       {/* Icône */}
-      {claim.object?.image ? (
+      {showObjectImage ? (
         <SafeImage
           src={claim.object.image}
           alt={claim.object?.label || ""}

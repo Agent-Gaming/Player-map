@@ -16,6 +16,8 @@ export const usePlayerAliases = ({
 }: UsePlayerAliasesProps) => {
   const predicateId = PREDICATES.HAS_ALIAS;
 
+  console.log('[DIAG][usePlayerAliases] walletAddress:', walletAddress, '| predicateId:', predicateId);
+
   // Single query: find has-alias triples where this wallet has a position.
   // subject_id of the triple = account atom term_id (playerAtomId).
   const { data: rawAliases, isLoading, error } = useQuery({
@@ -34,6 +36,8 @@ export const usePlayerAliases = ({
     );
     return sorted.map((a, i) => ({ ...a, isPrimary: i === 0 }));
   }, [rawAliases]);
+
+  console.log('[DIAG][usePlayerAliases] rawAliases:', rawAliases, '| isLoading:', isLoading, '| error:', error);
 
   // playerAtomId = subject_id shared by all has-alias triples of this wallet
   const playerAtomId = rawAliases?.[0]?.subjectId ?? null;

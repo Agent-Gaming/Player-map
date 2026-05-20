@@ -17,6 +17,7 @@ interface AtomDetailsSectionProps {
   walletAddress?: string;
   showDescription?: boolean;
   placeholderElement?: React.ReactNode;
+  actionElement?: React.ReactNode;
 }
 
 const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
@@ -25,6 +26,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   walletAddress,
   showDescription = true,
   placeholderElement,
+  actionElement,
 }) => {
   const [ipfsMetadata, setIpfsMetadata] = useState<any>(null);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
@@ -179,16 +181,16 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       <p className={styles.atomName}>
                         <strong>{String(atomDetails.label ?? "Not defined")}</strong>
                       </p>
-                      
+
                       {/* Badge verified avec tooltip */}
-                      <div 
+                      <div
                         className={styles.badgeWrapper}
                         onMouseEnter={() => setShowTooltip('verified')}
                         onMouseLeave={() => setShowTooltip(null)}
                       >
-                        <img 
-                          src={verifiedIcon} 
-                          alt="Verified" 
+                        <img
+                          src={verifiedIcon}
+                          alt="Verified"
                           className={styles.badgeIcon}
                         />
                         {showTooltip === 'verified' && (
@@ -198,6 +200,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                           </div>
                         )}
                       </div>
+                      {actionElement}
                     </div>
                     {showDescription && (
                       <div className={styles.descriptionScroll}>
@@ -215,16 +218,16 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       <p className={styles.atomName}>
                         <strong>{String(atomDetails.label ?? "Not defined")}</strong>
                       </p>
-                      
+
                       {/* Badge community avec tooltip */}
-                      <div 
+                      <div
                         className={styles.badgeWrapper}
                         onMouseEnter={() => setShowTooltip('community')}
                         onMouseLeave={() => setShowTooltip(null)}
                       >
-                        <img 
-                          src={communityIcon} 
-                          alt="Community" 
+                        <img
+                          src={communityIcon}
+                          alt="Community"
                           className={styles.badgeIcon}
                         />
                         {showTooltip === 'community' && (
@@ -234,6 +237,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                           </div>
                         )}
                       </div>
+                      {actionElement}
                     </div>
                     {showDescription && (
                       <div className={styles.descriptionScroll}>
@@ -260,9 +264,12 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
 
                   {/* Colonne droite: nom + description */}
                   <div className={styles.rightColumn}>
-                    <p className={styles.atomNameAccent}>
-                      <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-                    </p>
+                    <div className={styles.nameRow}>
+                      <p className={styles.atomNameAccent}>
+                        <strong>{String(atomDetails.label ?? "Not defined")}</strong>
+                      </p>
+                      {actionElement}
+                    </div>
                     {showDescription && (
                       <div className={styles.descriptionScroll}>
                         <p className={styles.descriptionText}>{description}</p>

@@ -8,6 +8,7 @@ import React, {
 import { Network } from "./hooks/useAtomData";
 import { usePositions } from "./hooks/usePositions";
 import { useSidebarData } from "./hooks/useSidebarData";
+import { useOtherPlayerProfile } from "./hooks/useOtherPlayerProfile";
 import { useSelectedAtomData } from "./hooks/useSelectedAtomData";
 import { useSelectedAtomClaims } from "./hooks/useSelectedAtomClaims";
 import PlayerMapHome from "./PlayerMapHome";
@@ -67,29 +68,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const { positions: activePositions, loading: positionsLoading } =
     usePositions(isWalletReady ? walletAddress : undefined, network);
 
-  // Detect "is player of Bossfighters" via a nested triple in active positions
-  // (the subject of this triple is the alias triple, not an atom — creator_id is not accessible)
-  const hasConfirmedPlayer = useMemo(
-    () => {
-      const match = activePositions.some((p: any) =>
-        p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
-        p.term?.triple?.object_id === activeGame?.atomId
-      );
-      console.log('[PlayerMap] hasConfirmedPlayer:', match);
-      console.log('[PlayerMap] activePositions count:', activePositions.length);
-      console.log('[PlayerMap] PREDICATES.IS_PLAYER_OF:', PREDICATES.IS_PLAYER_OF);
-      console.log('[PlayerMap] activeGame?.atomId:', activeGame?.atomId);
-      console.log('[PlayerMap] positions with triples:', activePositions
-        .filter((p: any) => p.term?.triple)
-        .map((p: any) => ({ predicate_id: p.term.triple.predicate_id, object_id: p.term.triple.object_id }))
-      );
-      return match;
-    },
-    [activePositions, activeGame],
-  );
-
-  // Pendant le chargement des positions, on ne sait pas encore si le player est confirmé.
-  // Si hasConfirmedPlayer=true, on attend aussi le sidebar pour savoir si l'alias existe.
   const isLoading = positionsLoading;
   const hasError = null;
 
@@ -97,10 +75,19 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const [graphControls, setGraphControls] = useState<GraphControls | null>(null);
 
   // ── Mode du panneau droit ─────────────────────────────────────────────────────
-  const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>("speakup");
+  // Restore persisted mode on refresh — only stateless modes (speakup/profile) survive
+  const PANEL_STORAGE_KEY = 'playermap_rightPanelMode';
+  const persistedMode = localStorage.getItem(PANEL_STORAGE_KEY) as RightPanelMode | null;
+  const initialPanelMode: RightPanelMode =
+    persistedMode === 'profile' || persistedMode === 'speakup' ? persistedMode : 'speakup';
+  const [rightPanelMode, setRightPanelMode] = useState<RightPanelMode>(initialPanelMode);
 
   // ── Nœud sélectionné ─────────────────────────────────────────────────────────
   const [selectedNode, setSelectedNode] = useState<any>(null);
+
+  // ── Profil autre joueur ───────────────────────────────────────────────────────
+  const [selectedPlayerAccountId, setSelectedPlayerAccountId] = useState<string | null>(null);
+  const [selectedPlayerPseudo, setSelectedPlayerPseudo] = useState<{ label: string; image: string }>({ label: '', image: '' });
 
   // ── Données sidebar "mon profil" ──────────────────────────────────────────────
   const {
@@ -113,16 +100,65 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
     error: sidebarError,
   } = useSidebarData(walletAddress, Network.MAINNET);
 
+  // Any IS_PLAYER_OF position for this game — fallback while sidebar loads.
+  const hasAnyIsPlayerOf = useMemo(
+    () => activePositions.some((p: any) =>
+      p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
+      p.term?.triple?.object_id === activeGame?.atomId
+    ),
+    [activePositions, activeGame],
+  );
+
+  // Strict check:
+  // 1. inner subject must be MY account atom (avoids false positives from other players' IS_PLAYER_OF)
+  // 2. user must also hold a position on the alias-triple (avoids access after redeeming alias-triple)
+  const hasConfirmedPlayer = useMemo(
+    () => {
+      if (!myAtomDetails?.term_id) return hasAnyIsPlayerOf; // fallback while sidebar loads
+      const myAtomId = myAtomDetails.term_id;
+      const isPlayerOfPositions = activePositions.filter((p: any) =>
+        p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF &&
+        p.term?.triple?.object_id === activeGame?.atomId
+      );
+      return isPlayerOfPositions.some((p: any) => {
+        const triple = p.term?.triple;
+        if (triple._innerTriple?.subject?.term_id !== myAtomId) return false;
+        const aliasTripleTermId: string | undefined = triple.subject_term?.id;
+        if (!aliasTripleTermId) return true; // data missing — grant access
+        return activePositions.some((ap: any) => ap.term_id === aliasTripleTermId);
+      });
+    },
+    [activePositions, activeGame, myAtomDetails, hasAnyIsPlayerOf],
+  );
+
   // Étend isLoading pour attendre le sidebar si le player est confirmé (évite flash du form)
   const isProfileLoading = hasConfirmedPlayer && sidebarLoading;
   // Accès complet au map : triple "is player of" + alias existant, ou juste après inscription
   const canAccessMap = justRegistered || (hasConfirmedPlayer && !!myAtomDetails);
-  console.log('[PlayerMap] canAccessMap:', canAccessMap, '| myAtomDetails:', !!myAtomDetails, '| sidebarLoading:', sidebarLoading);
 
-  // Reset justRegistered when the user switches to a different game — otherwise canAccessMap
-  // stays true from the previous registration and the new game bypasses the player check.
+  console.log('[DIAG][GraphComponent] ─────────────────────────────');
+  console.log('[DIAG] walletAddress:', walletAddress);
+  console.log('[DIAG] isWalletReady:', isWalletReady);
+  console.log('[DIAG] justRegistered:', justRegistered);
+  console.log('[DIAG] hasConfirmedPlayer:', hasConfirmedPlayer);
+  console.log('[DIAG] myAtomDetails:', myAtomDetails);
+  console.log('[DIAG] sidebarLoading:', sidebarLoading);
+  console.log('[DIAG] sidebarError:', sidebarError);
+  console.log('[DIAG] canAccessMap:', canAccessMap);
+  console.log('[DIAG] rightPanelMode:', rightPanelMode);
+  console.log('[DIAG] activeGame:', activeGame?.atomId, activeGame?.label);
+  console.log('[DIAG] activePositions (IS_PLAYER_OF):', (activePositions as any[]).filter((p: any) =>
+    p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF
+  ).map((p: any) => ({
+    term_id: p.term_id,
+    innerSubject: p.term?.triple?._innerTriple?.subject?.term_id,
+    subjectTermId: p.term?.triple?.subject_term?.id,
+  })));
+
+  // Reset justRegistered and show speakup page when switching games.
   useEffect(() => {
     setJustRegistered(false);
+    setRightPanelMode("speakup");
   }, [activeGame?.atomId]);
 
   // Keep the last accessible game ID up-to-date.
@@ -146,15 +182,44 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   const { claims: selectedClaims, loading: selectedClaimsLoading, error: selectedClaimsError } =
     useSelectedAtomClaims(selectedNode, Network.MAINNET);
 
+  // ── Profil autre joueur ───────────────────────────────────────────────────────
+  const {
+    atomDetails: otherPlayerAtomDetails,
+    walletAddress: otherPlayerWallet,
+    positions: otherPlayerPositions,
+    activities: otherPlayerActivities,
+    connections: otherPlayerConnections,
+    loading: otherPlayerLoading,
+    error: otherPlayerError,
+  } = useOtherPlayerProfile(
+    selectedPlayerAccountId,
+    selectedPlayerPseudo.label,
+    selectedPlayerPseudo.image,
+    Network.MAINNET,
+  );
+
   // ── Quand un nœud est cliqué → changer de mode ────────────────────────────────
   const handleNodeSelect = useCallback(
     (node: any) => {
       setSelectedNode(node);
       if (!node) return;
-      // Si c'est le nœud de l'utilisateur → profil, sinon → atom
-      const isMyNode =
-        node?.id === myAtomDetails?.id || node?.id === myAtomDetails?.term_id;
-      setRightPanelMode(isMyNode ? "profile" : "atom");
+      const accountId: string | undefined = node.accountId;
+      if (accountId) {
+        // Nœud joueur (pseudo résolu depuis account)
+        const isMyNode = accountId === myAtomDetails?.term_id;
+        if (isMyNode) {
+          setRightPanelMode("profile");
+        } else {
+          setSelectedPlayerAccountId(accountId);
+          setSelectedPlayerPseudo({ label: node.label || '', image: node.image || '' });
+          setRightPanelMode("player-profile");
+        }
+      } else {
+        // Nœud atom générique
+        const isMyNode =
+          node?.id === myAtomDetails?.id || node?.id === myAtomDetails?.term_id;
+        setRightPanelMode(isMyNode ? "profile" : "atom");
+      }
     },
     [myAtomDetails],
   );
@@ -162,6 +227,9 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // ── Bouton profil dans la navbar change le mode ───────────────────────────────
   const handlePanelModeChange = useCallback((mode: RightPanelMode) => {
     setRightPanelMode(mode);
+    if (mode === 'speakup' || mode === 'profile') {
+      localStorage.setItem(PANEL_STORAGE_KEY, mode);
+    }
   }, []);
 
   // ── Inscription ───────────────────────────────────────────────────────────────
@@ -283,6 +351,13 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
                 selectedClaims={selectedClaims}
                 selectedLoading={selectedLoading || selectedClaimsLoading}
                 selectedError={selectedError || selectedClaimsError}
+                otherPlayerAtomDetails={otherPlayerAtomDetails}
+                otherPlayerWallet={otherPlayerWallet}
+                otherPlayerPositions={otherPlayerPositions}
+                otherPlayerActivities={otherPlayerActivities}
+                otherPlayerConnections={otherPlayerConnections}
+                otherPlayerLoading={otherPlayerLoading}
+                otherPlayerError={otherPlayerError}
               />
             </div>
           </div>

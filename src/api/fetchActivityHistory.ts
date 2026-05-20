@@ -149,6 +149,45 @@ export const fetchActivityHistory = async (
           })
         );
 
+        // Step 2.5: reverse-lookup original triples for counter-triple term IDs
+        const counterTermIds = [...new Set([
+          ...deposits.filter((d: any) => d.vault_type === 'CounterTriple').map((d: any) => d.term_id),
+          ...redemptions.filter((r: any) => r.vault_type === 'CounterTriple').map((r: any) => r.term_id),
+        ].filter(Boolean))];
+
+        const originalTripleMap = new Map<string, any>();
+        if (counterTermIds.length > 0) {
+          const ctRes = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              query: `
+                query OriginalTriples($ids: [String!]!) {
+                  triples(where: { counter_term_id: { _in: $ids } }) {
+                    term_id counter_term_id subject_id predicate_id object_id
+                    subject { term_id label image }
+                    predicate { term_id label }
+                    object { term_id label image }
+                    subject_term {
+                      id
+                      triple { subject { label term_id } predicate { label } object { label image term_id } }
+                    }
+                    counter_term {
+                      id
+                      positions_aggregate(where: { shares: { _gt: 0 } }) { aggregate { count } }
+                    }
+                  }
+                }
+              `,
+              variables: { ids: counterTermIds },
+            }),
+          });
+          const ctData = await ctRes.json();
+          for (const t of ctData.data?.triples ?? []) {
+            if (t.counter_term_id) originalTripleMap.set(t.counter_term_id, t);
+          }
+        }
+
         // Step 3: enrich activities
         const enrichActivity = (activity: any) => {
           const term = termsMap.get(activity.term_id);
@@ -167,7 +206,6 @@ export const fetchActivityHistory = async (
           };
 
           if (triple) {
-            // Resolve subject: if subject.label is empty and subject_term.triple exists, attach _innerTriple
             const subjectLabel = triple.subject?.label;
             const innerTriple = (!subjectLabel && triple.subject_term?.triple)
               ? triple.subject_term.triple
@@ -187,6 +225,28 @@ export const fetchActivityHistory = async (
                 positions_aggregate: triple.counter_term.positions_aggregate ?? null,
               } : null,
             };
+          }
+
+          // For counter-triple activities, attach original triple for display
+          if (activity.vault_type === 'CounterTriple' && !enrichedTerm.triple) {
+            const orig = originalTripleMap.get(activity.term_id);
+            if (orig) {
+              const inner = (!orig.subject?.label && orig.subject_term?.triple) ? orig.subject_term.triple : null;
+              enrichedTerm._originalTriple = {
+                term_id: orig.term_id,
+                subject_id: orig.subject_id,
+                predicate_id: orig.predicate_id,
+                object_id: orig.object_id,
+                subject: orig.subject || { label: '' },
+                predicate: orig.predicate || { label: '' },
+                object: orig.object || { label: '' },
+                _innerTriple: inner,
+                counter_term: orig.counter_term ? {
+                  id: orig.counter_term.id,
+                  positions_aggregate: orig.counter_term.positions_aggregate ?? null,
+                } : null,
+              };
+            }
           }
 
           return { ...activity, term: enrichedTerm };

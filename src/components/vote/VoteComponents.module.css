@@ -74,16 +74,34 @@
 
 .txStatus {
   margin-top: 25px;
-  padding: 20px;
+  padding: 12px 16px;
   border-radius: 8px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  border: 1px solid #1e3b70;
+  border: 1px solid #565656;
+}
+
+.txStatusClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0 2px;
+  color: inherit;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+.txStatusClose:hover {
+  opacity: 1;
 }
 
 .txStatusPending {
-  background-color: #10172d;
+  background-color: #272727;
   color: #fff;
 }
 

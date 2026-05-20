@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Network } from './useAtomData';
 import { fetchTriplesForAgent, fetchFollowsAndFollowers } from '../api/sidebarQueries';
@@ -42,16 +42,25 @@ export const useSidebarData = (
   // - label   = pseudo de l'alias primaire
   // - image   = image de l'alias primaire
   const atomDetails = useMemo(() => {
-    if (!playerAtomId) return null;
+    console.log('[DIAG][useSidebarData] walletAddress:', walletAddress);
+    console.log('[DIAG][useSidebarData] aliasesLoading:', aliasesLoading);
+    console.log('[DIAG][useSidebarData] playerAtomId:', playerAtomId);
+    console.log('[DIAG][useSidebarData] aliases count:', aliases.length, aliases);
+    if (!playerAtomId) {
+      console.warn('[DIAG][useSidebarData] ⚠️ playerAtomId is null — HAS_ALIAS triple not found for this wallet');
+      return null;
+    }
     const primary = aliases.find(a => a.isPrimary) ?? aliases[0] ?? null;
     let pseudoLabel = primary?.pseudo ?? '';
     try { pseudoLabel = JSON.parse(pseudoLabel).name || pseudoLabel; } catch { /* use raw */ }
-    return {
+    const result = {
       term_id: playerAtomId,
       label: pseudoLabel,
       image: primary?.image ?? '',
     };
-  }, [playerAtomId, aliases]);
+    console.log('[DIAG][useSidebarData] atomDetails resolved:', result);
+    return result;
+  }, [playerAtomId, aliases, walletAddress, aliasesLoading]);
 
   const { positions, loading: positionsLoading, error: positionsError } = usePositions(
     walletAddress,
@@ -74,14 +83,27 @@ export const useSidebarData = (
     gcTime: 10 * 60 * 1000,
   });
 
-  // Map: subject_id (IS triple term_id) → quality atom { label, image }
-  const qualityBySubjectId = useMemo(() => {
+  // Map: IS_triple_term_id → quality atom { label, image }
+  // Map: IS_triple_term_id → subject_id (player atom) — for IN-predicate ownership check
+  const qualityBySubjectIdRaw = useMemo(() => {
     const map = new Map<string, { term_id: string; label: string; image?: string }>();
     for (const t of qualityTriples ?? []) {
       if (t.object) map.set(t.term_id, t.object);
     }
     return map;
   }, [qualityTriples]);
+
+  const qualityOwnerByTermId = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const t of qualityTriples ?? []) {
+      if (t.subject_id) map.set(t.term_id, t.subject_id);
+    }
+    return map;
+  }, [qualityTriples]);
+
+  const stableQualityRef = useRef(qualityBySubjectIdRaw);
+  if (qualityBySubjectIdRaw.size > 0) stableQualityRef.current = qualityBySubjectIdRaw;
+  const qualityBySubjectId = stableQualityRef.current;
 
   // Derive attestation activities from positions:
   // - IS_PLAYER_OF → games
@@ -106,6 +128,22 @@ export const useSidebarData = (
         if (triple.predicate_id === PREDICATES.IS && playerAtomId) {
           return triple.subject_id === playerAtomId;
         }
+        // IS_PLAYER_OF and IS_MEMBER_OF: nested triple pattern.
+        // Inner subject (player atom) must match current user.
+        if (
+          (triple.predicate_id === PREDICATES.IS_PLAYER_OF ||
+            triple.predicate_id === PREDICATES.IS_MEMBER_OF) &&
+          playerAtomId
+        ) {
+          const innerSubjectId = triple._innerTriple?.subject?.term_id;
+          return innerSubjectId === playerAtomId;
+        }
+        // IN predicate: [[playerAtom, IS, quality], IN, context].
+        // Verify the IS triple's subject is the current user.
+        if (triple.predicate_id === PREDICATES.IN && playerAtomId) {
+          const isTripleSubject = qualityOwnerByTermId.get(triple.subject_id);
+          if (isTripleSubject) return isTripleSubject === playerAtomId;
+        }
         return true;
       })
       .filter(p => {
@@ -128,6 +166,7 @@ export const useSidebarData = (
             object: qualityObject,
             term: p.term,
             counter_term: triple.counter_term,
+            context_game_id: triple.object_id, // game atom the quality is scoped to
           };
         }
 
@@ -141,7 +180,7 @@ export const useSidebarData = (
         };
       })
       .filter(a => a.object != null);
-  }, [positions, qualityBySubjectId, playerAtomId]);
+  }, [positions, qualityBySubjectId, qualityOwnerByTermId, playerAtomId]);
 
   const { data: triplesData } = useQuery({
     queryKey: ['triplesForAgent', walletAddress, network],
@@ -152,8 +191,8 @@ export const useSidebarData = (
   });
 
   const { data: connectionsData } = useQuery({
-    queryKey: ['followsAndFollowers', PREDICATES.FOLLOWS, walletAddress, network],
-    queryFn: () => fetchFollowsAndFollowers(PREDICATES.FOLLOWS, walletAddress!, network),
+    queryKey: ['followsAndFollowers', PREDICATES.FOLLOWS, walletAddress, playerAtomId, network],
+    queryFn: () => fetchFollowsAndFollowers(PREDICATES.FOLLOWS, walletAddress!, network, playerAtomId ?? undefined),
     enabled: Boolean(walletAddress),
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,

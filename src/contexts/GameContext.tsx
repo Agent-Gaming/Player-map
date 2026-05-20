@@ -41,6 +41,8 @@ interface GameContextProviderProps {
   children: React.ReactNode
 }
 
+const STORAGE_KEY = 'playermap_activeGameId'
+
 export const GameContextProvider: React.FC<GameContextProviderProps> = ({
   games,
   activeGameId: initialActiveGameId,
@@ -49,7 +51,7 @@ export const GameContextProvider: React.FC<GameContextProviderProps> = ({
 }) => {
   const [resolvedGames, setResolvedGames] = useState<ResolvedGame[]>([])
   const [activeGameId, setActiveGameIdState] = useState<string | undefined>(
-    initialActiveGameId ?? games[0]?.atomId
+    initialActiveGameId ?? localStorage.getItem(STORAGE_KEY) ?? games[0]?.atomId
   )
   const [isLoading, setIsLoading] = useState(true)
 
@@ -113,6 +115,7 @@ export const GameContextProvider: React.FC<GameContextProviderProps> = ({
 
   const setActiveGameId = (atomId: string) => {
     setActiveGameIdState(atomId)
+    localStorage.setItem(STORAGE_KEY, atomId)
     onGameChange?.(atomId)
   }
 

@@ -163,7 +163,10 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
           isSubmitting={isSubmitting}
           isDepositLoading={isDepositLoading}
         />
-        <TransactionStatusDisplay transactionStatus={transactionStatus} />
+        <TransactionStatusDisplay
+          transactionStatus={transactionStatus}
+          onDismiss={() => setTransactionStatus({ status: "idle", message: "" })}
+        />
         {!isCorrectNetwork && (
           <NetworkSwitchMessage
             allowedChainIds={allowedChainIds}

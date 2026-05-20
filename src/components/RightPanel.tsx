@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaUser } from "react-icons/fa";
+import FollowButton from "./graph/FollowButton";
 import { RightPanelMode } from "./TopNavBar";
 import { ClaimVoting } from "./vote/ClaimVoting";
 import { SpeakUpHeader } from "./vote/SpeakUpHeader";
@@ -37,6 +38,15 @@ interface RightPanelProps {
   selectedClaims?: any[];
   selectedLoading?: boolean;
   selectedError?: string | null;
+
+  // données "profil autre joueur"
+  otherPlayerAtomDetails?: any;
+  otherPlayerWallet?: string | null;
+  otherPlayerPositions?: any[];
+  otherPlayerActivities?: any[];
+  otherPlayerConnections?: { followingCount: number; followersCount: number };
+  otherPlayerLoading?: boolean;
+  otherPlayerError?: string | null;
 }
 
 
@@ -240,6 +250,10 @@ const ProfileContent: React.FC<{
         showDescription={false}
         placeholderElement={<FaUser size={60} color="#ffd32a" />}
       />
+      <div className={styles.followStats}>
+        <span><strong>{connections.follows.length}</strong> Following</span>
+        <span><strong>{connections.followers.length}</strong> Followers</span>
+      </div>
       </div>
 
       {/* ── Bloc de stats ──────────────────────────────────────────────────── */}
@@ -271,9 +285,6 @@ const ProfileContent: React.FC<{
       <ClaimsSection
         activities={activities}
         title=""
-        walletAddress={walletAddress}
-        walletConnected={walletConnected}
-        publicClient={publicClient}
       />
       </div>
 
@@ -283,6 +294,108 @@ const ProfileContent: React.FC<{
         walletConnected={walletConnected}
         publicClient={publicClient}
       />
+    </div>
+  );
+};
+
+// ─── Contenu "Mode Profil Autre Joueur" ────────────────────────────────────────
+
+const OtherPlayerProfileContent: React.FC<{
+  atomDetails: any;
+  activities: any[];
+  positions?: any[];
+  walletAddress?: string | null;
+  connections?: { followingCount: number; followersCount: number };
+  loading?: boolean;
+  error?: string | null;
+  myAccountAtomId?: string | null;
+  walletConnected?: any;
+  publicClient?: any;
+  currentWalletAddress?: string;
+  myPositions?: any[];
+}> = ({ atomDetails, activities, positions = [], walletAddress, connections, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress, myPositions = [] }) => {
+  if (loading) return <p className={styles.stateMessage}>Loading…</p>;
+  if (error) return <p className={styles.stateMessageError}>{error}</p>;
+  if (!atomDetails)
+    return <p className={styles.stateMessage}>Select a player to view their profile.</p>;
+
+  const totalVotes = positions.length;
+  const totalAttestations = activities.reduce(
+    (sum, a) => sum + (a.term?.positions_aggregate?.aggregate?.count || 0) + (a.counter_term?.positions_aggregate?.aggregate?.count || 0),
+    0
+  );
+  const totalValueRaw = positions.reduce((sum, p) => sum + (p.shares ? Number(p.shares) : 0), 0);
+  const formatValue = (value: number): string => {
+    const eth = value / 1e18;
+    if (eth >= 1e9) return `${(eth / 1e9).toFixed(2)}B`;
+    if (eth >= 1e6) return `${(eth / 1e6).toFixed(2)}M`;
+    if (eth >= 1e3) return `${(eth / 1e3).toFixed(2)}K`;
+    if (eth >= 1) return eth.toFixed(2);
+    if (eth >= 0.01) return eth.toFixed(4);
+    return eth.toFixed(6);
+  };
+  const totalValue = formatValue(totalValueRaw);
+
+  return (
+    <div className={styles.profileContent}>
+      <div className={styles.profileHeader}>
+        <AtomDetailsSection
+          atomDetails={atomDetails}
+          connections={{ follows: [], followers: [] }}
+          walletAddress={undefined}
+          showDescription={false}
+          placeholderElement={<FaUser size={60} color="#ffd32a" />}
+          actionElement={
+            <FollowButton
+              walletConnected={walletConnected}
+              walletAddress={currentWalletAddress}
+              publicClient={publicClient}
+              myAccountAtomId={myAccountAtomId ?? null}
+              otherAccountAtomId={atomDetails?.term_id ?? null}
+            />
+          }
+        />
+        {connections && (
+          <div className={styles.followStats}>
+            <span><strong>{connections.followingCount}</strong> Following</span>
+            <span><strong>{connections.followersCount}</strong> Followers</span>
+          </div>
+        )}
+      </div>
+
+      <div className={styles.profileHeader}>
+        <div className={styles.statsBlock}>
+          <PlayerStatBlock
+            label="Votes"
+            value={totalVotes}
+            gradient="linear-gradient(to right, #3b82f6, #f97316)"
+          />
+          <div className={styles.statsDivider} />
+          <PlayerStatBlock
+            label="Attestation"
+            value={totalAttestations}
+            imageSrc={tripleSvg}
+          />
+          <div className={styles.statsDivider} />
+          <PlayerStatBlock
+            label="Value"
+            value={totalValue}
+            gradient="linear-gradient(to right, #a78bfa, #ec4899)"
+          />
+        </div>
+      </div>
+
+      <div className={styles.sectionDivider}>
+        <SectionDivider title="Attestations" />
+        <ClaimsSection
+          activities={activities}
+          title=""
+          walletAddress={currentWalletAddress}
+          walletConnected={walletConnected}
+          publicClient={publicClient}
+          myPositions={myPositions}
+        />
+      </div>
     </div>
   );
 };
@@ -330,6 +443,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
   selectedClaims = [],
   selectedLoading,
   selectedError,
+  otherPlayerAtomDetails,
+  otherPlayerWallet,
+  otherPlayerPositions = [],
+  otherPlayerActivities = [],
+  otherPlayerConnections,
+  otherPlayerLoading,
+  otherPlayerError,
 }) => {
 
 
@@ -361,6 +481,26 @@ const RightPanel: React.FC<RightPanelProps> = ({
             loading={selectedLoading}
             error={selectedError}
             title="Attestations"
+          />
+        </div>
+      )}
+
+      {/* Player Profile – profil d'un autre joueur */}
+      {mode === "player-profile" && (
+        <div className={styles.modeSlot}>
+          <OtherPlayerProfileContent
+            atomDetails={otherPlayerAtomDetails}
+            activities={otherPlayerActivities}
+            positions={otherPlayerPositions}
+            walletAddress={otherPlayerWallet}
+            connections={otherPlayerConnections}
+            loading={otherPlayerLoading}
+            error={otherPlayerError}
+            myAccountAtomId={myAtomDetails?.term_id ?? null}
+            walletConnected={walletConnected}
+            publicClient={wagmiConfig?.publicClient}
+            currentWalletAddress={walletAddress}
+            myPositions={myPositions}
           />
         </div>
       )}

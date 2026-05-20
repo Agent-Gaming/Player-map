@@ -85,3 +85,31 @@
   font-size: 12px;
   margin: 0;
 }
+
+/* ─── Vote buttons ───────────────────────────────────────────── */
+.voteBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.voteBtn:hover {
+  opacity: 0.75;
+}
+
+.voteBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.voteBtnIcon {
+  width: 22px;
+  height: 22px;
+}

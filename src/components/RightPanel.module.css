@@ -59,6 +59,20 @@
   flex-shrink: 0;
 }
 
+/* ─── Follow stats ────────────────────────────────────────────── */
+.followStats {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 6px;
+}
+
+.followStats strong {
+  color: #fff;
+  font-weight: 700;
+}
+
 /* ─── Stats joueur ────────────────────────────────────────────── */
 .statsBlock {
   flex-shrink: 0;

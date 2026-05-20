@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { PositionBubble } from "./index";
 import SafeImage from "../SafeImage";
 import { useGameContext } from "../../contexts/GameContext";
 import { PREDICATES } from "../../utils/constants";
+import ClaimActionRow from "./ClaimActionRow";
+import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import styles from "./ClaimsSection.module.css";
 
 interface ClaimsSectionProps {
@@ -11,13 +13,33 @@ interface ClaimsSectionProps {
   walletAddress?: string;
   walletConnected?: any;
   publicClient?: any;
+  myPositions?: any[];
 }
 
 const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   activities,
   title,
+  walletAddress,
+  walletConnected,
+  publicClient,
+  myPositions = [],
 }) => {
-  const { games: allGames } = useGameContext();
+  const { games: allGames, activeGame } = useGameContext();
+  const isInteractive = Boolean(walletAddress && walletConnected);
+
+  const positionsByTermId = useMemo(() => {
+    const map = new Map<string, { shares: bigint; curveId: bigint }>();
+    for (const p of myPositions) {
+      const termId = (p.term_id ?? '').toLowerCase();
+      if (termId) {
+        map.set(termId, {
+          shares: BigInt(p.shares ?? 0),
+          curveId: BigInt(p.curve_id ?? 1),
+        });
+      }
+    }
+    return map;
+  }, [myPositions]);
 
   // ── IDs de prédicats ─────────────────────────────────────────────────────────
   const IS_PLAYER_OF_ID = PREDICATES.IS_PLAYER_OF;
@@ -47,32 +69,71 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
   // Guilds: only the current nested IS_MEMBER_OF format.
   const guilds = [...isMemberOfClaims];
 
-  // Player qualities — group IS claims by quality atom, sum votes across all games
-  const qualityMap = new Map<string, { object: { label: string; image?: string }; forCount: number; againstCount: number }>();
-  for (const claim of isClaims) {
-    const key = claim.object_id;
-    if (!key || !claim.object) continue;
-    const forCount = claim.term?.positions_aggregate?.aggregate?.count || 0;
-    const againstCount = claim.counter_term?.positions_aggregate?.aggregate?.count || 0;
-    const existing = qualityMap.get(key);
-    if (existing) {
-      existing.forCount += forCount;
-      existing.againstCount += againstCount;
-    } else {
-      qualityMap.set(key, { object: claim.object, forCount, againstCount });
+  // Player qualities:
+  // - Interactive mode: aggregate total for/against counts across ALL games (same quality),
+  //   but use the context-nested triple scoped to the active game as the voting target.
+  //   Falls back to bare IS triple if no context-scoped triple exists for this game.
+  // - Static mode: aggregated by quality atom (sum votes, dedup)
+  const playerQualities = useMemo(() => {
+    if (isInteractive) {
+      const activeGameId = activeGame?.atomId;
+
+      // Group all IS claims (bare + context-remapped) by quality object_id
+      const groupsByObjectId = new Map<string, { claims: any[]; totalFor: number; totalAgainst: number }>();
+      for (const a of isClaims) {
+        const key: string = a.object_id ?? a.object?.term_id ?? a.object?.label;
+        if (!key || !a.object) continue;
+        const forCount  = a.term?.positions_aggregate?.aggregate?.count ?? 0;
+        const againstCount = a.counter_term?.positions_aggregate?.aggregate?.count ?? 0;
+        const entry = groupsByObjectId.get(key);
+        if (entry) {
+          entry.claims.push(a);
+          entry.totalFor     += forCount;
+          entry.totalAgainst += againstCount;
+        } else {
+          groupsByObjectId.set(key, { claims: [a], totalFor: forCount, totalAgainst: againstCount });
+        }
+      }
+
+      // For each quality group: pick context-scoped claim for active game as voting target
+      // (falls back to bare IS), override counts with aggregated totals
+      return Array.from(groupsByObjectId.values())
+        .map(({ claims, totalFor, totalAgainst }) => {
+          const contextClaim = activeGameId
+            ? claims.find((c: any) => c.context_game_id === activeGameId)
+            : null;
+          const votingClaim = contextClaim ?? claims.find((c: any) => !c.context_game_id) ?? claims[0];
+          return { ...votingClaim, forCount: totalFor, againstCount: totalAgainst };
+        })
+        .filter((a: any) => a.object != null);
     }
-  }
-  // Only display qualities that have at least one vote
-  const playerQualities = Array.from(qualityMap.values()).filter(q => q.forCount + q.againstCount > 0);
+    const qualityMap = new Map<string, { object: { label: string; image?: string }; forCount: number; againstCount: number }>();
+    for (const claim of isClaims) {
+      const key = claim.object_id;
+      if (!key || !claim.object) continue;
+      const forCount = claim.term?.positions_aggregate?.aggregate?.count || 0;
+      const againstCount = claim.counter_term?.positions_aggregate?.aggregate?.count || 0;
+      const existing = qualityMap.get(key);
+      if (existing) {
+        existing.forCount += forCount;
+        existing.againstCount += againstCount;
+      } else {
+        qualityMap.set(key, { object: claim.object, forCount, againstCount });
+      }
+    }
+    return Array.from(qualityMap.values()).filter(q => q.forCount + q.againstCount > 0);
+  }, [isClaims, isInteractive]);
 
   // ── Composant : une ligne de claim ──────────────────────────────────────────
   const ClaimRow = ({ claim }: { claim: any }) => {
     const forCount = claim.forCount ?? claim.term?.positions_aggregate?.aggregate?.count ?? 0;
     const againstCount = claim.againstCount ?? claim.counter_term?.positions_aggregate?.aggregate?.count ?? 0;
+    const objectVerif = getAtomVerificationStatus(claim.object_id ?? claim.object?.term_id);
+    const showObjectImage = claim.object?.image && objectVerif.status !== 'not-verified';
     return (
     <div className={styles.claimRow}>
       {/* Icône */}
-      {claim.object?.image ? (
+      {showObjectImage ? (
         <SafeImage
           src={claim.object.image}
           alt={claim.object?.label || ""}
@@ -119,9 +180,20 @@ const ClaimsSection: React.FC<ClaimsSectionProps> = ({
         {showCount ? `${items.length} ` : ""}
         {label}
       </div>
-      {items.map((claim, idx) => (
-        <ClaimRow key={claim.term_id ?? claim.object?.term_id ?? claim.object?.label ?? idx} claim={claim} />
-      ))}
+      {items.map((claim, idx) =>
+        isInteractive ? (
+          <ClaimActionRow
+            key={claim.term_id ?? claim.object?.term_id ?? claim.object?.label ?? idx}
+            claim={claim}
+            walletAddress={walletAddress!}
+            walletConnected={walletConnected}
+            publicClient={publicClient}
+            positionsByTermId={positionsByTermId}
+          />
+        ) : (
+          <ClaimRow key={claim.term_id ?? claim.object?.term_id ?? claim.object?.label ?? idx} claim={claim} />
+        )
+      )}
     </div>
   );
 

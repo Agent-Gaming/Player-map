@@ -66,7 +66,7 @@ export interface InitItem {
   type: 'atom' | 'triple' | 'nested-triple'
   label: string
   description: string
-  status: 'existing' | 'to-create' | 'creating' | 'created' | 'error'
+  status: 'existing' | 'to-create' | 'creating' | 'created' | 'error' | 'to-deposit' | 'depositing' | 'deposited'
   subjectId?: string       // hex string, used at creation time
   predicateId?: string
   objectId?: string

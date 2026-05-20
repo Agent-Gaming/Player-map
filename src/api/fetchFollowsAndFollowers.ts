@@ -1,111 +1,85 @@
 import { Network, API_URLS } from '../hooks/useAtomData';
-import { convertIpfsUrlsInObject } from '../utils/ipfsUtils';
-import { filterAtomsImages } from '../config/atomFiltering';
+import { PREDICATES, ATOMS } from '../utils/constants';
 
-// Fetch follows and followers
+// Triple structure: (I, follow, accountAtomId)
+// following = walletAddress has positions in (I, follow, *) triples with shares > 0
+// followers = any wallet has positions in (I, follow, playerAccountAtomId) triple with shares > 0
+
 export const fetchFollowsAndFollowers = async (
-  predicateId: string,
-  accountId: string,
-  network: Network = Network.MAINNET
+  _predicateId: string, // kept for backward compat, ignored — PREDICATES.FOLLOWS used directly
+  walletAddress: string,
+  network: Network = Network.MAINNET,
+  playerAccountAtomId?: string,
 ) => {
   try {
     const apiUrl = API_URLS[network];
-
-    // Pour le moment, on garde l'ID hardcodé comme dans playermap-graph
-    const userAtomId = "0x4b5ec64b82fae56c71a469fc902df2096b0dc7c930dd61032e817d583575fe47";
-
-    if (!userAtomId) {
-      console.warn('⚠️ Aucun atom trouvé pour cette adresse');
-      return { follows: [], followers: [] };
-    }
 
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
-          query GetFollowsAndFollowers($predicateId: String!, $userAtomId: String!) {
-            follows: triples(
-              where: {
-                _and: [
-                  { predicate_id: { _eq: $predicateId } },
-                  { subject_id: { _eq: $userAtomId } }
-                ]
+          query GetFollowsAndFollowers(
+            $iAtom: String!
+            $predicate: String!
+            $wallet: String!
+            $playerAtomId: String!
+          ) {
+            follows: positions(where: {
+              account_id: { _ilike: $wallet }
+              shares: { _gt: "0" }
+              vault: { term: { triple: {
+                subject_id: { _eq: $iAtom }
+                predicate_id: { _eq: $predicate }
+              }}}
+            }) {
+              vault {
+                term {
+                  triple {
+                    object_id
+                    object { term_id label image }
+                  }
+                }
               }
-            ) {
-              term_id
-              object_id
             }
-            followers: triples(
-              where: {
-                _and: [
-                  { predicate_id: { _eq: $predicateId } },
-                  { object_id: { _eq: $userAtomId } }
-                ]
-              }
-            ) {
-              term_id
-              subject_id
+            followers: positions(where: {
+              shares: { _gt: "0" }
+              vault: { term: { triple: {
+                subject_id: { _eq: $iAtom }
+                predicate_id: { _eq: $predicate }
+                object_id: { _eq: $playerAtomId }
+              }}}
+            }) {
+              account_id
             }
           }
         `,
-        variables: { predicateId, userAtomId }
-      })
+        variables: {
+          iAtom: ATOMS.I,
+          predicate: PREDICATES.FOLLOWS,
+          wallet: walletAddress.toLowerCase(),
+          playerAtomId: playerAccountAtomId ?? '',
+        },
+      }),
     });
 
     const data = await response.json();
-    
-    // Fetch atom details for objects (follows) and subjects (followers)
-    const objectIds = [...new Set((data.data?.follows || []).map((f: any) => f.object_id).filter(Boolean))];
-    const subjectIds = [...new Set((data.data?.followers || []).map((f: any) => f.subject_id).filter(Boolean))];
-    const allAtomIds = [...new Set([...objectIds, ...subjectIds])];
 
-    let atomsMap = new Map();
-    if (allAtomIds.length > 0) {
-      const atomsResponse = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            query GetAtoms($termIds: [String!]!) {
-              atoms(where: { term_id: { _in: $termIds } }) {
-                term_id
-                label
-                image
-                creator_id
-              }
-            }
-          `,
-          variables: { termIds: allAtomIds }
-        })
-      });
+    const follows = (data.data?.follows || []).map((p: any) => {
+      const obj = p.vault?.term?.triple?.object;
+      return {
+        object_id: p.vault?.term?.triple?.object_id,
+        object: obj ?? null,
+      };
+    });
 
-      const atomsData = await atomsResponse.json();
-      // Convertir les URLs IPFS en HTTP pour les images
-      const atoms = convertIpfsUrlsInObject(atomsData.data?.atoms || []);
-      // Appliquer le filtre de vérification
-      const filteredAtoms = filterAtomsImages(atoms);
-      atomsMap = new Map(
-        filteredAtoms.map((atom: any) => [atom.term_id, atom])
-      );
-    }
+    const followers = (data.data?.followers || []).map((p: any) => ({
+      account_id: p.account_id,
+    }));
 
-    return {
-      follows: (data.data?.follows || []).map((f: any) => ({
-        ...f,
-        object: atomsMap.get(f.object_id) || { term_id: f.object_id, label: '', image: null, creator_id: '' }
-      })),
-      followers: (data.data?.followers || []).map((f: any) => ({
-        ...f,
-        subject: atomsMap.get(f.subject_id) || { term_id: f.subject_id, label: '', image: null }
-      }))
-    };
+    return { follows, followers };
   } catch (error) {
     console.error('Error fetching follows and followers:', error);
     return { follows: [], followers: [] };
   }
 };
-
-
-
-

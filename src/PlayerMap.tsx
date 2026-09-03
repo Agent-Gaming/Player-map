@@ -1,9 +1,8 @@
 // Player-map/src/PlayerMap.tsx
-import React, { useEffect, useRef } from 'react'
+import React from 'react'
 import { GameContextProvider } from './contexts/GameContext'
 import GraphComponent from './GraphComponent'
 import type { PlayerMapProps } from './types/PlayerMapConfig'
-import { postSession } from './api/sessionApi'
 
 const PlayerMap: React.FC<PlayerMapProps> = ({
   games,
@@ -12,22 +11,13 @@ const PlayerMap: React.FC<PlayerMapProps> = ({
   initialProfile,
   getAccessToken,
 }) => {
-  const hasFiredSession = useRef(false)
-
-  useEffect(() => {
-    if (!getAccessToken || hasFiredSession.current) return
-    // Lock only once a token actually resolved — getAccessToken() can
-    // transiently return null while host auth is still initializing on
-    // mount; locking unconditionally here would permanently skip the
-    // daily-login session record for that load.
-    postSession(getAccessToken).then((result) => {
-      if (result.ok) hasFiredSession.current = true
-    })
-  }, [getAccessToken])
+  // postSession firing lives in GraphComponent itself now (fires there
+  // regardless of whether the host uses this wrapper or GraphComponent
+  // directly) — see GraphComponent.tsx.
 
   return (
     <GameContextProvider games={games} activeGameId={activeGameId} onGameChange={onGameChange}>
-      <GraphComponent initialProfile={initialProfile} />
+      <GraphComponent initialProfile={initialProfile} getAccessToken={getAccessToken} />
     </GameContextProvider>
   )
 }

@@ -58,7 +58,13 @@ export const extractIpfsHash = (url: string | undefined): string | null => {
   return match ? match[1] : null
 }
 
-export const ipfsToHttpUrl = (ipfsUrl: string): string => {
+// Shared, unauthenticated gateway that serves any public CID regardless of
+// which account pinned it — unlike a host's dedicated Pinata gateway
+// (custom subdomain), which only serves content pinned to that specific
+// account and 404s (ERR_ID:00006) on anything pinned elsewhere.
+export const PUBLIC_FALLBACK_GATEWAY = "gateway.pinata.cloud"
+
+export const ipfsToHttpUrl = (ipfsUrl: string, gatewayOverride?: string): string => {
   if (!ipfsUrl) return ipfsUrl
 
   // Atoms created in Discord mode may have stored proxy URLs — decode them back
@@ -77,7 +83,7 @@ export const ipfsToHttpUrl = (ipfsUrl: string): string => {
   // not just a fallback option.
   const hash = extractIpfsHash(ipfsUrl)
   if (hash) {
-    const gateway = getPinataConstants()?.PINATA_CONFIG?.IPFS_GATEWAY || "gateway.pinata.cloud"
+    const gateway = gatewayOverride || getPinataConstants()?.PINATA_CONFIG?.IPFS_GATEWAY || PUBLIC_FALLBACK_GATEWAY
     const httpUrl = `https://${gateway}/ipfs/${hash}`
     return proxyIfDiscord(httpUrl)
   }

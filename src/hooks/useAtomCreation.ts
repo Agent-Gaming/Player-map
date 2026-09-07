@@ -1,6 +1,5 @@
 import {
   createAtomFromString,
-  createAtomFromThing,
   createAtomFromEthereumAccount,
   createAtomFromIpfsUpload,
 } from '@0xintuition/sdk';
@@ -31,6 +30,14 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
   /**
    * Creates a rich JSON-LD atom (name + optional image).
    * Converts IPFS image URLs to HTTP gateway URLs before storing.
+   *
+   * Pins via Pinata directly (createAtomFromIpfsUpload) instead of the SDK's
+   * createAtomFromThing/pinThing, which routes through Intuition's gated
+   * pinning GraphQL mutation (requires an INTUITION_PIN_API_KEY we don't have).
+   * The on-chain contract only stores the resulting ipfs:// URI — it doesn't
+   * care which service pinned it — so a schema.org-shaped JSON-LD object
+   * pinned through our own Pinata JWT is indistinguishable on-chain and to
+   * the Intuition indexer/portal from one pinned via pinThing.
    */
   const createAtom = async (input: IpfsAtomInput): Promise<{ atomId: bigint; ipfsHash: string }> => {
     if (!walletConnected || !walletAddress) {
@@ -40,12 +47,25 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
       ? ipfsToHttpUrl(input.image)
       : input.image;
 
-    console.log('[createAtom] ▶ name:', input.name, '| image:', imageUrl ?? '(none)');
-    const result = await createAtomFromThing(writeConfig, {
+    const pinataConstants = getPinataConstants();
+    if (!pinataConstants?.PINATA_CONFIG?.JWT_KEY) {
+      throw new Error('Pinata JWT not configured — call setPinataConstants() with PINATA_CONFIG');
+    }
+    const config = {
+      ...writeConfig,
+      pinataApiJWT: pinataConstants.PINATA_CONFIG.JWT_KEY as string,
+    };
+    const thingJson = {
+      '@context': 'https://schema.org',
+      '@type': 'Thing',
       name: input.name,
-      image: imageUrl,
-      description: input.description,
-    });
+      description: input.description ?? '',
+      image: imageUrl ?? '',
+      url: '',
+    };
+
+    console.log('[createAtom] ▶ name:', input.name, '| image:', imageUrl ?? '(none)');
+    const result = await createAtomFromIpfsUpload(config, thingJson);
     console.log('[createAtom] ✓ atomId:', result.state.termId, '| ipfsHash:', result.uri);
     return {
       atomId: BigInt(result.state.termId),

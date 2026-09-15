@@ -53,8 +53,23 @@ export const useNetworkCheck = ({ walletConnected, publicClient: _publicClient }
 
     const readChainId = async () => {
       try {
-        const hex = await walletConnected?.request?.({ method: 'eth_chainId' });
-        if (!cancelled) setCurrentChainId(hex != null ? Number(hex) : null);
+        // Real EIP-1193 providers (MetaMask, injected wallets) expose
+        // .request — ask them live, they're the whole reason this hook
+        // stopped trusting static/fixed clients. Custom wallet shims that
+        // don't proxy arbitrary RPC calls (e.g. playermap-discord's Discord
+        // relay proxy, which only implements a curated set of write methods
+        // routed through an external browser) have no .request at all — for
+        // those, fall back to their declared static .chain, which is the
+        // best available signal and matches how they were built (the
+        // Discord relay's switchChain rejects anything but Intuition, so
+        // its .chain being fixed to Intuition is a true contract, not a
+        // stale cache).
+        if (typeof walletConnected?.request === 'function') {
+          const hex = await walletConnected.request({ method: 'eth_chainId' });
+          if (!cancelled) setCurrentChainId(hex != null ? Number(hex) : null);
+        } else {
+          if (!cancelled) setCurrentChainId(walletConnected?.chain?.id ?? null);
+        }
       } catch (error) {
         console.error('Error checking network:', error);
         if (!cancelled) setCurrentChainId(null);

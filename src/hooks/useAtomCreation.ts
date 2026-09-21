@@ -1,7 +1,8 @@
 import {
   createAtomFromString,
   createAtomFromEthereumAccount,
-  createAtomFromIpfsUpload,
+  createAtomFromIpfsUri,
+  uploadJsonToPinata,
 } from '@0xintuition/sdk';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../abi';
 import { isIpfsUrl, ipfsToHttpUrl } from '../utils/pinata';
@@ -31,13 +32,21 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
    * Creates a rich JSON-LD atom (name + optional image).
    * Converts IPFS image URLs to HTTP gateway URLs before storing.
    *
-   * Pins via Pinata directly (createAtomFromIpfsUpload) instead of the SDK's
+   * Pins via Pinata directly (uploadJsonToPinata) instead of the SDK's
    * createAtomFromThing/pinThing, which routes through Intuition's gated
    * pinning GraphQL mutation (requires an INTUITION_PIN_API_KEY we don't have).
    * The on-chain contract only stores the resulting ipfs:// URI — it doesn't
    * care which service pinned it — so a schema.org-shaped JSON-LD object
    * pinned through our own Pinata JWT is indistinguishable on-chain and to
    * the Intuition indexer/portal from one pinned via pinThing.
+   *
+   * Uses createAtomFromIpfsUri (not createAtomFromIpfsUpload): the latter's
+   * SDK implementation (@0xintuition/sdk@2.0.2) writes toHex(IpfsHash) on
+   * chain — the bare CID, missing the "ipfs://" scheme — so the Portal/
+   * subgraph never recognizes it as an IPFS pointer and shows the raw CID
+   * instead of resolving the name. createAtomFromIpfsUri writes
+   * toHex(`ipfs://${IpfsHash}`), which resolves correctly. Same pin call,
+   * just encoded correctly before it goes on-chain.
    */
   const createAtom = async (input: IpfsAtomInput): Promise<{ atomId: bigint; ipfsHash: string }> => {
     if (!walletConnected || !walletAddress) {
@@ -51,10 +60,6 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     if (!pinataConstants?.PINATA_CONFIG?.JWT_KEY) {
       throw new Error('Pinata JWT not configured — call setPinataConstants() with PINATA_CONFIG');
     }
-    const config = {
-      ...writeConfig,
-      pinataApiJWT: pinataConstants.PINATA_CONFIG.JWT_KEY as string,
-    };
     const thingJson = {
       '@context': 'https://schema.org',
       '@type': 'Thing',
@@ -65,7 +70,9 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     };
 
     console.log('[createAtom] ▶ name:', input.name, '| image:', imageUrl ?? '(none)');
-    const result = await createAtomFromIpfsUpload(config, thingJson);
+    const pinResult = await uploadJsonToPinata(pinataConstants.PINATA_CONFIG.JWT_KEY as string, thingJson);
+    const ipfsUri: `ipfs://${string}` = `ipfs://${pinResult.IpfsHash}`;
+    const result = await createAtomFromIpfsUri(writeConfig, ipfsUri);
     console.log('[createAtom] ✓ atomId:', result.state.termId, '| ipfsHash:', result.uri);
     return {
       atomId: BigInt(result.state.termId),
@@ -130,6 +137,10 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
    * Creates a consent atom by uploading a JSON object to IPFS via Pinata,
    * then creating an on-chain atom pointing to that IPFS URI.
    * Requires PINATA_CONFIG.JWT_KEY to be set via setPinataConstants().
+   *
+   * Uses createAtomFromIpfsUri, not createAtomFromIpfsUpload — see createAtom()
+   * above for why (createAtomFromIpfsUpload writes the bare CID on-chain,
+   * missing the "ipfs://" scheme, so the atom never resolves).
    */
   const createConsentAtom = async (consentJson: object): Promise<{ atomId: bigint }> => {
     if (!walletConnected || !walletAddress) {
@@ -139,12 +150,10 @@ export const useAtomCreation = ({ walletConnected, walletAddress, publicClient }
     if (!pinataConstants?.PINATA_CONFIG?.JWT_KEY) {
       throw new Error('Pinata JWT not configured — call setPinataConstants() with PINATA_CONFIG');
     }
-    const config = {
-      ...writeConfig,
-      pinataApiJWT: pinataConstants.PINATA_CONFIG.JWT_KEY as string,
-    };
     console.log('[createConsentAtom] ▶ uploading consent JSON to IPFS');
-    const result = await createAtomFromIpfsUpload(config, consentJson);
+    const pinResult = await uploadJsonToPinata(pinataConstants.PINATA_CONFIG.JWT_KEY as string, consentJson);
+    const ipfsUri: `ipfs://${string}` = `ipfs://${pinResult.IpfsHash}`;
+    const result = await createAtomFromIpfsUri(writeConfig, ipfsUri);
     console.log('[createConsentAtom] ✓ atomId:', result.state.termId, '| uri:', result.uri);
     return { atomId: BigInt(result.state.termId) };
   };

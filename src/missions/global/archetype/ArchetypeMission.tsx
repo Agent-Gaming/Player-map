@@ -22,24 +22,6 @@ interface ArchetypeMissionProps {
 
 type FlowPhase = 'intro' | 'steps' | 'submitting' | 'reveal';
 
-const introSeenKey = (address: string): string => `playermap:archetype-intro-seen:${address}`;
-
-function hasSeenIntro(address: string): boolean {
-  try {
-    return localStorage.getItem(introSeenKey(address)) !== null;
-  } catch {
-    return true; // localStorage unavailable — don't block the flow on the intro
-  }
-}
-
-function markIntroSeen(address: string): void {
-  try {
-    localStorage.setItem(introSeenKey(address), 'true');
-  } catch {
-    // best-effort — a failed write just means the intro may reappear once
-  }
-}
-
 const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
   isOpen,
   walletConnected,
@@ -52,25 +34,27 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
   const [phase, setPhase] = useState<FlowPhase>('steps');
 
   // Decide intro-vs-steps once per open (not once per mount — this
-  // component stays mounted and toggles isOpen, so "seen" must be
-  // re-evaluated every time the mission is (re)launched). "Seen" is only
-  // persisted when the user actually clicks Start (see below) — clicking
-  // Later leaves it unmarked, so the intro reappears next launch. Guarded
-  // against re-deciding while already in 'submitting'/'reveal' so closing
-  // mid-reveal (e.g. to wait out subgraph indexing lag) and reopening
-  // doesn't clobber that in-flight state back to 'intro'/'steps'.
+  // component stays mounted and toggles isOpen, so this must be
+  // re-evaluated every time the mission is (re)launched). The intro always
+  // reappears on relaunch as long as the mission isn't completed — waits
+  // for completion to actually resolve (not just !completionLoading at the
+  // moment isOpen flips) so a completed player isn't briefly shown the
+  // intro before completion data arrives. Guarded against re-deciding while
+  // already in 'submitting'/'reveal' so closing mid-reveal (e.g. to wait
+  // out subgraph indexing lag) and reopening doesn't clobber that in-flight
+  // state back to 'intro'/'steps'.
   const introDecidedForThisOpenRef = useRef(false);
   useEffect(() => {
     if (!isOpen) {
       introDecidedForThisOpenRef.current = false;
       return;
     }
-    if (introDecidedForThisOpenRef.current || !walletAddress) return;
+    if (introDecidedForThisOpenRef.current || !walletAddress || completionLoading) return;
     introDecidedForThisOpenRef.current = true;
     if (phase === 'submitting' || phase === 'reveal') return;
-    setPhase(hasSeenIntro(walletAddress) ? 'steps' : 'intro');
+    setPhase(completion?.completed ? 'steps' : 'intro');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, walletAddress]);
+  }, [isOpen, walletAddress, completionLoading, completion?.completed]);
 
   // Partial completion (some questions voted on-chain, but not all) — only
   // re-prompt the still-missing question(s) instead of the full 15.
@@ -194,10 +178,7 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
           <button
             type="button"
             className={styles.nextBtn}
-            onClick={() => {
-              if (walletAddress) markIntroSeen(walletAddress);
-              setPhase('steps');
-            }}
+            onClick={() => setPhase('steps')}
           >
             Start
           </button>
@@ -358,8 +339,11 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
         <button
           type="button"
           className={styles.prevBtn}
-          onClick={() => draft.setStepIndex(draft.currentStepIndex - 1)}
-          disabled={draft.currentStepIndex === 0}
+          onClick={() =>
+            draft.currentStepIndex === 0
+              ? setPhase('intro')
+              : draft.setStepIndex(draft.currentStepIndex - 1)
+          }
         >
           ‹ Previous
         </button>

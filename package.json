@@ -1,6 +1,6 @@
 {
   "name": "player-map",
-  "version": "2.0.32",
+  "version": "2.0.37",
   "type": "module",
   "main": "dist/index.umd.js",
   "module": "dist/index.es.js",
@@ -19,7 +19,7 @@
     "build": "vite build",
     "sync": "STORE=$(ls -d ../playermap.box/node_modules/.pnpm/player-map@*/node_modules/player-map 2>/dev/null | head -1) && cp -r dist/* $STORE/dist/ && rm -rf ../playermap.box/examples/test-player-map/node_modules/.vite/deps && echo 'Synced to consuming app (Vite cache cleared)'",
     "build:sync": "vite build && pnpm sync",
-    "test": ""
+    "test": "vitest run"
   },
   "dependencies": {
     "@0xintuition/graphql": "^2.0.2",
@@ -36,7 +36,8 @@
     "typescript": "^5.0.0",
     "vite": "^5.0.0",
     "vite-plugin-css-injected-by-js": "^4.0.1",
-    "vite-plugin-dts": "^3.0.0"
+    "vite-plugin-dts": "^3.0.0",
+    "vitest": "^2"
   },
   "peerDependencies": {
     "react": "^18.3.1",

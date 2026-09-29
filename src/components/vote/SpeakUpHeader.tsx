@@ -9,6 +9,7 @@ import communityIcon from "../../assets/img/community.svg";
 import { useGamePublicInfo } from "../../hooks/useGamePublicInfo";
 import { DEV_STEP_LABEL, DEV_STEP_COLOR } from "../../config/devStep";
 import styles from "./SpeakUpHeader.module.css";
+import bannImageDefault from '../img/bannGame.png';
 
 interface SpeakUpHeaderProps {
   stats: GameStats;
@@ -20,12 +21,6 @@ const DECORATOR: Record<string, React.CSSProperties> = {
     height: 28,
     border: "3px solid #22c55e",
     borderRadius: 5,
-  },
-  player: {
-    width: 28,
-    height: 28,
-    border: "3px solid #ffd32a",
-    borderRadius: "50%",
   },
 };
 
@@ -57,11 +52,11 @@ const StatCard: React.FC<{
 
   return (
     <div className={styles.statCard}>
-      {/* Label */}
+      {/* Label 
       <span className={styles.statLabel}>
         {label}
       </span>
-
+      */}
       {/* Nombre + décorateur */}
       {isBar ? (
         <>
@@ -70,11 +65,13 @@ const StatCard: React.FC<{
           ) : (
             <span className={styles.statNumberLarge}>{value}</span>
           )}
+          {/*
           {variant === "attestation" ? (
             <img src={BAR_GRADIENT[variant]} alt={variant} className={styles.statBarImage} />
           ) : (
             <div className={styles.statBar} style={{ background: BAR_GRADIENT[variant] }} />
           )}
+            */}
         </>
       ) : isScore ? (
         <div
@@ -124,23 +121,33 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
   const imageUrl = (gameImage && verification?.status !== 'not-verified') ? ipfsToHttpUrl(gameImage) : null;
   const { info: gamePublicInfo, isLoading: gamePublicInfoLoading } = useGamePublicInfo(gameTermId ?? undefined);
   const devStep = gamePublicInfo?.dev_step;
+  const [imageError, setImageError] = useState(false);
 
   return (
     <div className={styles.header}>
+    <div className={styles.bannGameCard}>
+      <img src={bannImageDefault} alt="" />
+    </div>
       {/* Titre du jeu */}
       <div className={styles.titleRow}>
-        {imageUrl && (
-          <img
-            src={imageUrl}
-            alt={gameName}
-            className={styles.gameImage}
-            onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-          />
-        )}
+      {imageUrl && !imageError ? (
+  <img
+    src={imageUrl}
+    alt={gameName}
+    className={styles.gameImage}
+    onError={() => setImageError(true)}
+  />
+) : (
+  <div className={styles.gameImageFallback}>
+    {(gameName || "?").charAt(0).toUpperCase()}
+  </div>
+)}
+        
+        <div className={styles.gameNameContainer}>
+       
         <span className={styles.gameName}>
           {loading ? "Loading..." : (gameName || "—")}
-        </span>
-        {verification && (
+          {verification && (
           <div
             className={styles.badgeWrapper}
             onMouseEnter={() => setShowTooltip(true)}
@@ -165,6 +172,8 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
             )}
           </div>
         )}
+        </span>
+
         {devStep && (
           <span
             className={styles.devStepBadge}
@@ -177,19 +186,35 @@ export const SpeakUpHeader: React.FC<SpeakUpHeaderProps> = ({ stats }) => {
             {DEV_STEP_LABEL[devStep]}
           </span>
         )}
+        </div>
+       
+       <div className={styles.scoreGameCardContainer}>
+       <StatCard label="Score"          value={gamePublicInfo?.game_score.overall ?? "—"} loading={gamePublicInfoLoading} variant="score" />
+       </div>
       </div>
 
       {/* Statistiques */}
       <div className={styles.statsRow}>
-        <StatCard label="Guild(s)"       value={totalGuilds}       loading={false}   variant="guild" />
+         {/* Guild Stat -----------------------------
+          <span className={styles.label}>Guild</span>
+          <StatCard label="Guild(s)"       value={totalGuilds}       loading={false}   variant="guild" />
+        */}
+
+
+        <div className={styles.statContainer}>
+          <span className={styles.labelStat}>Player</span>
+          <StatCard label="Player(s)"      value={totalPlayers}      loading={loading} variant="player" />
+        </div>
         <div className={styles.statsDivider} />
-        <StatCard label="Player(s)"      value={totalPlayers}      loading={loading} variant="player" />
+        <div className={styles.statContainer}>
+        <span className={styles.labelStat}>Attestations</span>
+          <StatCard label="Attestation(s)"  value={totalAttestations} loading={loading} variant="attestation" />
+          </div>
         <div className={styles.statsDivider} />
-        <StatCard label="Score"          value={gamePublicInfo?.game_score.overall ?? "—"} loading={gamePublicInfoLoading} variant="score" />
-        <div className={styles.statsDivider} />
-        <StatCard label="Attestation(s)"  value={totalAttestations} loading={loading} variant="attestation" />
-        <div className={styles.statsDivider} />
-        <StatCard label="Vote(s)"        value={totalVotes}        loading={loading} variant="triple" />
+        <div className={styles.statContainer}>
+          <span className={styles.labelStat}>Votes</span>
+          <StatCard label="Vote(s)"        value={totalVotes}        loading={loading} variant="triple" />
+        </div>
       </div>
     </div>
   );

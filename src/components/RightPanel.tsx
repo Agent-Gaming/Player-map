@@ -246,6 +246,9 @@ const ProfileContent: React.FC<{
     <div className={styles.profileContent}>
       {/* ── Header joueur ───────────────────────────────────────────────────── */}
       <div className={styles.profileHeader}>
+      <div className={styles.profileBann}>
+          
+          </div>
       <AtomDetailsSection
         atomDetails={atomDetails}
         connections={connections}
@@ -470,7 +473,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   return (
     <aside className={styles.panel}>
-
+      {/* <div className={styles.haloBottom} /> */}
       {/* SpeakUp */}
       {mode === "speakup" && (
         <div className={styles.modeSlot}>

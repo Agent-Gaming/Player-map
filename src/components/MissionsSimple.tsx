@@ -7,6 +7,8 @@ import MissionCard from '../missions/shared/MissionCard';
 import type { Mission } from '../types/Missions';
 import MissionsExpanded from './MissionsExpanded';
 import styles from './MissionsSimple.module.css';
+import UserIcon from './img/user-icon.png';
+import ClosePanel from './img/close-panel.png';
 
 const PANEL_STORAGE_KEY = 'playermap_missionsPanelOpen';
 
@@ -60,12 +62,8 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
 
   return (
     <div className={styles.block}>
-      <button
-        type="button"
-        className={styles.blockHeader}
-        onClick={() => setExpanded((prev) => !prev)}
-        aria-expanded={expanded}
-      >
+    
+        <div className={styles.headerMissionBlock}>
         <span className={styles.blockTitle}>
           <span className={styles.blockDot} style={{ backgroundColor: `var(--color-${colorVariant})` }} />
           {title}
@@ -76,14 +74,11 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
               <FaFire className={styles.streakIcon} /> {streak}
             </span>
           )}
-          <span className={styles.blockXp}>{earnedXp} XP</span>
-          <FaChevronDown
-            className={[styles.chevron, expanded ? styles.chevronOpen : ''].join(' ')}
-          />
         </span>
-      </button>
 
-      {expanded && (
+        </div>
+
+
         <div className={styles.blockContent}>
           {!visibleMission && <p className={styles.emptyState}>{emptyLabel}</p>}
           {visibleMission && (
@@ -106,6 +101,7 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
               )}
             </div>
           )}
+          <div className={styles.dashedLine} />
           <button
             type="button"
             className={styles.seeMoreBtn}
@@ -117,7 +113,7 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
             See more
           </button>
         </div>
-      )}
+
     </div>
   );
 };
@@ -147,6 +143,11 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
     });
   };
 
+  const closePanel = () => {
+    setOpen(false);
+    localStorage.setItem(PANEL_STORAGE_KEY, 'false');
+  };
+
   const handleClaim = (mission: Mission) => {
     claimMutation.mutate(mission.id);
   };
@@ -168,32 +169,59 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
 
   return (
     <div className={styles.wrapper}>
-      <button
-        type="button"
-        className={styles.toggleHandle}
-        onClick={togglePanel}
-        aria-label={open ? 'Collapse missions panel' : 'Expand missions panel'}
-      >
-        <FaChevronRight
-          color="#ffd32a"
-          style={{
-            width: 14,
-            height: 14,
-            flexShrink: 0,
-            transform: open ? 'rotate(180deg)' : 'none',
-            transition: 'transform 0.2s ease',
-          }}
-        />
-      </button>
+      {!open && (
+  <button
+    type="button"
+    className={styles.toggleHandle}
+    onClick={togglePanel}
+    aria-label="Expand missions panel"
+  >
+    <FaChevronRight
+      color="#ffd32a"
+      style={{
+        width: 14,
+        height: 14,
+        flexShrink: 0,
+      }}
+    />
+  </button>
+)}
 
-      <div className={styles.content} style={{ width: open ? '320px' : '0px' }}>
+<div className={`${styles.content} ${!open ? styles.contentClosed : ''}`}>
         {open && (
           <div className={styles.inner}>
             <div className={styles.header}>
-              <span className={styles.headerTitle}>Missions</span>
-              <span className={styles.headerXp}>{totalXp} XP</span>
+            <span className={styles.headerTitle}>
+  Missions
+  <button
+    type="button"
+    onClick={closePanel}
+    aria-label="Close Missions Panel"
+    className={styles.closeButtonPanel}
+  >
+    <div className={styles.closeButtonPanelContainer}>
+    <img
+  src={ClosePanel}
+  alt="Close Panel"
+  className={styles.closeButtonPanelIcon}
+  width={12}
+  height={12}
+/>
+    </div>
+  </button>
+</span>
+              <span className={styles.labelMissions}>Complete missions, earn XP, and make progress every day.</span>
             </div>
-            <div className={styles.divider} />
+
+            <div className={styles.totalXp}>
+              <span className={styles.headerTitleXP}>Total XP Points</span>
+              <span className={styles.headerXp}>{totalXp}</span>
+              <div className={styles.rangUser}>
+                <img src={UserIcon} alt="User Icon" className={styles.userIcon} />
+                <span className={styles.labelUserName}>Omiage</span>
+                <span className={styles.labelUserRank}>#354</span>
+              </div>
+            </div>
 
             {isLoading && <p className={styles.status}>Loading missions...</p>}
             {error && <p className={styles.status}>Failed to load missions.</p>}

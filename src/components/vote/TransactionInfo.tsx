@@ -26,15 +26,16 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
     <div className={styles.txInfo}>
       {/* Stats */}
       <div className={styles.txInfoStats}>
-        <div>
+        <div className={styles.voteTotalContainer}>
           <div className={styles.txStatLabel}>
-            Position(s) selected
+            Your Votes :
           </div>
           <div className={styles.txStatValue}>
             {numberOfTransactions}
           </div>
         </div>
 
+       {/* Total Trust TX ----------------------
         <div>
           <div className={styles.txStatLabel}>
             Total $TRUST
@@ -43,24 +44,24 @@ export const TransactionInfo: React.FC<TransactionInfoProps> = ({
             {calculateEthCost(totalUnits)}
           </div>
         </div>
+       */}
       </div>
 
       {/* Buttons */}
       <div className={styles.txInfoBtns}>
         <button
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          className={styles.txBtn}
-        >
-          ✔ {isProcessing ? "Processing..." : "SUBMIT"}
-        </button>
-
-        <button
           onClick={onResetAll}
           disabled={totalUnits === 0}
-          className={styles.txBtn}
+          className={styles.txBtnReset}
         >
-          ↺ RESET
+          ↺
+        </button>
+        <button
+          onClick={onSubmit}
+          disabled={!canSubmit}
+          className={styles.txBtnSubmit}
+        >
+          {isProcessing ? "Processing..." : "Validate"} ✔
         </button>
       </div>
     </div>

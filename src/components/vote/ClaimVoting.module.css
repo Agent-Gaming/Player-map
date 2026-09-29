@@ -53,6 +53,22 @@
   min-height: 0;
   scrollbar-width: auto;
   scrollbar-color: var(--color-primary) transparent;
+  background-color: var(--primary-grey);
+  border-radius: 30px;
+  width: 95%;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+}
+
+.scrollList::after {
+  content: " ";
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 5px;
+  background-color: var(--primary-grey);
+  filter: blur(20px);
 }
 
 .footer {

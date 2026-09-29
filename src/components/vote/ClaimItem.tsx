@@ -9,6 +9,7 @@ import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
 import downNotSelectedSvg from "../../assets/img/downNotSelected.svg";
+import controllerIcon from '../img/controller.png';
 
 interface ClaimItemProps {
   voteItem: VoteItem;
@@ -114,6 +115,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     >
       {/* Triple details */}
       <div className={styles.tripleWrapper}>
+        {/*
         <div className={styles.pill}>
           {showSubjectImage && (
             <img
@@ -130,6 +132,10 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
         >
           {predicate}
         </span>
+        */}
+        <div className={styles.itemsTriplesContainer}>
+          <img src={controllerIcon} className={styles.controllerIcon} />
+        </div>
         <div
           ref={objectPillRef}
           className={styles.pill}

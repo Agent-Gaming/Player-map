@@ -137,9 +137,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   return (
     <div className={styles.root}>
       {/* En-tête fix — hauteur automatique */}
-      <div className={styles.headerSlot}>
-        <VotingHeader onClose={onClose} />
-      </div>
+   
       <br />
       {/* Liste scrollable — prend tout l'espace disponible */}
       <div className={styles.scrollList} data-scroll-list>

@@ -35,7 +35,7 @@ const CosmeticBadgeDisplay: React.FC<{
         onMouseLeave={() => setShowTooltip(false)}
         onClick={() => setShowModal(true)}
       >
-        <img src={badge.image_url} alt={badge.name} className={styles.cosmeticBadge} />
+        <SafeImage src={badge.image_url} alt={badge.name} className={styles.cosmeticBadge} />
         {showTooltip && (
           <div className={`${styles.tooltip} ${styles.tooltipWide}`}>
             <strong>{badge.name}</strong>
@@ -47,7 +47,7 @@ const CosmeticBadgeDisplay: React.FC<{
       {showModal && (
         <div className={styles.cosmeticModalOverlay} onClick={() => setShowModal(false)}>
           <div className={styles.cosmeticModalContent} onClick={(e) => e.stopPropagation()}>
-            <img src={badge.image_url} alt={badge.name} className={styles.cosmeticModalImage} />
+            <SafeImage src={badge.image_url} alt={badge.name} className={styles.cosmeticModalImage} />
             <p className={styles.cosmeticModalName}>{badge.name}</p>
             <p className={styles.cosmeticModalDescription}>{badge.description}</p>
             <button type="button" className={styles.cosmeticModalClose} onClick={() => setShowModal(false)}>

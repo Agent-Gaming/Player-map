@@ -2,8 +2,8 @@ import React, { useState, useRef } from "react";
 import ReactDOM from "react-dom";
 import { VoteItem, VoteDirection } from "../../types/vote";
 import { Network } from "../../hooks/useAtomData";
-import { ipfsToHttpUrl } from "../../utils/pinata";
 import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
+import SafeImage from "../SafeImage";
 import styles from "./ClaimItem.module.css";
 import upSvg from "../../assets/img/up.svg";
 import downSvg from "../../assets/img/down.svg";
@@ -118,10 +118,11 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
         {/*
         <div className={styles.pill}>
           {showSubjectImage && (
-            <img
-              src={ipfsToHttpUrl(subject_image!)}
+            <SafeImage
+              src={subject_image}
               alt=""
               className={styles.pillImage}
+              placeholderElement={<span />}
             />
           )}
           <span className={styles.pillLabel}>{subject}</span>
@@ -143,10 +144,11 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           onMouseLeave={handleObjectMouseLeave}
         >
           {showObjectImage && (
-            <img
-              src={ipfsToHttpUrl(object_image!)}
+            <SafeImage
+              src={object_image}
               alt=""
               className={styles.pillImage}
+              placeholderElement={<span />}
             />
           )}
           <span className={styles.pillLabel}>{object}</span>

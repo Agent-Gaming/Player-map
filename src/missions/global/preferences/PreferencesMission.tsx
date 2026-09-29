@@ -16,24 +16,6 @@ interface PreferencesMissionProps {
 
 type FlowPhase = 'intro' | 'steps' | 'submitting' | 'done';
 
-const introSeenKey = (address: string): string => `playermap:preferences-intro-seen:${address}`;
-
-function hasSeenIntro(address: string): boolean {
-  try {
-    return localStorage.getItem(introSeenKey(address)) !== null;
-  } catch {
-    return true; // localStorage unavailable — don't block the flow on the intro
-  }
-}
-
-function markIntroSeen(address: string): void {
-  try {
-    localStorage.setItem(introSeenKey(address), 'true');
-  } catch {
-    // best-effort — a failed write just means the intro may reappear once
-  }
-}
-
 // Simpler sibling of ArchetypeMission.tsx: one question type (checkboxes),
 // no intensity/direction, no archetype-style reveal — just confirm the
 // questionnaire is saved so the user can go claim it from the mission card.
@@ -49,24 +31,26 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
   const [phase, setPhase] = useState<FlowPhase>('steps');
 
   // Same per-open intro-vs-steps decision as ArchetypeMission.tsx — this
-  // component stays mounted and toggles isOpen, so "seen" must be
+  // component stays mounted and toggles isOpen, so this must be
   // re-evaluated every time the mission is (re)launched, not just once per
-  // mount. "Seen" is only persisted when the user clicks Start (see below)
-  // — clicking Later leaves it unmarked, so the intro reappears next
-  // launch. Guarded against re-deciding while already 'submitting'/'done'
-  // so closing mid-submit and reopening doesn't clobber that state.
+  // mount. The intro always reappears on relaunch as long as the mission
+  // isn't completed — waits for completion to actually resolve (not just
+  // !completionLoading at the moment isOpen flips) so a completed player
+  // isn't briefly shown the intro before completion data arrives. Guarded
+  // against re-deciding while already 'submitting'/'done' so closing
+  // mid-submit and reopening doesn't clobber that state.
   const introDecidedForThisOpenRef = useRef(false);
   useEffect(() => {
     if (!isOpen) {
       introDecidedForThisOpenRef.current = false;
       return;
     }
-    if (introDecidedForThisOpenRef.current || !walletAddress) return;
+    if (introDecidedForThisOpenRef.current || !walletAddress || completionLoading) return;
     introDecidedForThisOpenRef.current = true;
     if (phase === 'submitting' || phase === 'done') return;
-    setPhase(hasSeenIntro(walletAddress) ? 'steps' : 'intro');
+    setPhase(completion?.completed ? 'steps' : 'intro');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, walletAddress]);
+  }, [isOpen, walletAddress, completionLoading, completion?.completed]);
 
   const draft = usePreferencesDraft(walletAddress);
   const { submit, isSubmitting, error: submitError } = usePreferencesSubmission({
@@ -146,8 +130,9 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
             {/* TODO: swap in the real preferences-intro artwork once available (mirrors archetype-agent.png) */}
             <div className={styles.introImagePlaceholder} aria-hidden="true" />
             <p className={styles.introText}>
-              Tell us how you like to play: this will allow us to personalize your experience on
-              the Player Map.
+              Tell us how you like to play !
+              <br />
+              This will allow us to personalize your experience on the Player Map.
             </p>
           </div>
         </div>
@@ -158,10 +143,7 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
           <button
             type="button"
             className={styles.nextBtn}
-            onClick={() => {
-              if (walletAddress) markIntroSeen(walletAddress);
-              setPhase('steps');
-            }}
+            onClick={() => setPhase('steps')}
           >
             Start
           </button>
@@ -271,8 +253,11 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
         <button
           type="button"
           className={styles.prevBtn}
-          onClick={() => draft.setStepIndex(draft.currentStepIndex - 1)}
-          disabled={draft.currentStepIndex === 0}
+          onClick={() =>
+            draft.currentStepIndex === 0
+              ? setPhase('intro')
+              : draft.setStepIndex(draft.currentStepIndex - 1)
+          }
         >
           ‹ Previous
         </button>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useArchetypeBadges } from '../hooks/useArchetypeBadges';
+import SafeImage from '../../../../components/SafeImage';
 import styles from './ArchetypeBadgePicker.module.css';
 
 interface ArchetypeBadgePickerProps {
@@ -29,7 +30,7 @@ const ArchetypeBadgePicker: React.FC<ArchetypeBadgePickerProps> = ({ address, ge
             onClick={() => equip(item.id)}
             disabled={isEquipping}
           >
-            <img src={item.image_url} alt={item.name} className={styles.image} />
+            <SafeImage src={item.image_url} alt={item.name} className={styles.image} />
             <span className={styles.name}>{item.name}</span>
           </button>
         ))}

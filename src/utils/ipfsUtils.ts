@@ -60,8 +60,13 @@ export const convertIpfsUrlsInObject = (obj: any): any => {
     if (obj.hasOwnProperty(key)) {
       const value = obj[key];
       
-      // Conversion spéciale pour les propriétés "image"
-      if (key === 'image' && typeof value === 'string' && isIpfsUrl(value)) {
+      // Conversion spéciale pour les propriétés "image" — ipfsToHttpUrl gère
+      // déjà aussi bien ipfs:// que les URLs http(s) déjà résolues (et les
+      // route via /.proxy/img-proxy en contexte Discord, CSP oblige), donc
+      // pas besoin de filtrer sur isIpfsUrl ici : une image déjà en http ne
+      // doit pas échapper au proxy Discord juste parce qu'elle n'est plus
+      // au format ipfs://.
+      if (key === 'image' && typeof value === 'string' && value) {
         converted[key] = ipfsToHttpUrl(value);
       } else if (typeof value === 'object' && value !== null) {
         converted[key] = convertIpfsUrlsInObject(value);
@@ -95,10 +100,10 @@ export const convertGraphDataIpfsUrls = (graphData: any): any => {
  */
 export const ensureHttpUrl = (url: string | undefined): string | undefined => {
   if (!url) return url;
-  if (isIpfsUrl(url)) {
-    return ipfsToHttpUrl(url);
-  }
-  return url;
+  // ipfsToHttpUrl already no-ops correctly on a non-ipfs http(s) URL (just
+  // applies the Discord CSP proxy wrapping when needed) — gating on
+  // isIpfsUrl here would let an already-http URL skip that proxying.
+  return ipfsToHttpUrl(url);
 };
 
 /**

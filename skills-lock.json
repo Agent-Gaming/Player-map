@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "intuition": {
+      "source": "0xintuition/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/intuition/SKILL.md",
+      "computedHash": "25122a7a65a4fbf3163d637d9e0073c5b5b2c75f9a01927c674fe29115f63004"
+    }
+  }
+}

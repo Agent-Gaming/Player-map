@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, QueryClient } from '@tanstack/react-query';
 import { parseEther } from 'viem';
 import { ATOM_CONTRACT_ADDRESS, atomABI } from '../../../../abi';
 import { Network, API_URLS } from '../../../../hooks/useAtomData';
 import { ARCHETYPE_STEPS } from '../archetype-questionnaire.config';
 import { AnswerValue, MultiRatingAnswer, ArchetypeAnswers } from './useArchetypeDraft';
+import { fetchArchetypeCompletion } from './archetypeApi';
 
 interface UseArchetypeSubmissionProps {
   walletConnected?: any;
@@ -73,6 +74,25 @@ function buildPendingDeposits(answers: ArchetypeAnswers): PendingDeposit[] {
   }
 
   return deposits;
+}
+
+// The subgraph typically lags a few seconds behind the depositBatch tx
+// confirming, so a single refetch right after submit often still sees a
+// partial vote count (e.g. 6/15) — same indexing-lag class as
+// ArchetypeMission's pollForArchetype, applied here to the completion query
+// that gates both the "missing questions" re-prompt and the mission-list
+// progress bar / claim badge.
+async function pollUntilCompletionIndexed(address: string, queryClient: QueryClient): Promise<void> {
+  const ATTEMPTS = 8;
+  const DELAY_MS = 2500;
+  for (let i = 0; i < ATTEMPTS; i++) {
+    const result = await queryClient.fetchQuery({
+      queryKey: ['archetypeCompletion', address],
+      queryFn: () => fetchArchetypeCompletion(address),
+    });
+    if (result.completed) return;
+    if (i < ATTEMPTS - 1) await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
+  }
 }
 
 // Résout term_id/counter_term_id d'un triple — même requête que useDepositTriple.ts.
@@ -170,7 +190,12 @@ export function useArchetypeSubmission({
 
       setTxHash(typeof hash === 'string' ? hash : (hash as { hash: string }).hash);
 
-      await queryClient.invalidateQueries({ queryKey: ['archetypeCompletion', walletAddress] });
+      // Poll archetypeCompletion until the subgraph has caught up (or we give
+      // up) before touching playerArchetype/missions — invalidating those
+      // immediately would just have them refetch against the same
+      // not-yet-indexed state.
+      await pollUntilCompletionIndexed(walletAddress, queryClient);
+
       await queryClient.invalidateQueries({ queryKey: ['playerArchetype', walletAddress] });
       await queryClient.invalidateQueries({ queryKey: ['questStatus', 'archetype', walletAddress] });
       // Drives the CLAIM button on the mission card itself — without this the

@@ -24,6 +24,7 @@ import { useGameContext } from "./contexts/GameContext";
 import { PREDICATES } from "./utils/constants";
 import initGraphql from "./config/graphql";
 import { apiCache } from "./utils/apiCache";
+import { postSession } from "./api/sessionApi";
 import IntuitionLogo from "./assets/img/Intuition-logo.svg";
 import styles from "./GraphComponent.module.css";
 
@@ -60,6 +61,21 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
 }) => {
   // ── Init ──────────────────────────────────────────────────────────────────────
   useEffect(() => { initGraphql(); }, []);
+
+  // Records "logged in today" for the daily-login mission. Lives here (not
+  // in the PlayerMap wrapper) because hosts commonly render GraphComponent
+  // directly, bypassing that wrapper entirely.
+  const hasFiredSession = useRef(false);
+  useEffect(() => {
+    if (!getAccessToken || hasFiredSession.current) return;
+    // Lock only once a token actually resolved — getAccessToken() can
+    // transiently return null while host auth is still initializing on
+    // mount; locking unconditionally here would permanently skip the
+    // daily-login session record for that load.
+    postSession(getAccessToken).then((result) => {
+      if (result.ok) hasFiredSession.current = true;
+    });
+  }, [getAccessToken]);
 
   const { isLoading: gameLoading, activeGame, setActiveGameId } = useGameContext();
 

@@ -1,6 +1,5 @@
 .row {
-  padding: 13px 20px;
-  border-radius: 8px;
+  border-radius: 30px;
   position: relative;
   display: flex;
   align-items: center;
@@ -14,23 +13,39 @@
 .tripleWrapper {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 5px;
-  flex: 1;
-  min-width: 0;
+  background-color: var(--bg-vote-grey);
+  border-radius: 40px;
+}
+
+.itemsTriplesContainer {
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background-color: #393939;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.controllerIcon {
+  width: 15px;
+  height: 15px;
 }
 
 .pill {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  background-color: #393939;
   gap: 5px;
   max-width: 230px;
-  background-color: #1a1a1adc;
-  padding: 8px 12px;
-  border-radius: 4px;
+  height: 30px;
+  border-radius: 20px;
   position: relative;
   cursor: default;
   user-select: none;
+  padding-left: 7px;
+  padding-right: 7px;
 }
 
 .pillTooltip {
@@ -41,8 +56,6 @@
   font-size: 12px;
   color: #e8e8e8;
   white-space: normal;
-  max-width: 300px;
-  min-width: 220px;
   z-index: 9999;
   pointer-events: none;
   line-height: 1.5;
@@ -95,7 +108,7 @@
 }
 
 .pillLabel {
-  font-size: 1em;
+  font-size: 13px;
   color: #d9d9d9;
   font-weight: bold;
   overflow: hidden;
@@ -136,6 +149,11 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background-color: var(--bg-vote-grey);
 }
 
 .voteBtn:focus,
@@ -148,8 +166,8 @@
 }
 
 .voteIcon {
-  width: 32px;
-  height: 32px;
+  width: 16px;
+  height: 16px;
 }
 
 .voteCount {
@@ -173,10 +191,10 @@
 
 .rowFor {
   background-color: rgba(0, 111, 232, 0.15);
-  border: 1px solid rgba(0, 111, 232, 0.6);
+  border-radius: 30px;
 }
 
 .rowAgainst {
   background-color: rgba(255, 149, 0, 0.15);
-  border: 1px solid rgba(255, 149, 0, 0.6);
+  border-radius: 30px;
 }

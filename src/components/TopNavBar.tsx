@@ -4,9 +4,9 @@ import { SmartSearchInterface } from "playermap_graph";
 import { useGameContext } from "../contexts/GameContext";
 import { ipfsToHttpUrl } from "../utils/pinata";
 import SafeImage from "./SafeImage";
-import searchIconUrl from "../assets/img/search.svg";
+import searchIconUrl from "../assets/img/search.png";
 import agentLogoUrl from "../assets/img/agent.svg";
-import infoIconUrl from "../assets/img/info.svg";
+import infoIconUrl from "../assets/img/info.png";
 import styles from "./TopNavBar.module.css";
 
 // ─── Disclaimer Text ───────────────────────────────────────────────────────────
@@ -83,6 +83,21 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
       {/* ── Agent logo ─────────────────────────────── */}
       <img src={agentLogoUrl} alt="Agent" className={styles.agentLogo} />
 
+      
+      {/* ── Reset graph ─────────────────────────────── 
+      <button
+        className={styles.iconBtn}
+        onClick={() => graphControls?.resetGraph()}
+        disabled={!graphControls}
+        aria-label="Reset graph view"
+        title="Reset view"
+      >
+        <FaProjectDiagram size={35} />
+      </button>
+      
+      */}
+     <div className={styles.navLeftContainer}>
+      
       {/* ── Game selector ───────────────────────────── */}
       {games.length >= 2 && (
         <div ref={selectorRef} className={styles.gameSelectorWrapper}>
@@ -100,7 +115,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
               />
             )}
             <span className={styles.gameSelectorLabel}>
-              {activeGame?.label?.toUpperCase() ?? ''}
+              {activeGame?.label ?? ''}
             </span>
             <span className={`${styles.gameSelectorChevron} ${selectorOpen ? styles.gameSelectorChevronOpen : ''}`}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -129,71 +144,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           )}
         </div>
       )}
-
-      {/* ── Reset graph ─────────────────────────────── */}
-      <button
-        className={styles.iconBtn}
-        onClick={() => graphControls?.resetGraph()}
-        disabled={!graphControls}
-        aria-label="Reset graph view"
-        title="Reset view"
-      >
-        <FaProjectDiagram size={35} />
-      </button>
-
-      {/* ── Back ────────────────────────────────────── */}
-      <button
-        className={styles.iconBtn}
-        onClick={() => graphControls?.goBack()}
-        disabled={!graphControls?.canGoBack}
-        aria-label="Go back"
-        title="Back"
-      >
-        <FaArrowLeft size={35} />
-      </button>
-
-      {/* ── Forward ─────────────────────────────────── */}
-      <button
-        className={styles.iconBtn}
-        onClick={() => graphControls?.goForward()}
-        disabled={!graphControls?.canGoForward}
-        aria-label="Go forward"
-        title="Forward"
-      >
-        <FaArrowRight size={35} />
-      </button>
-
-      {/* ── Search (expands right) ───────────────────── */}
-      <div ref={searchWrapRef} className={styles.searchWrapper}>
-        {/* Search icon button */}
-        <button
-          className={`${styles.iconBtn} ${styles.searchBtn}`}
-          onClick={() => setSearchOpen((v) => !v)}
-          disabled={!graphControls}
-          aria-label="Search"
-          title="Search"
-        >
-          <img src={searchIconUrl} alt="search" width={35} height={35} />
-        </button>
-
-        {/* SmartSearchInterface expanding to the right */}
-        <div className={`${styles.searchPanel} ${searchOpen ? styles.searchPanelOpen : styles.searchPanelClosed}`}>
-          {graphControls?.handleSearch && (
-            <SmartSearchInterface
-              endpoint={endpoint}
-              onSearch={graphControls.handleSearch}
-              isSearching={graphControls.isSearching}
-              onSearchStart={graphControls.handleSearchStart ?? (() => {})}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* ── Spacer ──────────────────────────────────── */}
-      <div className={styles.spacer} />
-
-      {/* ── Info button ─────────────────────────────── */}
-      <div className={styles.infoWrapper}>
+{/* ── Info button ─────────────────────────────── */}
+<div className={styles.infoWrapper}>
         <button
           className={styles.iconBtn}
           onMouseEnter={() => setShowInfoTooltip(true)}
@@ -211,9 +163,61 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           </div>
         )}
       </div>
+       {/* ── Back ────────────────────────────────────── */}
+       <button
+        className={styles.iconBtn}
+        onClick={() => graphControls?.goBack()}
+        disabled={!graphControls?.canGoBack}
+        aria-label="Go back"
+        title="Back"
+      >
+        <FaArrowLeft size={14} />
+      </button>
 
-      {/* ── Separator ───────────────────────────────── */}
-      <div className={styles.separator} />
+      {/* ── Forward ─────────────────────────────────── */}
+      <button
+        className={styles.iconBtn}
+        onClick={() => graphControls?.goForward()}
+        disabled={!graphControls?.canGoForward}
+        aria-label="Go forward"
+        title="Forward"
+      >
+        <FaArrowRight size={14} />
+      </button>
+
+      {/* ── Search (expands right) ───────────────────── */}
+      <div ref={searchWrapRef} className={styles.searchWrapper}>
+        {/* Search icon button */}
+        <button
+          className={`${styles.iconBtn} ${styles.searchBtn}`}
+          onClick={() => setSearchOpen((v) => !v)}
+          disabled={!graphControls}
+          aria-label="Search"
+          title="Search"
+        >
+          <img src={searchIconUrl} alt="search" width={16} height={16} />
+        </button>
+
+        {/* SmartSearchInterface expanding to the right */}
+        <div className={`${styles.searchPanel} ${searchOpen ? styles.searchPanelOpen : styles.searchPanelClosed}`}>
+          {graphControls?.handleSearch && (
+            <SmartSearchInterface
+              endpoint={endpoint}
+              onSearch={graphControls.handleSearch}
+              isSearching={graphControls.isSearching}
+              onSearchStart={graphControls.handleSearchStart ?? (() => {})}
+            />
+          )}
+        </div>
+     </div>
+      </div>
+
+      {/* ── Spacer ──────────────────────────────────── */}
+      <div className={styles.spacer} />
+
+      
+
+
 
       {/* ── Profile button (right) ───────────────────── */}
       <button
@@ -224,7 +228,7 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
         aria-label="My profile"
         title="My profile"
       >
-        {userName && <span className={styles.profileName}>{userName}</span>}
+       <div className={styles.profileBtnContent}>
         <div className={styles.avatarContainer}>
           {avatarUrl ? (
             <SafeImage
@@ -237,6 +241,8 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
             <FaUser size={45} color="#ffd32a" />
           )}
         </div>
+        {userName && <span className={styles.profileName}>{userName}</span>}
+       </div>
       </button>
     </nav>
   );

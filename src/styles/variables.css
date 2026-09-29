@@ -1,11 +1,26 @@
 :root {
   --color-primary: #ffd32a;
   --color-secondary: #ffffff;
-  --color-background-primary: #000000;
+  --color-background-primary: transparent;
   --color-background-secondary: rgba(255, 255, 255, 0.03);
-  --color-daily: #2dd4bf;
-  --color-global: #3b82f6;
-  --color-social: #f97316;
+  --color-daily: #D0FF00;
+  --color-global: #D0FF00;
+  --color-social: #D0FF00;
+
+  --primary-grey: #141414;
+  --secondary-grey: rgb(34, 34, 34);
+  --primary-border:#1f1f1f;
+  --divider: #3d3d3d;
+
+  --bg-vote-grey: #212121;
+
+  --color-grey: #cacaca;
+  --text-grey: #9B9B9B;
+
+  --secondary-background-grey: #202020;
+
+  --border-grey: rgb(26, 26, 26);
+  --bg-grey: rgba(157, 157, 157, 0.05);
 }
 
 button {

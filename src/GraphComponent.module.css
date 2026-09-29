@@ -68,6 +68,9 @@
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  max-width: 2000px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .body {
@@ -87,10 +90,11 @@
 }
 
 .rightPane {
-  width: 50%;
+  width: 34%;
   height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  align-items: center;
   flex-shrink: 0;
 }

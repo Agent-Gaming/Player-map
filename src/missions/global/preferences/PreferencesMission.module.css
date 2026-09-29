@@ -85,7 +85,6 @@
   color: #aaa;
   font-size: 0.8em;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
 }
 
 .progressHeaderLabel strong {
@@ -264,7 +263,6 @@
   cursor: pointer;
   font-size: 0.85em;
   font-weight: bold;
-  text-transform: uppercase;
   letter-spacing: 0.03em;
 }
 
@@ -286,7 +284,6 @@
   border-radius: 6px;
   font-weight: bold;
   font-size: 0.85em;
-  text-transform: uppercase;
   letter-spacing: 0.03em;
   cursor: pointer;
   transition: background-color 0.2s;

@@ -7,23 +7,21 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 40px;
-  padding: 0 20px;
-  border-radius: 4px;
+  height: 25px;
+  padding-left: 10px;
+  padding-right: 10px;
+  border-radius: 20px;
   border: none;
   font-weight: bold;
   font-size: 0.85em;
   cursor: pointer;
   transition: background-color 0.2s;
+  background-color: transparent;
 }
 
 .action {
-  background-color: var(--color-primary);
   color: #000;
-}
-
-.action:hover {
-  background-color: #ffed4e;
+  background-color: #FFFFFF;
 }
 
 .claimed,

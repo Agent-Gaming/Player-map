@@ -19,7 +19,7 @@ const ClaimButton: React.FC<ClaimButtonProps> = ({ status, missionType, onClaim,
     return (
       <button type="button" className={styles.claimed} disabled>
         <FaCheck className={styles.checkIcon} />
-        CLAIMED
+        Claimed
       </button>
     );
   }
@@ -28,7 +28,7 @@ const ClaimButton: React.FC<ClaimButtonProps> = ({ status, missionType, onClaim,
     return (
       <button type="button" className={styles.locked} disabled>
         <FaLock className={styles.lockIcon} />
-        LOCKED
+        Locked
       </button>
     );
   }
@@ -44,7 +44,7 @@ const ClaimButton: React.FC<ClaimButtonProps> = ({ status, missionType, onClaim,
           if (link) window.open(link, '_blank', 'noopener,noreferrer');
         }}
       >
-        LINK
+        Link
       </button>
     );
   }
@@ -58,7 +58,7 @@ const ClaimButton: React.FC<ClaimButtonProps> = ({ status, missionType, onClaim,
         onClaim();
       }}
     >
-      CLAIM
+      Claim
     </button>
   );
 };

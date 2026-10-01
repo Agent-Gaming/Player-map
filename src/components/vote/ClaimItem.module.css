@@ -172,21 +172,34 @@
 
 .voteCount {
   font-weight: bold;
-  font-size: 1.3em;
-  min-width: 24px;
-  text-align: left;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .voteCountFor {
-  color: #006fe8;
+  color: #FFFFFF;
+  margin-right: 9px;
 }
 
 .voteCountAgainst {
-  color: #ff9500;
+  color: #FFFFFF;
+  margin-right: 9px;
+}
+
+.upIcon, .downIcon {
+  width: 12px;
+  height: 12px;
+}
+
+.upIcon, .downIcon {
+  margin-left: 5px;
 }
 
 .voteCountDefault {
   color: rgba(255, 255, 255, 0.7);
+  margin-right: 9px;
 }
 
 .rowFor {

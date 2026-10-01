@@ -9,6 +9,7 @@ import MissionsExpanded from './MissionsExpanded';
 import styles from './MissionsSimple.module.css';
 import UserIcon from './img/user-icon.png';
 import ClosePanel from './img/close-panel.png';
+import OpenPanel from './img/open-panel.png';
 
 const PANEL_STORAGE_KEY = 'playermap_missionsPanelOpen';
 
@@ -176,14 +177,15 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
     onClick={togglePanel}
     aria-label="Expand missions panel"
   >
-    <FaChevronRight
-      color="#ffd32a"
-      style={{
-        width: 14,
-        height: 14,
-        flexShrink: 0,
-      }}
-    />
+     <div className={styles.openButtonPanelContainer}>
+       <img
+  src={OpenPanel}
+  alt="open Panel"
+  className={styles.openButtonPanelIcon}
+  width={12}
+  height={12}
+/>
+</div>
   </button>
 )}
 

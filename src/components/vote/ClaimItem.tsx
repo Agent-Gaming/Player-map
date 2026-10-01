@@ -10,7 +10,8 @@ import downSvg from "../../assets/img/down.svg";
 import upNotSelectedSvg from "../../assets/img/upNotSelected.svg";
 import downNotSelectedSvg from "../../assets/img/downNotSelected.svg";
 import controllerIcon from '../img/controller.png';
-
+import upIcon from './icons/up.png';
+import downIcon from './icons/down.png';
 interface ClaimItemProps {
   voteItem: VoteItem;
   onChangeUnits: (id: bigint, direction: VoteDirection, units: number) => void;
@@ -152,7 +153,27 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             />
           )}
           <span className={styles.pillLabel}>{object}</span>
+          
         </div>
+       
+          {hasAnyPosition && (
+            <span
+              className={`${styles.voteCount} ${(isSelectedFor || hasForPosition) ? styles.voteCountFor : styles.voteCountDefault}`}
+            >
+               <img src={upSvg} className={styles.upIcon} />
+              {term_position_count}
+            </span>
+          )}
+          
+          {hasAnyPosition && (
+            
+            <span
+              className={`${styles.voteCount} ${(isSelectedAgainst || hasAgainstPosition) ? styles.voteCountAgainst : styles.voteCountDefault}`}
+            >
+              <img src={downSvg} className={styles.downIcon} />
+              {counter_term_position_count}
+            </span>
+          )}
       </div>
 
       {/* Vote buttons */}
@@ -170,13 +191,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               className={styles.voteIcon}
             />
           </button>
-          {hasAnyPosition && (
-            <span
-              className={`${styles.voteCount} ${(isSelectedFor || hasForPosition) ? styles.voteCountFor : styles.voteCountDefault}`}
-            >
-              {term_position_count}
-            </span>
-          )}
+         
         </div>
 
         {/* DOWN */}
@@ -192,13 +207,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               className={styles.voteIcon}
             />
           </button>
-          {hasAnyPosition && (
-            <span
-              className={`${styles.voteCount} ${(isSelectedAgainst || hasAgainstPosition) ? styles.voteCountAgainst : styles.voteCountDefault}`}
-            >
-              {counter_term_position_count}
-            </span>
-          )}
+          
         </div>
       </div>
 

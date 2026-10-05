@@ -389,6 +389,7 @@ const OtherPlayerProfileContent: React.FC<{
       </div>
 
       <div className={styles.profileHeaderContainer}>
+      <div className={styles.statsRowContainer}>
       <div className={styles.statsRow}>
          {/* Guild Stat -----------------------------
           <span className={styles.label}>Guild</span>
@@ -424,7 +425,7 @@ const OtherPlayerProfileContent: React.FC<{
         </div>
       </div>
 
-
+</div>
 
 
 

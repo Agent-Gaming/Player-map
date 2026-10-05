@@ -19,7 +19,6 @@ interface ClaimListProps {
 
 export const ClaimList: React.FC<ClaimListProps> = ({
   isLoading,
-  loadingProgress,
   voteItems,
   onChangeUnits,
   isVoteDirectionAllowed,
@@ -27,21 +26,20 @@ export const ClaimList: React.FC<ClaimListProps> = ({
   network = Network.MAINNET,
 }) => {
   if (isLoading) {
-    const progressText = loadingProgress
-      ? `Loading claims... ${loadingProgress.loaded}/${loadingProgress.total}`
-      : "Loading claims...";
-
     return (
       <div className={styles.loadingState}>
-        <div className={styles.loadingText}>{progressText}</div>
-        {loadingProgress && (
-          <div className={styles.progressTrack}>
-            <div
-              className={styles.progressFill}
-              style={{ width: `${(loadingProgress.loaded / loadingProgress.total) * 100}%` }}
-            />
+        {Array.from({ length: 10 }).map((_, index) => (
+          <div className={styles.skeletonRow} key={index}>
+            <div className={styles.skeletonCircleSmall} />
+
+            <div className={styles.skeletonBar} />
+
+            <div className={styles.skeletonActions}>
+              <div className={styles.skeletonCircle} />
+              <div className={styles.skeletonCircle} />
+            </div>
           </div>
-        )}
+        ))}
       </div>
     );
   }

@@ -90,11 +90,12 @@
 }
 
 .rightPane {
-  width: 34%;
+  width: 30%;
   height: 100%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
+  margin-right: 15px;
 }

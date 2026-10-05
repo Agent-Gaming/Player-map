@@ -7,10 +7,13 @@
   --color-global: #D0FF00;
   --color-social: #D0FF00;
 
-  --primary-grey: #141414;
+  --primary-grey: #111111;
   --secondary-grey: rgb(34, 34, 34);
-  --primary-border:#1f1f1f;
+
+  --primary-border:rgb(29, 29, 29);
   --divider: #3d3d3d;
+
+  --shadow-dark-01: rgba(0, 0, 0, 0.782);
 
   --bg-vote-grey: #212121;
 

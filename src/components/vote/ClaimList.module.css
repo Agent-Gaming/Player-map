@@ -22,3 +22,61 @@
   background-color: #3b82f6;
   transition: width 0.3s ease;
 }
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 25px;
+}
+
+.skeletonCircleSmall {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #292929;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonBar {
+  height: 14px;
+  width: 180px;
+  border-radius: 7px;
+  background: #292929;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.skeletonCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #292929;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}

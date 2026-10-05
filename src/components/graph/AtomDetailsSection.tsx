@@ -13,6 +13,8 @@ interface AtomDetailsSectionProps {
   connections: {
     follows: any[];
     followers: any[];
+    followingCount: number;
+    followersCount: number;
   };
   walletAddress?: string;
   showDescription?: boolean;
@@ -35,6 +37,7 @@ const CosmeticBadgeDisplay: React.FC<{
         onMouseLeave={() => setShowTooltip(false)}
         onClick={() => setShowModal(true)}
       >
+        
         <SafeImage src={badge.image_url} alt={badge.name} className={styles.cosmeticBadge} />
         {showTooltip && (
           <div className={`${styles.tooltip} ${styles.tooltipWide}`}>
@@ -200,30 +203,51 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
           
           return (
             <div className={styles.headerContent}>
+
+               <div className={styles.profileBann}>
+          
+          </div>
+         
               {verification.status === "verified" ? (
+                
                 // ─── ATOME VÉRIFIÉ ─────────────────────────────────────
                 <div className={styles.rowFlex}>
+                  
                   {/* Image à gauche */}
                   <div className={styles.imageContainer}>
                     <SafeImage
                       src={imageUrl as string}
                       fallbackSources={imageFallbacks}
                       alt={atomDetails.label || "Atom image"}
-                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px"}}
+                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}
                       placeholderText={atomDetails.emoji || "?"}
                       placeholderElement={placeholderElement}
                       showPlaceholder={true}
                     />
                   </div>
-
+<div className={styles.rightColumnWrapper}>
                   {/* Colonne droite: nom + badge + description */}
                   <div className={styles.rightColumn}>
+                
                     <div className={styles.nameRow}>
-                      <p className={styles.atomName}>
-                        <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-                      </p>
+                      <div className={styles.atomName}>
+                        <span className={styles.labelName}>
+                          {String(atomDetails.label ?? "Not defined")}
+                          {cosmeticBadge && <CosmeticBadgeDisplay badge={cosmeticBadge} />}
+                        </span>
+                        {(connections.followingCount != null || connections.followersCount != null) && (
+  <div className={styles.followStats}>
+  <span className={styles.wrapperFollow}>
+    <strong>{connections.followingCount}</strong> <span className={styles.followingLabel}>Following</span>
+  </span>
+  <span className={styles.wrapperFollow}>
+    <strong>{connections.followersCount}</strong> <span className={styles.followersLabel}>Followers</span>
+  </span>
+</div>
+)}
+                      </div>
 
-                      {cosmeticBadge && <CosmeticBadgeDisplay badge={cosmeticBadge} />}
+                  
 
                       {/* Badge verified avec tooltip */}
                       <div
@@ -251,6 +275,8 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       </div>
                     )}
                   </div>
+                
+</div>
                 </div>
               ) : verification.status === "not-verified" ? (
                 // ─── ATOME NON VÉRIFIÉ ─────────────────────────────────
@@ -258,11 +284,24 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                   {/* Nom + badge + description (sans image) */}
                   <div className={styles.rightColumn}>
                     <div className={styles.nameRow}>
-                      <p className={styles.atomName}>
-                        <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-                      </p>
+                      <div className={styles.atomName}>
+                        <span className={styles.labelName}>
+                          {String(atomDetails.label ?? "Not defined")}
+                          {cosmeticBadge && <CosmeticBadgeDisplay badge={cosmeticBadge} />}
+                        </span>
+                        {(connections.followingCount != null || connections.followersCount != null) && (
+  <div className={styles.followStats}>
+  <span className={styles.wrapperFollow}>
+    <strong>{connections.followingCount}</strong> <span className={styles.followingLabel}>Following</span>
+  </span>
+  <span className={styles.wrapperFollow}>
+    <strong>{connections.followersCount}</strong> <span className={styles.followersLabel}>Followers</span>
+  </span>
+</div>
+)}
+                      </div>
 
-                      {cosmeticBadge && <CosmeticBadgeDisplay badge={cosmeticBadge} />}
+                   
 
                       {/* Badge community avec tooltip */}
                       <div
@@ -284,6 +323,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       </div>
                       {actionElement}
                     </div>
+
                     {showDescription && (
                       <div className={styles.descriptionScroll}>
                         <p className={styles.descriptionText}>{description}</p>
@@ -310,10 +350,23 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                   {/* Colonne droite: nom + description */}
                   <div className={styles.rightColumn}>
                     <div className={styles.nameRow}>
-                      <p className={styles.atomNameAccent}>
-                        <strong>{String(atomDetails.label ?? "Not defined")}</strong>
-                      </p>
-                      {cosmeticBadge && <CosmeticBadgeDisplay badge={cosmeticBadge} />}
+                      <div className={styles.atomNameAccent}>
+                        <span className={styles.labelName}>
+                          {String(atomDetails.label ?? "Not defined")}
+                          {cosmeticBadge && <CosmeticBadgeDisplay badge={cosmeticBadge} />}
+                        </span>
+                        {(connections.followingCount != null || connections.followersCount != null) && (
+  <div className={styles.followStats}>
+  <span className={styles.wrapperFollow}>
+    <strong>{connections.followingCount}</strong> <span className={styles.followingLabel}>Following</span>
+  </span>
+  <span className={styles.wrapperFollow}>
+    <strong>{connections.followersCount}</strong> <span className={styles.followersLabel}>Followers</span>
+  </span>
+</div>
+)}
+                      </div>
+                     
                       {actionElement}
                     </div>
                     {showDescription && (

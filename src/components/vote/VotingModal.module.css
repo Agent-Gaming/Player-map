@@ -2,9 +2,9 @@
 .panel {
   height: 100%;
   overflow: hidden;
-  background-color: rgba(0, 0, 0, 0.92);
-  transition: width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1),
-              min-width 0.35s cubic-bezier(0.4, 1.1, 0.5, 1);
+  background-color: #151515;
+  border: 1px solid rgb(29, 29, 29);
+  box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.782);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;

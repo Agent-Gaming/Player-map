@@ -7,6 +7,7 @@ import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import verifiedIcon from "../../assets/img/verified.svg";
 import communityIcon from "../../assets/img/community.svg";
 import styles from "./AtomDetailsSection.module.css";
+import dynamicDecoration from "../img/dynamic.png";
 
 interface AtomDetailsSectionProps {
   atomDetails: any;
@@ -219,11 +220,13 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       src={imageUrl as string}
                       fallbackSources={imageFallbacks}
                       alt={atomDetails.label || "Atom image"}
-                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
                       placeholderText={atomDetails.emoji || "?"}
                       placeholderElement={placeholderElement}
                       showPlaceholder={true}
                     />
+                   
+                    <img src={dynamicDecoration} alt="Dynamic Decoration" className={styles.dynamicDecorationImage} />
                   </div>
 <div className={styles.rightColumnWrapper}>
                   {/* Colonne droite: nom + badge + description */}
@@ -340,11 +343,12 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       src={imageUrl as string}
                       fallbackSources={imageFallbacks}
                       alt={atomDetails.label || "Atom image"}
-                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "16px", display: "block" }}
+                      style={{width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%", display: "block" }}
                       placeholderText={atomDetails.emoji || "?"}
                       placeholderElement={placeholderElement}
                       showPlaceholder={true}
                     />
+                    <img src={dynamicDecoration} alt="Dynamic Decoration" className={styles.dynamicDecorationImage} />
                   </div>
 
                   {/* Colonne droite: nom + description */}

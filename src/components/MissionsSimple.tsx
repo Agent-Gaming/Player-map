@@ -19,6 +19,7 @@ interface MissionsSimpleProps {
   walletAddress?: string;
   getAccessToken?: () => Promise<string | null>;
   onOpenQuestModal?: (missionId: string) => void;
+  myAtomDetails?: any;
 }
 
 interface MissionBlockProps {
@@ -53,6 +54,7 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
   onSeeMore,
   streak,
   walletAddress,
+  myAtomDetails,
 }) => {
   const [expanded, setExpanded] = useState(true);
 
@@ -119,11 +121,13 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
   );
 };
 
-const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAccessToken, onOpenQuestModal }) => {
+const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAccessToken, onOpenQuestModal, myAtomDetails }) => {
   const [open, setOpen] = useState<boolean>(() => {
     const stored = localStorage.getItem(PANEL_STORAGE_KEY);
     return stored === null ? true : stored === 'true';
   });
+
+  const userName = myAtomDetails?.label as string | undefined;
 
   const { grouped, totalXp, categoryXp, isLoading, error } = useMissions(walletAddress);
   const claimMutation = useClaimMission({ address: walletAddress, getAccessToken });
@@ -219,10 +223,14 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
               <span className={styles.headerTitleXP}>Total XP Points</span>
               <span className={styles.headerXp}>{totalXp}</span>
               <div className={styles.rangUser}>
-                <img src={UserIcon} alt="User Icon" className={styles.userIcon} />
-                <span className={styles.labelUserName}>Omiage</span>
-                <span className={styles.labelUserRank}>#354</span>
-              </div>
+  <img src={UserIcon} alt="User Icon" className={styles.userIcon} />
+
+  {userName && (
+    <span className={styles.labelUserName}>{userName}</span>
+  )}
+
+  <span className={styles.labelUserRank}>#354</span>
+</div>
             </div>
 
             {isLoading && <p className={styles.status}>Loading missions...</p>}

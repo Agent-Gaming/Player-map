@@ -391,6 +391,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
               walletAddress={walletAddress}
               getAccessToken={getAccessToken}
               onOpenQuestModal={setOpenQuestMissionId}
+              myAtomDetails={myAtomDetails}
             />
 
             {/* Graphe — prend tout l'espace restant */}

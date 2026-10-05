@@ -61,17 +61,16 @@ const FollowButton: React.FC<FollowButtonProps> = ({
       <button
         className={styles.btn}
         onClick={handleClick}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
         disabled={!canInteract}
         title={getTitle()}
       >
         {isLoading ? (
           <div className={styles.spinner} />
         ) : (
-          <img src={getIcon()} alt={getTitle()} />
+          <span>{isFollowing ? 'Unfollow' : 'Follow'}</span>
         )}
       </button>
+  
       {error && <span className={styles.error}>{error}</span>}
     </div>
   );

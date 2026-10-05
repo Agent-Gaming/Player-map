@@ -23,8 +23,9 @@
   height: 100%;
   overflow: hidden;
   transition: width 0.3s ease;
-  background-color: #0d0d0d;
-  border: 1px solid var(--border-grey);
+  background-color: var(--primary-grey);
+  border: 1px solid var(--primary-border);
+  box-shadow: 0px 0px 4px var(--shadow-dark-01);
   border-radius: 40px;
   margin-left: 15px;
   transition: width 0.25s ease;
@@ -85,6 +86,15 @@
   align-items: center;
   justify-content: center;
   background-color: #262626;
+  cursor: pointer;
+}
+
+.closeButtonPanelContainer:hover, .openButtonPanelContainer:hover {
+  background-color: #393838;
+}
+
+.closeButtonPanelContainer:active, .openButtonPanelContainer:active {
+  transform: scale(0.97);
 }
 
 .closeButtonPanelIcon, .openButtonPanelIcon {

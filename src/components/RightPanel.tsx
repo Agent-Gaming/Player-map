@@ -112,13 +112,7 @@ const PlayerStatBlock: React.FC<{
   imageSrc?: string;
 }> = ({ label, value, gradient, imageSrc }) => (
   <div className={styles.statsRow}>
-    <span className={styles.statLabel}>{label}</span>
     <span className={styles.statValue}>{value}</span>
-    {imageSrc ? (
-      <img src={imageSrc} alt={label} className={styles.statImage} />
-    ) : gradient ? (
-      <div className={styles.statBar} style={{ background: gradient }} />
-    ) : null}
   </div>
 );
 
@@ -246,9 +240,6 @@ const ProfileContent: React.FC<{
     <div className={styles.profileContent}>
       {/* ── Header joueur ───────────────────────────────────────────────────── */}
       <div className={styles.profileHeader}>
-      <div className={styles.profileBann}>
-          
-          </div>
       <AtomDetailsSection
         atomDetails={atomDetails}
         connections={connections}
@@ -268,31 +259,44 @@ const ProfileContent: React.FC<{
       </div>
 
       {/* ── Bloc de stats ──────────────────────────────────────────────────── */}
-      <div className={styles.profileHeader}>
-      <div className={styles.statsBlock}>
-        <PlayerStatBlock
+      <div className={styles.profileHeaderContainer}>
+      
+      <div className={styles.statsRowContainer}>
+      <div className={styles.statContainer}>
+          <span className={styles.labelStat}>Player</span>
+          <PlayerStatBlock
           label="Votes"
           value={totalVotes}
           gradient="linear-gradient(to right, #3b82f6, #f97316)"
         />
+        </div>
         <div className={styles.statsDivider} />
+        <div className={styles.statContainer}>
+        <span className={styles.labelStat}>Attestations</span>
         <PlayerStatBlock
           label="Attestation"
           value={totalAttestations}
           imageSrc={tripleSvg}
         />
+          </div>
         <div className={styles.statsDivider} />
-        <PlayerStatBlock
+        <div className={styles.statContainer}>
+          <span className={styles.labelStat}>Votes</span>
+          <PlayerStatBlock
           label="Value"
           value={totalValue}
           gradient="linear-gradient(to right, #a78bfa, #ec4899)"
         />
+        </div>
       </div>
       </div>
 
       {/* ── Mes Attestations ──────────────────────────────────────────────────────── */}
       <div className={styles.sectionDivider}>
-      <SectionDivider title="My Attestations" />
+        <div className={styles.labelTitle}>
+         Attestations
+        
+        </div>
       <ClaimsSection
         activities={activities}
         title=""
@@ -352,49 +356,66 @@ const OtherPlayerProfileContent: React.FC<{
   return (
     <div className={styles.profileContent}>
       <div className={styles.profileHeader}>
-        <AtomDetailsSection
-          atomDetails={atomDetails}
-          connections={{ follows: [], followers: [] }}
-          walletAddress={undefined}
-          showDescription={false}
-          placeholderElement={<FaUser size={60} color="#ffd32a" />}
-          cosmeticBadge={
-          archetype?.cosmetics?.[0]
-            ? { ...archetype.cosmetics[0], description: archetype.description }
-            : null
+      <AtomDetailsSection
+  atomDetails={atomDetails}
+  connections={{
+    follows: [],
+    followers: [],
+    followingCount: connections?.followingCount ?? 0,
+    followersCount: connections?.followersCount ?? 0,
+  }}
+  walletAddress={undefined}
+  showDescription={false}
+  placeholderElement={<FaUser size={60} color="#ffd32a" />}
+  cosmeticBadge={
+    archetype?.cosmetics?.[0]
+      ? {
+          ...archetype.cosmetics[0],
+          description: archetype.description,
         }
-          actionElement={
-            <FollowButton
-              walletConnected={walletConnected}
-              walletAddress={currentWalletAddress}
-              publicClient={publicClient}
-              myAccountAtomId={myAccountAtomId ?? null}
-              otherAccountAtomId={atomDetails?.term_id ?? null}
-            />
-          }
-        />
-        {connections && (
-          <div className={styles.followStats}>
-            <span><strong>{connections.followingCount}</strong> Following</span>
-            <span><strong>{connections.followersCount}</strong> Followers</span>
-          </div>
-        )}
+      : null
+  }
+  actionElement={
+    <FollowButton
+      walletConnected={walletConnected}
+      walletAddress={currentWalletAddress}
+      publicClient={publicClient}
+      myAccountAtomId={myAccountAtomId ?? null}
+      otherAccountAtomId={atomDetails?.term_id ?? null}
+    />
+  }
+/>
+       
       </div>
 
-      <div className={styles.profileHeader}>
-        <div className={styles.statsBlock}>
+      <div className={styles.profileHeaderContainer}>
+      <div className={styles.statsRow}>
+         {/* Guild Stat -----------------------------
+          <span className={styles.label}>Guild</span>
+          <StatCard label="Guild(s)"       value={totalGuilds}       loading={false}   variant="guild" />
+        */}
+
+
+        <div className={styles.statContainer}>
+          <span className={styles.labelStat}>Player</span>
           <PlayerStatBlock
             label="Votes"
             value={totalVotes}
             gradient="linear-gradient(to right, #3b82f6, #f97316)"
           />
-          <div className={styles.statsDivider} />
-          <PlayerStatBlock
+        </div>
+        <div className={styles.statsDivider} />
+        <div className={styles.statContainer}>
+        <span className={styles.labelStat}>Attestations</span>
+        <PlayerStatBlock
             label="Attestation"
             value={totalAttestations}
             imageSrc={tripleSvg}
           />
-          <div className={styles.statsDivider} />
+          </div>
+        <div className={styles.statsDivider} />
+        <div className={styles.statContainer}>
+          <span className={styles.labelStat}>Votes</span>
           <PlayerStatBlock
             label="Value"
             value={totalValue}
@@ -403,8 +424,18 @@ const OtherPlayerProfileContent: React.FC<{
         </div>
       </div>
 
+
+
+
+
+       
+      </div>
+
       <div className={styles.sectionDivider}>
-        <SectionDivider title="Attestations" />
+      <div className={styles.labelTitle}>
+         Attestations
+     
+        </div>
         <ClaimsSection
           activities={activities}
           title=""

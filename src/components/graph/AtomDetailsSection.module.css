@@ -17,18 +17,27 @@
 
 .rowFlex {
   display: flex;
-  flex-direction: row;
   align-items: center;
-  gap: 16px;
+  margin-top: -40px;
   width: 100%;
 }
 
 .imageContainer {
-  width: 70px;
-  height: 70px;
-  overflow: hidden;
-  border-radius: 100%;
+  width: 100px;
+  height: 100px;
+  margin-left: 10px;
+  border-radius: 50%;
+  border: 3px solid #0d0d0d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #000000;
+  color: white;
+  font-size: 60px;
+  font-weight: 500;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .nameRow {
@@ -37,7 +46,7 @@
   gap: 10px;
 }
 
-.rightColumn {
+.rightColumnWrapper {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -45,11 +54,24 @@
   min-width: 0;
 }
 
-.atomName {
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  margin-left: 10px;
+  margin-top: 20px;
+}
+
+.labelName {
   font-weight: 700;
   font-size: 1.5rem;
   color: #ffffff;
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .atomNameAccent {
@@ -77,8 +99,8 @@
 }
 
 .cosmeticBadge {
-  width: 60px;
-  height: 60px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -192,4 +214,34 @@
   font-size: 0.875rem;
   color: rgba(255, 255, 255, 0.9);
   text-align: left;
+}
+
+.profileBann {
+  background-image: url('../img/bann.png');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  height: 160px;
+  width: 100%;
+  border-radius: 40px;
+  border: 1px solid var(--border-grey);
+  overflow: hidden;
+}
+
+.followStats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.wrapperFollow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.followingLabel, .followersLabel {
+  color: grey;
 }

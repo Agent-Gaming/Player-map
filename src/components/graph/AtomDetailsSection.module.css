@@ -23,9 +23,9 @@
 }
 
 .imageContainer {
-  width: 100px;
-  height: 100px;
-  margin-left: 10px;
+  width: 80px;
+  height: 80px;
+  margin-left: 15px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -44,8 +44,8 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   z-index: 10;
 }
 
@@ -53,6 +53,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-left: 10px;
+  margin-top: 10px;
 }
 
 .rightColumnWrapper {
@@ -226,15 +228,14 @@
 }
 
 .profileBann {
-  background-image: url('../img/bann.png');
+  background-image: url('../img/bannGame.png');
   background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
 
   height: 160px;
   width: 100%;
-  border-radius: 40px;
-  border: 1px solid var(--border-grey);
+  border-bottom: 1px solid var(--primary-border);
   overflow: hidden;
 }
 

@@ -86,9 +86,12 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
       {/* Triple / Atom display */}
       <div className={styles.tripleArea}>
         {/* Badge Deposit / Redeem */}
+        <div className={styles.dateContainer}>
         <span className={`${styles.badge} ${isRedeem ? styles.badgeRedeem : styles.badgeDeposit}`}>
           {isRedeem ? "Redeem" : "Deposit"}
         </span>
+        {dateStr && <span className={styles.dateStr}>{dateStr}</span>}
+        </div>
         {activityComponents.type === 'triple' ? (
           <>
             <div title={subjectLabel} className={styles.pill}>
@@ -118,7 +121,6 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
           <img src={isAgainst ? downSvg : downNotSelectedSvg} alt="down" className={styles.voteImg} />
           <span className={`${styles.voteCount} ${isAgainst ? styles.voteCountAgainst : styles.voteCountDefault}`}>{againstCount}</span>
         </div>
-        {dateStr && <span className={styles.dateStr}>{dateStr}</span>}
       </div>
     </div>
   );

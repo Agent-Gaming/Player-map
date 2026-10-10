@@ -79,6 +79,7 @@
   min-height: 0;
   width: 100%;
   overflow: hidden;
+  position: relative;
 }
 
 .graphPane {
@@ -91,11 +92,48 @@
 
 .rightPane {
   width: 30%;
-  height: 100%;
+  height: 99%;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
-  margin-right: 15px;
+  background: #1111117a;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+  border: 1px solid var(--primary-border);
+  border-radius: 45px;
+  overflow: hidden;
+  position: absolute;
+  right: 15px;
+  bottom: 7px;
+  z-index: 100;
+  padding: 5px;
 }
+
+.rightPane::after {
+  z-index: -1;
+  content: " ";
+  height: 20%;
+  width: 100%;
+  background: linear-gradient(to left, blue ,yellow, red, green);
+  filter: blur(100px);
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-50%);
+  animation: rotateHalo 17s infinite;
+}
+
+@keyframes rotateHalo {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+

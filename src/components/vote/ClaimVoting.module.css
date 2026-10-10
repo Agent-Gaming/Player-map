@@ -54,7 +54,8 @@
   min-height: 0;
   scrollbar-width: auto;
   scrollbar-color: var(--color-primary) transparent;
-  background-color: var(--primary-grey);
+  background-color: var(--secondary-background-grey);
+  border: 1px solid var(--primary-border);
   border-radius: 30px;
   width: 95%;
   margin-left: auto;

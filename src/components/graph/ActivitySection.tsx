@@ -18,7 +18,7 @@ const ActivitySection: React.FC<ActivitySectionProps> = ({ accountId }) => {
   });
 
   return (
-    <div>
+    <div className={styles.wrapperActivityCard}>
       {loading ? (
         <p className={styles.stateMessage}>Loading…</p>
       ) : activities.length === 0 ? (

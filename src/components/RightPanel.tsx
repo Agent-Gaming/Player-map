@@ -137,6 +137,7 @@ const ProfileTabs: React.FC<{
   return (
     <div className={styles.tabsContainer}>
       {/* ── En-têtes onglets ─── */}
+       {/*
       <div className={styles.tabHeaders}>
         <button
           className={`${styles.tab} ${activeTab === "positions" ? styles.tabActive : ""}`}
@@ -144,16 +145,19 @@ const ProfileTabs: React.FC<{
         >
           My Positions
         </button>
+       
+        
         <button
-          className={`${styles.tab} ${activeTab === "activity" ? styles.tabActive : ""}`}
-          onClick={() => setActiveTab("activity")}
+          className={styles.tabActive}
         >
           Activity History
         </button>
       </div>
+          */}
 
       {/* ── Contenu avec scrollbar ─── */}
       <div className={styles.tabContent}>
+            {/*
         {activeTab === "positions" && (
           <PositionsSection
             accountId={walletAddress || ""}
@@ -165,6 +169,8 @@ const ProfileTabs: React.FC<{
         {activeTab === "activity" && (
           <ActivitySection accountId={walletAddress || ""} />
         )}
+          */}
+          <ActivitySection accountId={walletAddress || ""} />
       </div>
     </div>
   );
@@ -196,7 +202,7 @@ const ProfileContent: React.FC<{
   error,
 }) => {
   const { archetype } = usePlayerArchetype(walletAddress);
-
+  const [activeChoice, setActiveChoice] = useState<"ecosystem" | "player" | "activity">("ecosystem");
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
@@ -242,7 +248,12 @@ const ProfileContent: React.FC<{
       <div className={styles.profileHeader}>
       <AtomDetailsSection
         atomDetails={atomDetails}
-        connections={connections}
+        connections={{
+          follows: [],
+          followers: [],
+          followingCount: connections?.followingCount ?? 0,
+          followersCount: connections?.followersCount ?? 0,
+        }}
         walletAddress={walletAddress}
         showDescription={false}
         placeholderElement={<FaUser size={60} color="#ffd32a" />}
@@ -252,16 +263,43 @@ const ProfileContent: React.FC<{
             : null
         }
       />
-      <div className={styles.followStats}>
-        <span><strong>{connections.follows.length}</strong> Following</span>
-        <span><strong>{connections.followers.length}</strong> Followers</span>
+    
       </div>
-      </div>
+      <div className={styles.navProfil}>
+  <button
+    className={`${styles.choice} ${
+      activeChoice === "ecosystem" ? styles.choiceActive : ""
+    }`}
+    onClick={() => setActiveChoice("ecosystem")}
+  >
+    Ecosystem
+  </button>
 
-      {/* ── Bloc de stats ──────────────────────────────────────────────────── */}
-      <div className={styles.profileHeaderContainer}>
+  <button
+    className={`${styles.choice} ${
+      activeChoice === "player" ? styles.choiceActive : ""
+    }`}
+    onClick={() => setActiveChoice("player")}
+  >
+    Player
+  </button>
+
+  <button
+    className={`${styles.choice} ${
+      activeChoice === "activity" ? styles.choiceActive : ""
+    }`}
+    onClick={() => setActiveChoice("activity")}
+  >
+    Activity
+  </button>
+</div>
+
+{activeChoice === "ecosystem" && (
+  <div className={styles.choiceEcosystem}>
+<div className={styles.profileHeaderContainer}>
       
       <div className={styles.statsRowContainer}>
+
       <div className={styles.statContainer}>
           <span className={styles.labelStat}>Player</span>
           <PlayerStatBlock
@@ -270,7 +308,6 @@ const ProfileContent: React.FC<{
           gradient="linear-gradient(to right, #3b82f6, #f97316)"
         />
         </div>
-        <div className={styles.statsDivider} />
         <div className={styles.statContainer}>
         <span className={styles.labelStat}>Attestations</span>
         <PlayerStatBlock
@@ -279,7 +316,6 @@ const ProfileContent: React.FC<{
           imageSrc={tripleSvg}
         />
           </div>
-        <div className={styles.statsDivider} />
         <div className={styles.statContainer}>
           <span className={styles.labelStat}>Votes</span>
           <PlayerStatBlock
@@ -289,26 +325,30 @@ const ProfileContent: React.FC<{
         />
         </div>
       </div>
+ 
       </div>
+  </div>
+)}
 
-      {/* ── Mes Attestations ──────────────────────────────────────────────────────── */}
-      <div className={styles.sectionDivider}>
-        <div className={styles.labelTitle}>
-         Attestations
-        
-        </div>
-      <ClaimsSection
+{activeChoice === "player" && (
+  <div className={styles.choicePlayer}>
+     <ClaimsSection
         activities={activities}
         title=""
       />
-      </div>
+  </div>
+)}
 
-      {/* ── Onglets Positions / Activity ──────────────────────────────────── */}
-      <ProfileTabs
+{activeChoice === "activity" && (
+  <div className={styles.choiceActivity}>
+    <ProfileTabs
         walletAddress={walletAddress}
         walletConnected={walletConnected}
         publicClient={publicClient}
       />
+  </div>
+)}
+
     </div>
   );
 };
@@ -330,7 +370,6 @@ const OtherPlayerProfileContent: React.FC<{
   myPositions?: any[];
 }> = ({ atomDetails, activities, positions = [], walletAddress, connections, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress, myPositions = [] }) => {
   const { archetype } = usePlayerArchetype(walletAddress ?? undefined);
-
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
@@ -390,7 +429,6 @@ const OtherPlayerProfileContent: React.FC<{
 
       <div className={styles.profileHeaderContainer}>
       <div className={styles.statsRowContainer}>
-      <div className={styles.statsRow}>
          {/* Guild Stat -----------------------------
           <span className={styles.label}>Guild</span>
           <StatCard label="Guild(s)"       value={totalGuilds}       loading={false}   variant="guild" />
@@ -405,7 +443,7 @@ const OtherPlayerProfileContent: React.FC<{
             gradient="linear-gradient(to right, #3b82f6, #f97316)"
           />
         </div>
-        <div className={styles.statsDivider} />
+
         <div className={styles.statContainer}>
         <span className={styles.labelStat}>Attestations</span>
         <PlayerStatBlock
@@ -414,7 +452,7 @@ const OtherPlayerProfileContent: React.FC<{
             imageSrc={tripleSvg}
           />
           </div>
-        <div className={styles.statsDivider} />
+ 
         <div className={styles.statContainer}>
           <span className={styles.labelStat}>Votes</span>
           <PlayerStatBlock
@@ -423,7 +461,6 @@ const OtherPlayerProfileContent: React.FC<{
             gradient="linear-gradient(to right, #a78bfa, #ec4899)"
           />
         </div>
-      </div>
 
 </div>
 
@@ -433,10 +470,6 @@ const OtherPlayerProfileContent: React.FC<{
       </div>
 
       <div className={styles.sectionDivider}>
-      <div className={styles.labelTitle}>
-         Attestations
-     
-        </div>
         <ClaimsSection
           activities={activities}
           title=""

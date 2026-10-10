@@ -70,6 +70,7 @@ const MissionsExpanded: React.FC<MissionsExpandedProps> = ({
   return (
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.popup} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.corePopUp}>
         <div className={styles.header}>
           <span className={styles.headerTitle}>MISSION &amp; QUEST</span>
           <div className={styles.headerRight}>
@@ -154,6 +155,7 @@ const MissionsExpanded: React.FC<MissionsExpandedProps> = ({
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

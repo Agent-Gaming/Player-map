@@ -20,22 +20,91 @@
 }
 
 .content {
-  height: 100%;
+  height: 99%;
+  width: 350px;
   overflow: hidden;
-  transition: width 0.3s ease;
-  background-color: var(--primary-grey);
+
+  background: #1111117a;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+
   border: 1px solid var(--primary-border);
-  box-shadow: 0px 0px 4px var(--shadow-dark-01);
   border-radius: 40px;
-  margin-left: 15px;
-  transition: width 0.25s ease;
+
+  position: absolute;
+  left: 15px;
+  top: 0;
+  z-index: 100;
+
+  transition:
+    width 0.25s ease,
+    height 0.25s ease;
+  padding: 5px;
 }
 
 .contentClosed {
-  width: 0;
-  border: none;
-  padding: 0;
-  box-shadow: none;
+  height: 130px;
+  width: 350px;
+
+  overflow: hidden;
+
+  background: #1111117a;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+
+  backdrop-filter: blur(50px);
+  -webkit-backdrop-filter: blur(50px);
+
+  border: 1px solid var(--primary-border);
+  border-radius: 40px;
+
+  position: absolute;
+  left: 15px;
+  top: 0;
+  z-index: 100;
+
+  transition:
+    width 0.25s ease,
+    height 0.25s ease;
+  padding: 5px;
+}
+
+.contentClosed::after {
+  z-index: -1;
+  content: " ";
+  height: 100px;
+  width: 80%;
+  background: linear-gradient(to left, blue ,yellow, red, green);
+  filter: blur(50px);
+  position: absolute;
+  top: 0;
+  right: 0;
+  animation: rotateHalo 7s infinite;
+}
+
+.content::after {
+  z-index: -1;
+  content: " ";
+  height: 90%;
+  width: 80%;
+  background: linear-gradient(to left, blue ,yellow, red, green);
+  filter: blur(50px);
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform: translateY(-50%);
+  animation: rotateHalo 17s infinite;
+}
+
+@keyframes rotateHalo {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .inner {
@@ -44,6 +113,8 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  background-color: #0f0f0f;
+  border-radius: 35px;
 }
 
 .header {
@@ -62,9 +133,12 @@
   font-weight: bold;
   width: 100%;
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
 }
+
+
+
 
 .closeButtonPanel {
   height: 38px;
@@ -105,18 +179,19 @@
 .labelMissions {
   font-size: 13px;
   color: var(--text-grey);
+  max-width: 250px;
 }
 
 .totalXp {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  justify-content: center;
   margin-top: 20px;
   background-color: var(--secondary-background-grey);
+  border: 1px solid var(--primary-border);
   border-radius: 30px;
-  height: 160px;
-  padding-bottom: 10px;
+  height: 45px;
   width: 95%;
   margin-left: auto;
   margin-right: auto;
@@ -142,27 +217,51 @@
 
 .headerXp {
   font-weight: bold;
-  font-size: 35px;
-  margin-top: 10px;
+  font-size: 16px;
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.dashedConnexion {
+  width: 1px;
+  height: 20px;
+  border-left: 1px dashed var(--primary-border);
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 5px;
 }
 
 .rangUser {
   display: flex;
   align-items: center;
-  margin-top: 8px;
-  background-color: #393838;
-  border-radius: 30px;
-  margin-top: auto;
-  margin-bottom: 15px;
-  width: 90%;
-  min-height: 40px;
+  width: 100%;
+}
+
+.userIconContainer {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  margin-left: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .userIcon {
   width: 30px;
   height: 30px;
+}
+
+.dot {
+  z-index: 2;
+  height: 10px;
+  width: 10px;
+  background-color: rgb(4, 179, 4);
   border-radius: 50%;
-  margin-left: 5px;
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
 }
 
 .labelUserName {
@@ -170,13 +269,15 @@
   font-size: 14px;
   font-weight: bold;
   margin-left: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: start;
 }
 
 .labelUserRank {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: bold;
-  margin-right: 8px;
-  margin-left: auto;
+  color: grey;
 }
 
 .status {
@@ -191,7 +292,8 @@
   width: 95%;
   margin-left: auto;
   margin-right: auto;
-  border: 1px solid var(--border-grey);
+  background-color: var(--secondary-background-grey);
+  border: 1px solid var(--primary-border);
   border-radius: 25px;
   margin-top: 5px;
 }
@@ -262,13 +364,6 @@
   font-size: 0.9em;
 }
 
-.dashedLine {
-  width: 90%;
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 3px;
-  border-top: 1px dashed rgba(255, 255, 255, 0.2);
-}
 
 .seeMoreBtn {
   align-self: center;
@@ -280,7 +375,7 @@
   margin-bottom: 5px;
   cursor: pointer;
   margin-left: auto;
-  margin-right: 10px;
+  margin-right: auto;
 }
 
 .seeMoreBtn:hover {
@@ -307,7 +402,6 @@
   color: #666;
   font-size: 0.85em;
   font-style: italic;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   padding: 10px 12px;
   text-align: center;

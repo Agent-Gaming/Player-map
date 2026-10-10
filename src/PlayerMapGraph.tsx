@@ -114,7 +114,7 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
             aria-label="Speak Up"
           >
             <img src={Atom} alt="" className={styles.speakUpIcon} />
-            SPEAK UP
+            SPEAK UP tEESTttTs
           </button>
         </div>
       )}

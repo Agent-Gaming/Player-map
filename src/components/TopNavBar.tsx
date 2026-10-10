@@ -8,6 +8,7 @@ import searchIconUrl from "../assets/img/search.png";
 import agentLogoUrl from "../assets/img/agent.svg";
 import infoIconUrl from "../assets/img/info.png";
 import styles from "./TopNavBar.module.css";
+import UserIcon from './img/user-icon.png';
 
 // ─── Disclaimer Text ───────────────────────────────────────────────────────────
 
@@ -84,18 +85,9 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
       <img src={agentLogoUrl} alt="Agent" className={styles.agentLogo} />
 
       
-      {/* ── Reset graph ─────────────────────────────── 
-      <button
-        className={styles.iconBtn}
-        onClick={() => graphControls?.resetGraph()}
-        disabled={!graphControls}
-        aria-label="Reset graph view"
-        title="Reset view"
-      >
-        <FaProjectDiagram size={35} />
-      </button>
       
-      */}
+
+
      <div className={styles.navLeftContainer}>
       
       {/* ── Game selector ───────────────────────────── */}
@@ -163,6 +155,16 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           </div>
         )}
       </div>
+      <button
+        className={styles.resetGraphBtn}
+        onClick={() => graphControls?.resetGraph()}
+        disabled={!graphControls}
+        aria-label="Reset graph view"
+        title="Reset view"
+      >
+        <FaProjectDiagram size={17} />
+      </button>
+      
        {/* ── Back ────────────────────────────────────── */}
        <button
         className={styles.iconBtn}
@@ -238,8 +240,16 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
               style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
           ) : (
-            <FaUser size={45} color="#ffd32a" />
+            <img
+            src={UserIcon}
+            alt="User Icon"
+            className={styles.userIcon}
+          />
           )}
+
+
+            <div className={styles.dot}></div>
+  
         </div>
         {userName && <span className={styles.profileName}>{userName}</span>}
        </div>

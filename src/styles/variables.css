@@ -3,9 +3,9 @@
   --color-secondary: #ffffff;
   --color-background-primary: transparent;
   --color-background-secondary: rgba(255, 255, 255, 0.03);
-  --color-daily: #D0FF00;
-  --color-global: #D0FF00;
-  --color-social: #D0FF00;
+  --color-daily: #ffbb00;
+  --color-global: #ffbb00;
+  --color-social: #ffbb00;
 
   --primary-grey: #111111;
   --secondary-grey: rgb(34, 34, 34);
@@ -20,7 +20,7 @@
   --color-grey: #cacaca;
   --text-grey: #9B9B9B;
 
-  --secondary-background-grey: #202020;
+  --secondary-background-grey: #141414;
 
   --border-grey: rgb(26, 26, 26);
   --bg-grey: rgba(157, 157, 157, 0.05);

@@ -104,7 +104,7 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
               )}
             </div>
           )}
-          <div className={styles.dashedLine} />
+        
           <button
             type="button"
             className={styles.seeMoreBtn}
@@ -174,120 +174,137 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
 
   return (
     <div className={styles.wrapper}>
-      {!open && (
-  <button
-    type="button"
-    className={styles.toggleHandle}
-    onClick={togglePanel}
-    aria-label="Expand missions panel"
-  >
-     <div className={styles.openButtonPanelContainer}>
-       <img
-  src={OpenPanel}
-  alt="open Panel"
-  className={styles.openButtonPanelIcon}
-  width={12}
-  height={12}
-/>
-</div>
-  </button>
-)}
+     
 
-<div className={`${styles.content} ${!open ? styles.contentClosed : ''}`}>
-        {open && (
-          <div className={styles.inner}>
-            <div className={styles.header}>
-            <span className={styles.headerTitle}>
-  Missions
-  <button
-    type="button"
-    onClick={closePanel}
-    aria-label="Close Missions Panel"
-    className={styles.closeButtonPanel}
-  >
-    <div className={styles.closeButtonPanelContainer}>
-    <img
-  src={ClosePanel}
-  alt="Close Panel"
-  className={styles.closeButtonPanelIcon}
-  width={12}
-  height={12}
-/>
-    </div>
-  </button>
-</span>
-              <span className={styles.labelMissions}>Complete missions, earn XP, and make progress every day.</span>
-            </div>
+     <div className={`${styles.content} ${!open ? styles.contentClosed : ''}`}>
+  <div className={styles.inner}>
 
-            <div className={styles.totalXp}>
-              <span className={styles.headerTitleXP}>Total XP Points</span>
-              <span className={styles.headerXp}>{totalXp}</span>
-              <div className={styles.rangUser}>
-  <img src={UserIcon} alt="User Icon" className={styles.userIcon} />
+    {/* TOUJOURS VISIBLE */}
+    <div className={styles.header}>
+      <span className={styles.headerTitle}>
+        Missions
 
-  {userName && (
-    <span className={styles.labelUserName}>{userName}</span>
-  )}
-
-  <span className={styles.labelUserRank}>#354</span>
-</div>
-            </div>
-
-            {isLoading && <p className={styles.status}>Loading missions...</p>}
-            {error && <p className={styles.status}>Failed to load missions.</p>}
-
-            {!isLoading && !error && (
-              <>
-                <MissionBlock
-                  title="Daily"
-                  colorVariant="daily"
-                  missions={grouped.daily}
-                  earnedXp={categoryXp.daily}
-                  emptyLabel="No daily mission right now."
-                  onClaim={handleClaim}
-                  pendingMissionId={pendingMissionId}
-                  errorMissionId={errorMissionId}
-                  errorMessage={errorMessage}
-                  errorIsRateLimit={errorIsRateLimit}
-                  onOpenQuestModal={onOpenQuestModal}
-                  onSeeMore={handleSeeMore}
-                  streak={dailyLoginStreak}
-                  walletAddress={walletAddress}
-                />
-                <MissionBlock
-                  title="Global"
-                  colorVariant="global"
-                  missions={grouped.global}
-                  earnedXp={categoryXp.global}
-                  emptyLabel="No global mission right now."
-                  onClaim={handleClaim}
-                  pendingMissionId={pendingMissionId}
-                  errorMissionId={errorMissionId}
-                  errorMessage={errorMessage}
-                  errorIsRateLimit={errorIsRateLimit}
-                  onOpenQuestModal={onOpenQuestModal}
-                  onSeeMore={handleSeeMore}
-                  walletAddress={walletAddress}
-                />
-                <MissionBlock
-                  title="Social"
-                  colorVariant="social"
-                  missions={grouped.social}
-                  earnedXp={categoryXp.social}
-                  emptyLabel="No social mission right now."
-                  onClaim={handleClaim}
-                  pendingMissionId={pendingMissionId}
-                  errorMissionId={errorMissionId}
-                  errorMessage={errorMessage}
-                  errorIsRateLimit={errorIsRateLimit}
-                  onOpenQuestModal={onOpenQuestModal}
-                  onSeeMore={handleSeeMore}
-                />
-              </>
-            )}
+        <button
+          type="button"
+          onClick={togglePanel}
+          aria-label={open ? "Close Missions Panel" : "Open Missions Panel"}
+          className={styles.closeButtonPanel}
+        >
+          <div className={styles.closeButtonPanelContainer}>
+            <img
+              src={open ? ClosePanel : OpenPanel}
+              alt={open ? "Close Panel" : "Open Panel"}
+              className={styles.closeButtonPanelIcon}
+              width={12}
+              height={12}
+            />
           </div>
+        </button>
+      </span>
+
+      <span className={styles.labelMissions}>
+        Complete missions, earn XP, and make progress every day.
+      </span>
+     
+    </div>
+
+    {/* TOUT LE RESTE EST CACHÉ QUAND LE PANEL EST FERMÉ */}
+    {open && (
+      <>
+        <div className={styles.totalXp}>
+       
+          <div className={styles.rangUser}>
+           <div className={styles.userIconContainer}>
+           <img
+              src={UserIcon}
+              alt="User Icon"
+              className={styles.userIcon}
+            />
+            <div className={styles.dot}></div>
+           </div>
+
+            {userName && (
+              <span className={styles.labelUserName}>
+                {userName}
+                <span className={styles.labelUserRank}>
+              #354
+            </span>
+              </span>
+            )}
+<span className={styles.headerXp}>{totalXp} XP</span>
+            
+          </div>
+        </div>
+<div className={styles.dashedConnexion}></div>
+        {isLoading && (
+          <p className={styles.status}>
+            Loading missions...
+          </p>
         )}
-      </div>
+
+        {error && (
+          <p className={styles.status}>
+            Failed to load missions.
+          </p>
+        )}
+
+        {!isLoading && !error && (
+          <>
+            <MissionBlock
+              title="Daily"
+              colorVariant="daily"
+              missions={grouped.daily}
+              earnedXp={categoryXp.daily}
+              emptyLabel="No daily mission right now."
+              onClaim={handleClaim}
+              pendingMissionId={pendingMissionId}
+              errorMissionId={errorMissionId}
+              errorMessage={errorMessage}
+              errorIsRateLimit={errorIsRateLimit}
+              onOpenQuestModal={onOpenQuestModal}
+              onSeeMore={handleSeeMore}
+              streak={dailyLoginStreak}
+              walletAddress={walletAddress}
+            />
+
+            <MissionBlock
+              title="Global"
+              colorVariant="global"
+              missions={grouped.global}
+              earnedXp={categoryXp.global}
+              emptyLabel="No global mission right now."
+              onClaim={handleClaim}
+              pendingMissionId={pendingMissionId}
+              errorMissionId={errorMissionId}
+              errorMessage={errorMessage}
+              errorIsRateLimit={errorIsRateLimit}
+              onOpenQuestModal={onOpenQuestModal}
+              onSeeMore={handleSeeMore}
+              walletAddress={walletAddress}
+            />
+
+            <MissionBlock
+              title="Social"
+              colorVariant="social"
+              missions={grouped.social}
+              earnedXp={categoryXp.social}
+              emptyLabel="No social mission right now."
+              onClaim={handleClaim}
+              pendingMissionId={pendingMissionId}
+              errorMissionId={errorMissionId}
+              errorMessage={errorMessage}
+              errorIsRateLimit={errorIsRateLimit}
+              onOpenQuestModal={onOpenQuestModal}
+              onSeeMore={handleSeeMore}
+              walletAddress={walletAddress}
+            />
+          </>
+        )}
+      </>
+    )}
+
+  </div>
+</div>
 
       <MissionsExpanded
         isOpen={expandedOpen}

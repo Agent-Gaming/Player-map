@@ -93,6 +93,9 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
     network,
     walletAddress,
     tripleIdsOverride,
+    scoreTypeOverride: isActive
+      ? Object.fromEntries(campaign!.attestations.map((a) => [a.triple_id, a.score_type ?? undefined]))
+      : undefined,
     onError: (message) => {
       setTransactionStatus({ status: "error", message });
     },

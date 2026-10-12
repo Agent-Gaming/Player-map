@@ -34,6 +34,7 @@ export interface VoteItem extends Claim {
   object_term_id?: string | null;
   subject_description?: string | null;
   object_description?: string | null;
+  score_type?: string; // FeedbackScoreType — see src/config/scoreType.ts
 }
 
 // Response structure after a transaction

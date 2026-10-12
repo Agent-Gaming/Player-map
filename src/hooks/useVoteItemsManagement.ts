@@ -13,6 +13,11 @@ interface UseVoteItemsManagementProps {
   // source of PREDEFINED_CLAIM_IDS below — everything else in this hook is
   // already generic over that id list and needs no further change.
   tripleIdsOverride?: string[];
+  // Per-triple score_type for the Campaign tab (its triples carry their own
+  // score_type from the campaign's attestations, not from activeGame.claims)
+  // — when omitted, score_type is looked up from activeGame.claims instead
+  // (the Feedback tab's own per-claim classification).
+  scoreTypeOverride?: Record<string, string | undefined>;
 }
 
 export const useVoteItemsManagement = ({
@@ -20,12 +25,15 @@ export const useVoteItemsManagement = ({
   walletAddress = "",
   onError,
   tripleIdsOverride,
+  scoreTypeOverride,
 }: UseVoteItemsManagementProps) => {
   const [voteItems, setVoteItems] = useState<VoteItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const { activeGame } = useGameContext();
   const PREDEFINED_CLAIM_IDS = tripleIdsOverride ?? (activeGame?.claims.map(c => c.atomId) ?? []);
+  const scoreTypeByClaimId: Record<string, string | undefined> =
+    scoreTypeOverride ?? Object.fromEntries((activeGame?.claims ?? []).map(c => [c.atomId, c.score_type]));
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
   const [userSharesMap, setUserSharesMap] = useState<Record<string, { termId: string; shares: bigint; curveId: bigint }>>({});
@@ -431,6 +439,7 @@ export const useVoteItemsManagement = ({
             direction: VoteDirection.None,
             userHasPosition: false,
             userPositionDirection: VoteDirection.None,
+            score_type: scoreTypeByClaimId[id],
           } as VoteItem;
         }
 
@@ -465,6 +474,7 @@ export const useVoteItemsManagement = ({
           userPositionTermId: sharesInfo?.termId,
           userShares: sharesInfo?.shares,
           userCurveId: sharesInfo?.curveId,
+          score_type: scoreTypeByClaimId[id],
         } as VoteItem;
       });
 

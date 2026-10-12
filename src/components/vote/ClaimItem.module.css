@@ -117,6 +117,15 @@
   white-space: nowrap;
 }
 
+.scoreTypeBadge {
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
 .predicate {
   display: inline-block;
   max-width: 100px;

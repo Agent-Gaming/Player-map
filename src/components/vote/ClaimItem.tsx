@@ -12,6 +12,7 @@ import downNotSelectedSvg from "../../assets/img/downNotSelected.svg";
 import controllerIcon from '../img/controller.png';
 import upIcon from './icons/up.png';
 import downIcon from './icons/down.png';
+import { SCORE_TYPE_LABEL, SCORE_TYPE_COLOR, SCORE_TYPE_ICON, FeedbackScoreType } from '../../config/scoreType';
 interface ClaimItemProps {
   voteItem: VoteItem;
   onChangeUnits: (id: bigint, direction: VoteDirection, units: number) => void;
@@ -46,7 +47,10 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     counter_term_position_count = 0,
     userHasPosition = false,
     userPositionDirection = VoteDirection.None,
+    score_type,
   } = voteItem;
+
+  const isValidScoreType = (v?: string): v is FeedbackScoreType => !!v && v in SCORE_TYPE_LABEL;
 
   const showSubjectImage = subject_image &&
     getAtomVerificationStatus(subject_term_id ?? undefined).status !== 'not-verified';
@@ -136,7 +140,10 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
         </span>
         */}
         <div className={styles.itemsTriplesContainer}>
-          <img src={controllerIcon} className={styles.controllerIcon} />
+          <img
+            src={isValidScoreType(score_type) ? SCORE_TYPE_ICON[score_type] : controllerIcon}
+            className={styles.controllerIcon}
+          />
         </div>
         <div
           ref={objectPillRef}
@@ -153,9 +160,22 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
             />
           )}
           <span className={styles.pillLabel}>{object}</span>
-          
+
         </div>
-       
+
+        {isValidScoreType(score_type) && (
+          <span
+            className={styles.scoreTypeBadge}
+            style={{
+              color: SCORE_TYPE_COLOR[score_type],
+              borderColor: `${SCORE_TYPE_COLOR[score_type]}40`,
+              background: `${SCORE_TYPE_COLOR[score_type]}14`,
+            }}
+          >
+            {SCORE_TYPE_LABEL[score_type]}
+          </span>
+        )}
+
           {hasAnyPosition && (
             <span
               className={`${styles.voteCount} ${(isSelectedFor || hasForPosition) ? styles.voteCountFor : styles.voteCountDefault}`}

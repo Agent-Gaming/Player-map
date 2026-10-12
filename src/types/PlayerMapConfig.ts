@@ -2,7 +2,7 @@
 
 export interface ClaimConfig {
   atomId: string
-  category?: string
+  score_type?: string
 }
 
 export interface GuildConfig {

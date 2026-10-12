@@ -79,13 +79,14 @@ const StatCard: React.FC<{
           onMouseEnter={() => setShowScoreTooltip(true)}
           onMouseLeave={() => setShowScoreTooltip(false)}
         >
-          <div
+         <div
             className={styles.statValueBoxScore}
+            style={scoreColor ? { background: scoreColor } : undefined}
           >
             {loading ? (
               <div className={styles.skeleton} />
             ) : (
-              <span className={styles.statNumberScore} data-stroke={value}>{value}</span>
+              <span className={styles.statNumberScore}>{value}</span>
             )}
           </div>
           {showScoreTooltip && (

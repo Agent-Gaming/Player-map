@@ -3,6 +3,7 @@ import { FaUser } from "react-icons/fa";
 import FollowButton from "./graph/FollowButton";
 import { RightPanelMode } from "./TopNavBar";
 import { ClaimVoting } from "./vote/ClaimVoting";
+import { CampaignVoting } from "./vote/CampaignVoting";
 import { SpeakUpHeader } from "./vote/SpeakUpHeader";
 import AtomDetailsSection from "./graph/AtomDetailsSection";
 import ClaimsSection from "./graph/ClaimsSection";
@@ -11,6 +12,8 @@ import PositionsSection from "./graph/PositionsSection";
 import ActivitySection from "./graph/ActivitySection";
 import { Network } from "../hooks/useAtomData";
 import { useGameStats } from "../hooks/useGameStats";
+import { useGameContext } from "../contexts/GameContext";
+import { useCampaigns } from "../hooks/useCampaigns";
 import { usePlayerArchetype } from "../missions/global/archetype/hooks/usePlayerArchetype";
 import tripleSvg from "../assets/img/triple.svg";
 import styles from "./RightPanel.module.css";
@@ -491,18 +494,49 @@ const SpeakUpContent: React.FC<{
   wagmiConfig?: any;
 }> = ({ walletAddress, walletConnected, wagmiConfig }) => {
   const stats = useGameStats(Network.MAINNET);
+  const { activeGame } = useGameContext();
+  const { campaigns } = useCampaigns(activeGame?.atomId);
+  const hasActiveCampaign = campaigns.some((c) => c.status === "Active");
+  const [activeTab, setActiveTab] = useState<"feedback" | "campaign">("feedback");
 
   return (
     <div className={styles.speakUpContent}>
       <SpeakUpHeader stats={stats} />
+
+      <div className={styles.speakUpTabs}>
+        <button
+          className={`${styles.speakUpTab} ${activeTab === "feedback" ? styles.speakUpTabActive : ""}`}
+          onClick={() => setActiveTab("feedback")}
+        >
+          Feedback
+        </button>
+        <button
+          className={`${styles.speakUpTab} ${activeTab === "campaign" ? styles.speakUpTabActive : ""}`}
+          onClick={() => setActiveTab("campaign")}
+        >
+          Campaign
+          {hasActiveCampaign && <span className="pm-live-dot" />}
+        </button>
+      </div>
+
       <div className={styles.speakUpBody}>
-        <ClaimVoting
-          walletConnected={walletConnected}
-          walletAddress={walletAddress}
-          publicClient={wagmiConfig?.publicClient}
-          network={Network.MAINNET}
-          wagmiConfig={wagmiConfig}
-        />
+        {activeTab === "feedback" ? (
+          <ClaimVoting
+            walletConnected={walletConnected}
+            walletAddress={walletAddress}
+            publicClient={wagmiConfig?.publicClient}
+            network={Network.MAINNET}
+            wagmiConfig={wagmiConfig}
+          />
+        ) : (
+          <CampaignVoting
+            walletConnected={walletConnected}
+            walletAddress={walletAddress}
+            publicClient={wagmiConfig?.publicClient}
+            network={Network.MAINNET}
+            wagmiConfig={wagmiConfig}
+          />
+        )}
       </div>
     </div>
   );

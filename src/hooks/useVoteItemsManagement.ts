@@ -8,31 +8,40 @@ interface UseVoteItemsManagementProps {
   network?: Network;
   walletAddress?: string;
   onError?: (message: string) => void;
+  // Campaign tab: votes a specific campaign's triple set instead of the
+  // game's static feedback claim list. When provided, takes over as the
+  // source of PREDEFINED_CLAIM_IDS below — everything else in this hook is
+  // already generic over that id list and needs no further change.
+  tripleIdsOverride?: string[];
 }
 
 export const useVoteItemsManagement = ({
   network = Network.MAINNET,
   walletAddress = "",
   onError,
+  tripleIdsOverride,
 }: UseVoteItemsManagementProps) => {
   const [voteItems, setVoteItems] = useState<VoteItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const { activeGame } = useGameContext();
-  const PREDEFINED_CLAIM_IDS = activeGame?.claims.map(c => c.atomId) ?? [];
+  const PREDEFINED_CLAIM_IDS = tripleIdsOverride ?? (activeGame?.claims.map(c => c.atomId) ?? []);
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
   const [userSharesMap, setUserSharesMap] = useState<Record<string, { termId: string; shares: bigint; curveId: bigint }>>({});
   const [hasLoadedTripleDetails, setHasLoadedTripleDetails] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Reset when the active game changes so the claim list reloads for the new game.
+  // Reset when the active game changes, or (Campaign tab) when the selected
+  // campaign's triple set changes — otherwise switching campaigns without
+  // the game itself changing would leave stale voteItems/positions from the
+  // previously-selected campaign on screen.
   useEffect(() => {
     setHasLoadedTripleDetails(false);
     setVoteItems([]);
     setUserPositionsData(null);
     setIsLoading(true);
-  }, [activeGame?.atomId]);
+  }, [activeGame?.atomId, tripleIdsOverride?.join(',')]);
 
   const refreshPositions = () => {
     setHasLoadedTripleDetails(false);

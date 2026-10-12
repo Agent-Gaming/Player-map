@@ -4,4 +4,5 @@
  */
 export const workerKeys = {
   gamePublicInfo: (atomId: string) => ['gamePublicInfo', atomId] as const,
+  campaigns: (atomId: string) => ['campaigns', atomId] as const,
 };

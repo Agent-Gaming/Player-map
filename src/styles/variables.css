@@ -26,6 +26,24 @@
   --bg-grey: rgba(157, 157, 157, 0.05);
 }
 
+/* Pulsing "live" indicator — same green/size/radius as TopNavBar's static
+   .dot, finally animated. Global (not CSS-Module-scoped) because it needs to
+   render identically from several different .module.css files, which can't
+   share scoped classes. */
+@keyframes pm-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(0.85); }
+}
+
+.pm-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: rgb(4, 179, 4);
+  animation: pm-pulse 1.6s ease-in-out infinite;
+  display: inline-block;
+}
+
 button {
   border: none;
   outline: none;

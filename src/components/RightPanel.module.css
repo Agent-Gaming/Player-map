@@ -123,6 +123,46 @@
   background-color: #262626;
 }
 
+.speakUpTabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  border-radius: 20px;
+  padding-left: 5px;
+  padding-right: 5px;
+  background-color: #151515;
+  border: 1px solid #181818;
+  align-self: flex-start;
+  margin-left: 20px;
+  margin-top: 5px;
+}
+
+.speakUpTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  height: 30px;
+  border-radius: 20px;
+  color: rgb(158, 158, 158);
+  padding-left: 10px;
+  padding-right: 10px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.speakUpTab:hover {
+  color: var(--color-secondary);
+  background-color: #262626;
+}
+
+.speakUpTabActive {
+  color: #FFFFFF;
+  background-color: #262626;
+}
+
 .choiceActivity {
   display: flex;
   flex-direction: column;

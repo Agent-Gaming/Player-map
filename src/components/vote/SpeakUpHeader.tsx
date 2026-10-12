@@ -81,12 +81,11 @@ const StatCard: React.FC<{
         >
           <div
             className={styles.statValueBoxScore}
-            style={scoreColor ? { background: scoreColor } : undefined}
           >
             {loading ? (
               <div className={styles.skeleton} />
             ) : (
-              <span className={styles.statNumberScore}>{value}</span>
+              <span className={styles.statNumberScore} data-stroke={value}>{value}</span>
             )}
           </div>
           {showScoreTooltip && (

@@ -2,7 +2,6 @@ import React, { useMemo } from "react";
 import { GraphVisualization } from "playermap_graph";
 import { useGameContext } from "./contexts/GameContext";
 import { PREDICATES } from "./utils/constants";
-import Atom from "./assets/img/atom.svg";
 import styles from "./PlayerMapGraph.module.css";
 
 interface GraphControls {
@@ -113,8 +112,9 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
             style={isSpeakUpActive ? { opacity: 0.5, cursor: 'default' } : undefined}
             aria-label="Speak Up"
           >
-            <img src={Atom} alt="" className={styles.speakUpIcon} />
-            SPEAK UP tEESTttTs
+            <div className={styles.btnSpeakUpContainer}>
+            FEEDBACK
+            </div>
           </button>
         </div>
       )}

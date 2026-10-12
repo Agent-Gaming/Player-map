@@ -9,29 +9,41 @@
 
 .speakUpOverlay {
   position: absolute;
-  bottom: 14px;
-  left: 50%;
+  bottom: 30px;
+  left: 33%;
   transform: translateX(-50%);
   z-index: 50;
 }
 
 .speakUpBtn {
-  background: #ffd32a;
-  color: #18181b;
-  border: none;
+  background: none;
+  color: #FFFFFF;
+  border: 1px solid #1d1d1d;
   outline: none;
-  border-radius: 12px;
-  padding: 0 18px;
+  border-radius: 30px;
   height: 50px;
+  padding-left: 5px;
+  padding-right: 5px;
   font-size: 16px;
-  font-weight: 900;
-  letter-spacing: 0.05em;
+  font-weight: 700;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 10px;
   transition: background 0.15s, transform 0.1s;
+}
+
+
+.btnSpeakUpContainer {
+  background: #111111;
+  border-radius: 30px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .speakUpBtn:focus,
@@ -47,10 +59,7 @@
 }
 
 .speakUpBtnActive {
-  background: #ffd42a;
-}
-
-.speakUpIcon {
-  width: 32px;
-  pointer-events: none;
+  background: #111111;
+  color: #FFFFFF;
+  border: 1px solid #1d1d1d;
 }

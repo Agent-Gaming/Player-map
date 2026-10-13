@@ -1,5 +1,5 @@
 import React, { useState, useEffect, CSSProperties } from 'react';
-import { ipfsToHttpUrl, extractIpfsHash, PUBLIC_FALLBACK_GATEWAY } from '../utils/pinata';
+import { ipfsToHttpUrl, extractIpfsHash, PUBLIC_FALLBACK_GATEWAY, rememberWorkingGateway } from '../utils/pinata';
 import styles from './SafeImage.module.css';
 
 const normalizeSrc = (src?: string) => src ? ipfsToHttpUrl(src) : src;
@@ -78,6 +78,12 @@ const SafeImage: React.FC<SafeImageProps> = ({
         setTriedPublicGateway(true);
         setImgSrc(publicUrl);
         setHasError(false);
+        // Remembered as soon as we switch, not only once it's confirmed to
+        // load — every other direct ipfsToHttpUrl() caller (graph node
+        // images, header/nav avatars, ...) that resolves this same CID from
+        // now on skips straight past the dedicated gateway's guaranteed
+        // 404 instead of repeating it.
+        rememberWorkingGateway(src!, PUBLIC_FALLBACK_GATEWAY);
         return;
       }
 

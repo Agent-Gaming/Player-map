@@ -182,25 +182,6 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
   // Accès complet au map : triple "is player of" + alias existant, ou juste après inscription
   const canAccessMap = justRegistered || (hasConfirmedPlayer && !!myAtomDetails);
 
-  console.log('[DIAG][GraphComponent] ─────────────────────────────');
-  console.log('[DIAG] walletAddress:', walletAddress);
-  console.log('[DIAG] isWalletReady:', isWalletReady);
-  console.log('[DIAG] justRegistered:', justRegistered);
-  console.log('[DIAG] hasConfirmedPlayer:', hasConfirmedPlayer);
-  console.log('[DIAG] myAtomDetails:', myAtomDetails);
-  console.log('[DIAG] sidebarLoading:', sidebarLoading);
-  console.log('[DIAG] sidebarError:', sidebarError);
-  console.log('[DIAG] canAccessMap:', canAccessMap);
-  console.log('[DIAG] rightPanelMode:', rightPanelMode);
-  console.log('[DIAG] activeGame:', activeGame?.atomId, activeGame?.label);
-  console.log('[DIAG] positionsLoading:', positionsLoading, '| total positions:', activePositions.length);
-  console.log('[DIAG] activePositions (IS_PLAYER_OF):', (activePositions as any[]).filter((p: any) =>
-    p.term?.triple?.predicate_id === PREDICATES.IS_PLAYER_OF
-  ).map((p: any) => ({
-    term_id: p.term_id,
-    innerSubject: p.term?.triple?._innerTriple?.subject?.term_id,
-    subjectTermId: p.term?.triple?.subject_term?.id,
-  })));
 
   // Reset justRegistered and show speakup page when switching games.
   useEffect(() => {

@@ -15,6 +15,7 @@ import { PREDICATES } from "../../utils/constants";
 import { useNetworkCheck } from "../../shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "../../shared/components/NetworkSwitchMessage";
 import { DEV_STEP_LABEL, DEV_STEP_COLOR } from "../../config/devStep";
+import { FeedbackScoreType } from "../../config/scoreType";
 import styles from "./CampaignVoting.module.css";
 
 interface CampaignVotingProps {
@@ -24,6 +25,8 @@ interface CampaignVotingProps {
   network?: Network;
   onConnectWallet?: () => void;
   wagmiConfig?: any;
+  // Shared with Feedback via RightPanel — see ClaimVotingProps.
+  selectedScoreType?: FeedbackScoreType | "all";
 }
 
 export const CampaignVoting: React.FC<CampaignVotingProps> = ({
@@ -33,6 +36,7 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
   network = Network.MAINNET,
   onConnectWallet,
   wagmiConfig,
+  selectedScoreType = "all",
 }) => {
   const [isWalletReady, setIsWalletReady] = useState(false);
 
@@ -119,6 +123,9 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
     await submitVotes(voteItems);
   };
 
+  const filteredVoteItems =
+    selectedScoreType === "all" ? voteItems : voteItems.filter((i) => i.score_type === selectedScoreType);
+
   const { isCorrectNetwork, currentChainId, targetChainId, allowedChainIds } = useNetworkCheck({
     walletConnected,
     publicClient,
@@ -188,7 +195,7 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
           <div className={styles.scrollList} data-scroll-list>
             <ClaimList
               isLoading={isLoading}
-              voteItems={voteItems}
+              voteItems={filteredVoteItems}
               onChangeUnits={handleChangeUnits}
               isVoteDirectionAllowed={isVoteDirectionAllowed}
               walletAddress={walletAddress}

@@ -46,34 +46,24 @@
   padding: 15px 15px 0;
 }
 
-.scoreTypeTabs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
+.scoreTypeFilter {
   padding: 0 15px;
   flex-shrink: 0;
 }
 
-.scoreTypeTab {
+.scoreTypeSelect {
   font-size: 13px;
-  height: 28px;
+  height: 32px;
   border-radius: 20px;
-  color: rgb(158, 158, 158);
-  padding-left: 12px;
-  padding-right: 12px;
+  color: #FFFFFF;
+  padding-left: 14px;
+  padding-right: 14px;
   background-color: #151515;
   border: 1px solid #181818;
   cursor: pointer;
 }
 
-.scoreTypeTab:hover {
-  color: var(--color-secondary);
-  background-color: #262626;
-}
-
-.scoreTypeTabActive {
-  color: #FFFFFF;
+.scoreTypeSelect:hover {
   background-color: #262626;
 }
 

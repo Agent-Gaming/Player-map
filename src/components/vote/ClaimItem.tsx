@@ -12,7 +12,16 @@ import downNotSelectedSvg from "../../assets/img/downNotSelected.svg";
 import controllerIcon from '../img/controller.png';
 import upIcon from './icons/up.png';
 import downIcon from './icons/down.png';
-import { SCORE_TYPE_LABEL, SCORE_TYPE_COLOR, SCORE_TYPE_ICON, FeedbackScoreType } from '../../config/scoreType';
+import { SCORE_TYPE_LABEL, SCORE_TYPE_ICON, FeedbackScoreType } from '../../config/scoreType';
+
+// Same strong/weak amount convention as the archetype quiz
+// (useArchetypeSubmission.ts's AMOUNT_FAIBLE/AMOUNT_FORT, 0.01/0.03 TRUST) —
+// UNIT_VALUE here is 0.01 TRUST per unit (src/utils/constants.ts), so 1 unit
+// = "faible" and 3 units = "fort" line up with those exact amounts. Visual
+// intensity is conveyed by thumb size (small/large), same up/down icons as
+// before — unlike the quiz's IntensitySelector, which uses icon count.
+const UNITS_WEAK = 1;
+const UNITS_STRONG = 3;
 interface ClaimItemProps {
   voteItem: VoteItem;
   onChangeUnits: (id: bigint, direction: VoteDirection, units: number) => void;
@@ -69,24 +78,15 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   const hasAgainstPosition = userHasPosition && userPositionDirection === VoteDirection.Against;
   const hasAnyPosition = userHasPosition && userPositionDirection !== VoteDirection.None;
 
-  const handleUpClick = () => {
-    if (isSelectedFor) {
-      onChangeUnits(id, VoteDirection.None, 0);
-    } else if (!hasForPosition) {
-      onChangeUnits(id, VoteDirection.For, 1);
-    }
-  };
-
-  const handleDownClick = () => {
-    if (isSelectedAgainst) {
-      onChangeUnits(id, VoteDirection.None, 0);
-    } else if (!hasAgainstPosition) {
-      onChangeUnits(id, VoteDirection.Against, 1);
-    }
-  };
-
   const upDisabled = hasForPosition;
   const downDisabled = hasAgainstPosition;
+
+  const isSelected = (d: VoteDirection, u: number) => direction === d && units === u;
+
+  const handleVoteClick = (d: VoteDirection, u: number) => {
+    const isSame = isSelected(d, u);
+    onChangeUnits(id, isSame ? VoteDirection.None : d, isSame ? 0 : u);
+  };
 
   const handleObjectMouseEnter = () => {
     if (!object_description || !objectPillRef.current) return;
@@ -143,6 +143,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           <img
             src={isValidScoreType(score_type) ? SCORE_TYPE_ICON[score_type] : controllerIcon}
             className={styles.controllerIcon}
+            title={isValidScoreType(score_type) ? SCORE_TYPE_LABEL[score_type] : undefined}
           />
         </div>
         <div
@@ -162,19 +163,6 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           <span className={styles.pillLabel}>{object}</span>
 
         </div>
-
-        {isValidScoreType(score_type) && (
-          <span
-            className={styles.scoreTypeBadge}
-            style={{
-              color: SCORE_TYPE_COLOR[score_type],
-              borderColor: `${SCORE_TYPE_COLOR[score_type]}40`,
-              background: `${SCORE_TYPE_COLOR[score_type]}14`,
-            }}
-          >
-            {SCORE_TYPE_LABEL[score_type]}
-          </span>
-        )}
 
           {hasAnyPosition && (
             <span
@@ -196,39 +184,58 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           )}
       </div>
 
-      {/* Vote buttons */}
+      {/* Vote buttons — strong/weak for/against, same units convention as the
+          archetype quiz (IntensitySelector) but this row's own round-button
+          look: one thumb per button, size (not icon count) conveys intensity. */}
       <div className={styles.voteGroup}>
-        {/* UP */}
-        <div className={styles.voteItem}>
-          <button
-            onClick={upDisabled ? undefined : handleUpClick}
-            disabled={upDisabled}
-            className={styles.voteBtn}
-          >
-            <img
-              src={isSelectedFor || hasForPosition ? upSvg : upNotSelectedSvg}
-              alt="vote up"
-              className={styles.voteIcon}
-            />
-          </button>
-         
-        </div>
-
-        {/* DOWN */}
-        <div className={styles.voteItem}>
-          <button
-            onClick={downDisabled ? undefined : handleDownClick}
-            disabled={downDisabled}
-            className={styles.voteBtn}
-          >
-            <img
-              src={isSelectedAgainst || hasAgainstPosition ? downSvg : downNotSelectedSvg}
-              alt="vote down"
-              className={styles.voteIcon}
-            />
-          </button>
-          
-        </div>
+        <button
+          type="button"
+          onClick={downDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_STRONG)}
+          disabled={downDisabled}
+          className={styles.voteBtn}
+          aria-label="Strongly disagree"
+        >
+          <img
+            src={isSelected(VoteDirection.Against, UNITS_STRONG) || hasAgainstPosition ? downSvg : downNotSelectedSvg}
+            className={`${styles.voteIcon} ${styles.voteIconStrong}`}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={downDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_WEAK)}
+          disabled={downDisabled}
+          className={styles.voteBtn}
+          aria-label="Disagree"
+        >
+          <img
+            src={isSelected(VoteDirection.Against, UNITS_WEAK) ? downSvg : downNotSelectedSvg}
+            className={`${styles.voteIcon} ${styles.voteIconWeak}`}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={upDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_WEAK)}
+          disabled={upDisabled}
+          className={styles.voteBtn}
+          aria-label="Agree"
+        >
+          <img
+            src={isSelected(VoteDirection.For, UNITS_WEAK) ? upSvg : upNotSelectedSvg}
+            className={`${styles.voteIcon} ${styles.voteIconWeak}`}
+          />
+        </button>
+        <button
+          type="button"
+          onClick={upDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_STRONG)}
+          disabled={upDisabled}
+          className={styles.voteBtn}
+          aria-label="Strongly agree"
+        >
+          <img
+            src={isSelected(VoteDirection.For, UNITS_STRONG) || hasForPosition ? upSvg : upNotSelectedSvg}
+            className={`${styles.voteIcon} ${styles.voteIconStrong}`}
+          />
+        </button>
       </div>
 
       {/* Portal tooltip */}

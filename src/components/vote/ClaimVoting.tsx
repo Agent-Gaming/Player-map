@@ -12,7 +12,7 @@ import { useGameContext } from "../../contexts/GameContext";
 import { PREDICATES } from "../../utils/constants";
 import { useNetworkCheck } from '../../shared/hooks/useNetworkCheck';
 import { NetworkSwitchMessage } from '../../shared/components/NetworkSwitchMessage';
-import { FEEDBACK_SCORE_TYPES_ORDER, SCORE_TYPE_LABEL, FeedbackScoreType } from '../../config/scoreType';
+import { FeedbackScoreType } from '../../config/scoreType';
 import styles from "./ClaimVoting.module.css";
 
 interface ClaimVotingProps {
@@ -25,6 +25,9 @@ interface ClaimVotingProps {
   onCreatePlayer?: () => void;
   wagmiConfig?: any;
   walletHooks?: any;
+  // Dimension filter — lifted to RightPanel so it's shared with the Campaign
+  // tab instead of each tab keeping its own.
+  selectedScoreType?: FeedbackScoreType | "all";
 }
 
 export const ClaimVoting: React.FC<ClaimVotingProps> = ({
@@ -37,6 +40,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   onCreatePlayer,
   wagmiConfig,
   walletHooks,
+  selectedScoreType = "all",
 }) => {
   // Vérifier si le wallet est connecté
   const [isWalletReady, setIsWalletReady] = useState(false);
@@ -112,12 +116,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     await submitVotes(voteItems);
   };
 
-  // Dimension filter — only tabs for score_types actually present among the
-  // current claims, plus "All" (default, no filter).
-  const [selectedScoreType, setSelectedScoreType] = useState<FeedbackScoreType | "all">("all");
-  const usedScoreTypes = FEEDBACK_SCORE_TYPES_ORDER.filter((t) =>
-    voteItems.some((i) => i.score_type === t)
-  );
   const filteredVoteItems =
     selectedScoreType === "all" ? voteItems : voteItems.filter((i) => i.score_type === selectedScoreType);
 
@@ -146,29 +144,6 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   // Affichage normal si wallet connecté et player existe
   return (
     <div className={styles.root}>
-      {/* En-tête fix — hauteur automatique */}
-      {usedScoreTypes.length > 0 && (
-        <div className={styles.scoreTypeTabs}>
-          <button
-            type="button"
-            className={`${styles.scoreTypeTab} ${selectedScoreType === "all" ? styles.scoreTypeTabActive : ""}`}
-            onClick={() => setSelectedScoreType("all")}
-          >
-            All
-          </button>
-          {usedScoreTypes.map((t) => (
-            <button
-              key={t}
-              type="button"
-              className={`${styles.scoreTypeTab} ${selectedScoreType === t ? styles.scoreTypeTabActive : ""}`}
-              onClick={() => setSelectedScoreType((prev) => (prev === t ? "all" : t))}
-            >
-              {SCORE_TYPE_LABEL[t]}
-            </button>
-          ))}
-        </div>
-      )}
-      <br />
       {/* Liste scrollable — prend tout l'espace disponible */}
       <div className={styles.scrollList} data-scroll-list>
         <ClaimList

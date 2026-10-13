@@ -117,15 +117,6 @@
   white-space: nowrap;
 }
 
-.scoreTypeBadge {
-  font-size: 10px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid;
-  flex-shrink: 0;
-}
-
 .predicate {
   display: inline-block;
   max-width: 100px;
@@ -141,7 +132,7 @@
 .voteGroup {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -178,6 +169,16 @@
 .voteIcon {
   width: 18px;
   height: 18px;
+}
+
+.voteIconWeak {
+  width: 13px;
+  height: 13px;
+}
+
+.voteIconStrong {
+  width: 22px;
+  height: 22px;
 }
 
 .voteCount {

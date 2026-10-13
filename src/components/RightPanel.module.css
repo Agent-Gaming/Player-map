@@ -123,6 +123,16 @@
   background-color: #262626;
 }
 
+.speakUpTabsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-top: 5px;
+}
+
 .speakUpTabs {
   display: flex;
   align-items: center;
@@ -134,8 +144,22 @@
   background-color: #151515;
   border: 1px solid #181818;
   align-self: flex-start;
-  margin-left: 20px;
-  margin-top: 5px;
+}
+
+.scoreTypeSelect {
+  font-size: 13px;
+  height: 32px;
+  border-radius: 20px;
+  color: #FFFFFF;
+  padding-left: 14px;
+  padding-right: 14px;
+  background-color: #151515;
+  border: 1px solid #181818;
+  cursor: pointer;
+}
+
+.scoreTypeSelect:hover {
+  background-color: #262626;
 }
 
 .speakUpTab {

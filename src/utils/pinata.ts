@@ -64,6 +64,21 @@ export const extractIpfsHash = (url: string | undefined): string | null => {
 // account and 404s (ERR_ID:00006) on anything pinned elsewhere.
 export const PUBLIC_FALLBACK_GATEWAY = "gateway.pinata.cloud"
 
+// Cross-component, in-memory (session-only, no persistence needed) record
+// of which gateway actually worked for a given CID. SafeImage is the only
+// thing that ever learns this (its onError fallback chain), but plenty of
+// other call sites resolve the same CID independently and one-shot (graph
+// node images via convertGraphDataIpfsUrls, SpeakUpHeader, TopNavBar, ...),
+// with no retry of their own — so without this, every one of them repeats
+// the exact same guaranteed-404-then-fallback round trip SafeImage already
+// paid for elsewhere in the same session. Keyed by CID, not by full URL.
+const resolvedGatewayByHash = new Map<string, string>()
+
+export function rememberWorkingGateway(ipfsUrlOrCid: string, gateway: string): void {
+  const hash = extractIpfsHash(ipfsUrlOrCid) ?? ipfsUrlOrCid
+  resolvedGatewayByHash.set(hash, gateway)
+}
+
 export const ipfsToHttpUrl = (ipfsUrl: string, gatewayOverride?: string): string => {
   if (!ipfsUrl) return ipfsUrl
 
@@ -83,7 +98,11 @@ export const ipfsToHttpUrl = (ipfsUrl: string, gatewayOverride?: string): string
   // not just a fallback option.
   const hash = extractIpfsHash(ipfsUrl)
   if (hash) {
-    const gateway = gatewayOverride || getPinataConstants()?.PINATA_CONFIG?.IPFS_GATEWAY || PUBLIC_FALLBACK_GATEWAY
+    const gateway =
+      gatewayOverride ||
+      resolvedGatewayByHash.get(hash) ||
+      getPinataConstants()?.PINATA_CONFIG?.IPFS_GATEWAY ||
+      PUBLIC_FALLBACK_GATEWAY
     const httpUrl = `https://${gateway}/ipfs/${hash}`
     return proxyIfDiscord(httpUrl)
   }

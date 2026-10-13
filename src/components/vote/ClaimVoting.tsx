@@ -12,6 +12,7 @@ import { useGameContext } from "../../contexts/GameContext";
 import { PREDICATES } from "../../utils/constants";
 import { useNetworkCheck } from '../../shared/hooks/useNetworkCheck';
 import { NetworkSwitchMessage } from '../../shared/components/NetworkSwitchMessage';
+import { FeedbackScoreType } from '../../config/scoreType';
 import styles from "./ClaimVoting.module.css";
 
 interface ClaimVotingProps {
@@ -24,6 +25,9 @@ interface ClaimVotingProps {
   onCreatePlayer?: () => void;
   wagmiConfig?: any;
   walletHooks?: any;
+  // Dimension filter — lifted to RightPanel so it's shared with the Campaign
+  // tab instead of each tab keeping its own.
+  selectedScoreType?: FeedbackScoreType | "all";
 }
 
 export const ClaimVoting: React.FC<ClaimVotingProps> = ({
@@ -36,6 +40,7 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   onCreatePlayer,
   wagmiConfig,
   walletHooks,
+  selectedScoreType = "all",
 }) => {
   // Vérifier si le wallet est connecté
   const [isWalletReady, setIsWalletReady] = useState(false);
@@ -111,6 +116,9 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
     await submitVotes(voteItems);
   };
 
+  const filteredVoteItems =
+    selectedScoreType === "all" ? voteItems : voteItems.filter((i) => i.score_type === selectedScoreType);
+
   const { isCorrectNetwork, currentChainId, targetChainId, allowedChainIds } = useNetworkCheck({
     walletConnected,
     publicClient
@@ -136,14 +144,11 @@ export const ClaimVoting: React.FC<ClaimVotingProps> = ({
   // Affichage normal si wallet connecté et player existe
   return (
     <div className={styles.root}>
-      {/* En-tête fix — hauteur automatique */}
-   
-      <br />
       {/* Liste scrollable — prend tout l'espace disponible */}
       <div className={styles.scrollList} data-scroll-list>
         <ClaimList
           isLoading={isLoading || positionsLoading}
-          voteItems={voteItems}
+          voteItems={filteredVoteItems}
           onChangeUnits={handleChangeUnits}
           isVoteDirectionAllowed={isVoteDirectionAllowed}
           walletAddress={walletAddress}

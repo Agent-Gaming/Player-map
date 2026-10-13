@@ -42,12 +42,7 @@ export const useSidebarData = (
   // - label   = pseudo de l'alias primaire
   // - image   = image de l'alias primaire
   const atomDetails = useMemo(() => {
-    console.log('[DIAG][useSidebarData] walletAddress:', walletAddress);
-    console.log('[DIAG][useSidebarData] aliasesLoading:', aliasesLoading);
-    console.log('[DIAG][useSidebarData] playerAtomId:', playerAtomId);
-    console.log('[DIAG][useSidebarData] aliases count:', aliases.length, aliases);
     if (!playerAtomId) {
-      console.warn('[DIAG][useSidebarData] ⚠️ playerAtomId is null — HAS_ALIAS triple not found for this wallet');
       return null;
     }
     const primary = aliases.find(a => a.isPrimary) ?? aliases[0] ?? null;
@@ -58,7 +53,6 @@ export const useSidebarData = (
       label: pseudoLabel,
       image: primary?.image ?? '',
     };
-    console.log('[DIAG][useSidebarData] atomDetails resolved:', result);
     return result;
   }, [playerAtomId, aliases, walletAddress, aliasesLoading]);
 

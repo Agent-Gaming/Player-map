@@ -132,7 +132,7 @@
 .voteGroup {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -169,6 +169,16 @@
 .voteIcon {
   width: 18px;
   height: 18px;
+}
+
+.voteIconWeak {
+  width: 13px;
+  height: 13px;
+}
+
+.voteIconStrong {
+  width: 22px;
+  height: 22px;
 }
 
 .voteCount {

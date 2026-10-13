@@ -73,6 +73,11 @@
   background-color: #2a2510;
 }
 
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

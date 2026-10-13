@@ -3,6 +3,7 @@ import { FaUser } from "react-icons/fa";
 import FollowButton from "./graph/FollowButton";
 import { RightPanelMode } from "./TopNavBar";
 import { ClaimVoting } from "./vote/ClaimVoting";
+import { CampaignVoting } from "./vote/CampaignVoting";
 import { SpeakUpHeader } from "./vote/SpeakUpHeader";
 import AtomDetailsSection from "./graph/AtomDetailsSection";
 import ClaimsSection from "./graph/ClaimsSection";
@@ -11,6 +12,9 @@ import PositionsSection from "./graph/PositionsSection";
 import ActivitySection from "./graph/ActivitySection";
 import { Network } from "../hooks/useAtomData";
 import { useGameStats } from "../hooks/useGameStats";
+import { useGameContext } from "../contexts/GameContext";
+import { useCampaigns } from "../hooks/useCampaigns";
+import { FEEDBACK_SCORE_TYPES_ORDER, SCORE_TYPE_LABEL, FeedbackScoreType } from "../config/scoreType";
 import { usePlayerArchetype } from "../missions/global/archetype/hooks/usePlayerArchetype";
 import tripleSvg from "../assets/img/triple.svg";
 import styles from "./RightPanel.module.css";
@@ -491,18 +495,67 @@ const SpeakUpContent: React.FC<{
   wagmiConfig?: any;
 }> = ({ walletAddress, walletConnected, wagmiConfig }) => {
   const stats = useGameStats(Network.MAINNET);
+  const { activeGame } = useGameContext();
+  const { campaigns } = useCampaigns(activeGame?.atomId);
+  const hasActiveCampaign = campaigns.some((c) => c.status === "Active");
+  const [activeTab, setActiveTab] = useState<"feedback" | "campaign">("feedback");
+  // Shared across both tabs — a dimension picked on Feedback stays selected
+  // when switching to Campaign, and vice versa.
+  const [selectedScoreType, setSelectedScoreType] = useState<FeedbackScoreType | "all">("all");
 
   return (
     <div className={styles.speakUpContent}>
       <SpeakUpHeader stats={stats} />
+
+      <div className={styles.speakUpTabsRow}>
+        <div className={styles.speakUpTabs}>
+          <button
+            className={`${styles.speakUpTab} ${activeTab === "feedback" ? styles.speakUpTabActive : ""}`}
+            onClick={() => setActiveTab("feedback")}
+          >
+            Feedback
+          </button>
+          <button
+            className={`${styles.speakUpTab} ${activeTab === "campaign" ? styles.speakUpTabActive : ""}`}
+            onClick={() => setActiveTab("campaign")}
+          >
+            Campaign
+            {hasActiveCampaign && <span className="pm-live-dot" />}
+          </button>
+        </div>
+
+        <select
+          className={styles.scoreTypeSelect}
+          value={selectedScoreType}
+          onChange={(e) => setSelectedScoreType(e.target.value as FeedbackScoreType | "all")}
+        >
+          <option value="all">All</option>
+          {FEEDBACK_SCORE_TYPES_ORDER.map((t) => (
+            <option key={t} value={t}>{SCORE_TYPE_LABEL[t]}</option>
+          ))}
+        </select>
+      </div>
+
       <div className={styles.speakUpBody}>
-        <ClaimVoting
-          walletConnected={walletConnected}
-          walletAddress={walletAddress}
-          publicClient={wagmiConfig?.publicClient}
-          network={Network.MAINNET}
-          wagmiConfig={wagmiConfig}
-        />
+        {activeTab === "feedback" ? (
+          <ClaimVoting
+            walletConnected={walletConnected}
+            walletAddress={walletAddress}
+            publicClient={wagmiConfig?.publicClient}
+            network={Network.MAINNET}
+            wagmiConfig={wagmiConfig}
+            selectedScoreType={selectedScoreType}
+          />
+        ) : (
+          <CampaignVoting
+            walletConnected={walletConnected}
+            walletAddress={walletAddress}
+            publicClient={wagmiConfig?.publicClient}
+            network={Network.MAINNET}
+            wagmiConfig={wagmiConfig}
+            selectedScoreType={selectedScoreType}
+          />
+        )}
       </div>
     </div>
   );

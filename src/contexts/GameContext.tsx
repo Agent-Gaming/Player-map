@@ -9,7 +9,7 @@ export interface ResolvedClaim {
   atomId: string
   label: string
   imageUrl?: string
-  category?: string
+  score_type?: string
 }
 
 export interface ResolvedGuild {
@@ -98,7 +98,7 @@ export const GameContextProvider: React.FC<GameContextProviderProps> = ({
           atomId: c.atomId,
           label: lookup.get(c.atomId)?.label ?? `${c.atomId.slice(0, 8)}…${c.atomId.slice(-4)}`,
           imageUrl: lookup.get(c.atomId)?.imageUrl,
-          category: c.category,
+          score_type: c.score_type,
         })),
         guilds: (g.guilds ?? []).map(guild => ({
           atomId: guild.atomId,

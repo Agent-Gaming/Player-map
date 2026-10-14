@@ -3,6 +3,7 @@ import { Network } from "../../hooks/useAtomData";
 import { useSubmitVotes } from "../../hooks/useSubmitVotes";
 import { useVoteItemsManagement } from "../../hooks/useVoteItemsManagement";
 import { useCampaigns } from "../../hooks/useCampaigns";
+import { useCountdown } from "../../hooks/useCountdown";
 import { TransactionInfo } from "./TransactionInfo";
 import { CampaignGroupedList } from "./CampaignGroupedList";
 import { CampaignTabs } from "./CampaignTabs";
@@ -81,6 +82,7 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
 
   const campaign = campaigns.find((c) => c.id === selectedCampaignId) ?? null;
   const isActive = campaign?.status === "Active";
+  const { label: countdownLabel, hasStarted } = useCountdown(campaign?.start_date);
 
   // Only a real, non-empty triple list when voting is actually allowed
   // (Active campaign selected) — Draft campaigns show a countdown only, no
@@ -179,7 +181,7 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
         onSelect={setSelectedCampaignId}
       />
 
-      {campaign.description && (
+      {isActive && campaign.description && (
         <div className={styles.campaignHeader}>
           <p className={styles.description}>{campaign.description}</p>
         </div>
@@ -221,7 +223,12 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
           </div>
         </>
       ) : (
-        <p className={styles.noVotes}>Voting opens when the campaign starts.</p>
+        <div className={styles.draftCountdown}>
+          <span className={styles.draftCountdownValue}>
+            {hasStarted ? "Starting…" : countdownLabel}
+          </span>
+          <span className={styles.draftCountdownLabel}>until voting opens</span>
+        </div>
       )}
     </div>
   );

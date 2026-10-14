@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import { PublicCampaign } from "../../hooks/useCampaigns";
-import { Countdown } from "./Countdown";
 import styles from "./CampaignTabs.module.css";
 
 interface CampaignTabsProps {
@@ -16,8 +15,16 @@ export const CampaignTabs: React.FC<CampaignTabsProps> = ({
   selectedCampaignId,
   onSelect,
 }) => {
+  // Active (can vote now) first, then upcoming Draft campaigns, each group
+  // ordered by sequence_number — status takes priority over version order so
+  // the one you can actually act on is never buried to the right.
+  const statusOrder: Record<string, number> = { Active: 0, Draft: 1 };
   const sorted = useMemo(
-    () => [...campaigns].sort((a, b) => a.sequence_number - b.sequence_number),
+    () =>
+      [...campaigns].sort((a, b) => {
+        const statusDelta = (statusOrder[a.status] ?? 2) - (statusOrder[b.status] ?? 2);
+        return statusDelta !== 0 ? statusDelta : a.sequence_number - b.sequence_number;
+      }),
     [campaigns]
   );
 
@@ -37,7 +44,7 @@ export const CampaignTabs: React.FC<CampaignTabsProps> = ({
                 <span className="pm-live-dot" /> Live
               </span>
             ) : (
-              <Countdown targetDate={c.start_date} />
+              <span className={styles.soonTag}>Soon</span>
             )}
           </button>
         ))}

@@ -13,6 +13,7 @@ import controllerIcon from '../img/controller.png';
 import upIcon from './icons/up.png';
 import downIcon from './icons/down.png';
 import { SCORE_TYPE_LABEL, SCORE_TYPE_ICON, FeedbackScoreType } from '../../config/scoreType';
+import { UNIT_VALUE } from '../../utils/constants';
 
 // Same strong/weak amount convention as the archetype quiz
 // (useArchetypeSubmission.ts's AMOUNT_FAIBLE/AMOUNT_FORT, 0.01/0.03 TRUST) —
@@ -31,6 +32,24 @@ interface ClaimItemProps {
   ) => boolean;
   walletAddress?: string;
   network?: Network;
+  // Campaign tab only: drives hasForPosition/hasAgainstPosition/
+  // heldPositionIsStrong (and therefore the disabled-button flags below)
+  // from the campaign-window-scoped fields instead of the account's real,
+  // all-time vault position. Default false — Feedback is unaffected.
+  useCampaignPosition?: boolean;
+  // The subject/predicate pill was already hidden (commented out) before
+  // this session's Campaign work — default false keeps that. Only
+  // CampaignGroupedList will ever flip it true, and only once it has its
+  // own per-row use for it (it currently shows the subject in its group
+  // header instead and also passes false).
+  showSubjectPill?: boolean;
+  // Campaign tab only, Global-type attestations that also exist in this
+  // game's Feedback claim list: there is only one on-chain vault for them
+  // (Feedback and every campaign reusing the triple share it), so voting
+  // here IS voting in Feedback — useCampaignPosition is false for these,
+  // and this badge makes that explicit instead of the matching button just
+  // looking disabled with no explanation.
+  sharedWithFeedback?: boolean;
 }
 
 export const ClaimItem: React.FC<ClaimItemProps> = ({
@@ -39,6 +58,9 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   isVoteDirectionAllowed = () => true,
   walletAddress = "",
   network = Network.MAINNET,
+  useCampaignPosition = false,
+  showSubjectPill = false,
+  sharedWithFeedback = false,
 }) => {
   const {
     id,
@@ -56,8 +78,20 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     counter_term_position_count = 0,
     userHasPosition = false,
     userPositionDirection = VoteDirection.None,
+    userShares,
     score_type,
+    campaignHasPosition = false,
+    campaignPositionDirection = VoteDirection.None,
+    campaignPositionUnits = 0,
   } = voteItem;
+
+  // Campaign tab: "already voted" state reflects activity strictly within
+  // the campaign window, not the account's real all-time vault balance (see
+  // useVoteItemsManagement.ts's positionWindowOverride) — display only,
+  // never fed into useSubmitVotes, which still needs the real balance to
+  // compute correct on-chain redeem amounts.
+  const effectiveHasPosition = useCampaignPosition ? campaignHasPosition : userHasPosition;
+  const effectivePositionDirection = useCampaignPosition ? campaignPositionDirection : userPositionDirection;
 
   const isValidScoreType = (v?: string): v is FeedbackScoreType => !!v && v in SCORE_TYPE_LABEL;
 
@@ -74,12 +108,31 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   const isSelectedFor = direction === VoteDirection.For && units > 0;
   const isSelectedAgainst = direction === VoteDirection.Against && units > 0;
 
-  const hasForPosition = userHasPosition && userPositionDirection === VoteDirection.For;
-  const hasAgainstPosition = userHasPosition && userPositionDirection === VoteDirection.Against;
-  const hasAnyPosition = userHasPosition && userPositionDirection !== VoteDirection.None;
+  const hasForPosition = effectiveHasPosition && effectivePositionDirection === VoteDirection.For;
+  const hasAgainstPosition = effectiveHasPosition && effectivePositionDirection === VoteDirection.Against;
+  const hasAnyPosition = effectiveHasPosition && effectivePositionDirection !== VoteDirection.None;
 
-  const upDisabled = hasForPosition;
-  const downDisabled = hasAgainstPosition;
+  // curve_id 1 (the only one this app ever deposits into) is a fixed 1:1
+  // price curve — confirmed live against the subgraph (a vault's
+  // total_shares == total_assets, current_share_price == 1e18) — so shares
+  // already directly approximate the deposited amount in wei, no separate
+  // vault/share-price lookup needed. Midpoint between weak (1 unit) and
+  // strong (3 units) to classify which one an existing position came from.
+  // Campaign mode already gets a unit count (not raw shares) from
+  // useVoteItemsManagement, so it compares directly against that midpoint.
+  const heldPositionIsStrong = useCampaignPosition
+    ? campaignPositionUnits >= 2
+    : (userShares ?? 0n) >= 2n * UNIT_VALUE; // midpoint of 1 and 3 units
+
+  // Disabled only for the exact button that matches the position already
+  // held (clicking it would be a true no-op) — every other button, same
+  // direction or opposite, stays clickable: useSubmitVotes now handles a
+  // same-direction intensity change as a top-up/partial-redeem instead of
+  // requiring the whole direction to be locked out.
+  const downStrongDisabled = hasAgainstPosition && heldPositionIsStrong;
+  const downWeakDisabled = hasAgainstPosition && !heldPositionIsStrong;
+  const upWeakDisabled = hasForPosition && !heldPositionIsStrong;
+  const upStrongDisabled = hasForPosition && heldPositionIsStrong;
 
   const isSelected = (d: VoteDirection, u: number) => direction === d && units === u;
 
@@ -120,25 +173,27 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     >
       {/* Triple details */}
       <div className={styles.tripleWrapper}>
-        {/*
-        <div className={styles.pill}>
-          {showSubjectImage && (
-            <SafeImage
-              src={subject_image}
-              alt=""
-              className={styles.pillImage}
-              placeholderElement={<span />}
-            />
-          )}
-          <span className={styles.pillLabel}>{subject}</span>
-        </div>
-        <span
-          title={predicate}
-          className={styles.predicate}
-        >
-          {predicate}
-        </span>
-        */}
+        {showSubjectPill && (
+          <>
+            <div className={styles.pill}>
+              {showSubjectImage && (
+                <SafeImage
+                  src={subject_image}
+                  alt=""
+                  className={styles.pillImage}
+                  placeholderElement={<span />}
+                />
+              )}
+              <span className={styles.pillLabel}>{subject}</span>
+            </div>
+            <span
+              title={predicate}
+              className={styles.predicate}
+            >
+              {predicate}
+            </span>
+          </>
+        )}
         <div className={styles.itemsTriplesContainer}>
           <img
             src={isValidScoreType(score_type) ? SCORE_TYPE_ICON[score_type] : controllerIcon}
@@ -163,6 +218,15 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           <span className={styles.pillLabel}>{object}</span>
 
         </div>
+
+        {sharedWithFeedback && (
+          <span
+            className={styles.sharedBadge}
+            title="This attestation is also tracked in Feedback — voting here updates that position too, it isn't scoped to this campaign."
+          >
+            i
+          </span>
+        )}
 
           {hasAnyPosition && (
             <span
@@ -190,49 +254,49 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
       <div className={styles.voteGroup}>
         <button
           type="button"
-          onClick={downDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_STRONG)}
-          disabled={downDisabled}
+          onClick={downStrongDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_STRONG)}
+          disabled={downStrongDisabled}
           className={styles.voteBtn}
           aria-label="Strongly disagree"
         >
           <img
-            src={isSelected(VoteDirection.Against, UNITS_STRONG) || hasAgainstPosition ? downSvg : downNotSelectedSvg}
+            src={isSelected(VoteDirection.Against, UNITS_STRONG) || (hasAgainstPosition && heldPositionIsStrong) ? downSvg : downNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconStrong}`}
           />
         </button>
         <button
           type="button"
-          onClick={downDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_WEAK)}
-          disabled={downDisabled}
+          onClick={downWeakDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_WEAK)}
+          disabled={downWeakDisabled}
           className={styles.voteBtn}
           aria-label="Disagree"
         >
           <img
-            src={isSelected(VoteDirection.Against, UNITS_WEAK) ? downSvg : downNotSelectedSvg}
+            src={isSelected(VoteDirection.Against, UNITS_WEAK) || (hasAgainstPosition && !heldPositionIsStrong) ? downSvg : downNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconWeak}`}
           />
         </button>
         <button
           type="button"
-          onClick={upDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_WEAK)}
-          disabled={upDisabled}
+          onClick={upWeakDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_WEAK)}
+          disabled={upWeakDisabled}
           className={styles.voteBtn}
           aria-label="Agree"
         >
           <img
-            src={isSelected(VoteDirection.For, UNITS_WEAK) ? upSvg : upNotSelectedSvg}
+            src={isSelected(VoteDirection.For, UNITS_WEAK) || (hasForPosition && !heldPositionIsStrong) ? upSvg : upNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconWeak}`}
           />
         </button>
         <button
           type="button"
-          onClick={upDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_STRONG)}
-          disabled={upDisabled}
+          onClick={upStrongDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_STRONG)}
+          disabled={upStrongDisabled}
           className={styles.voteBtn}
           aria-label="Strongly agree"
         >
           <img
-            src={isSelected(VoteDirection.For, UNITS_STRONG) || hasForPosition ? upSvg : upNotSelectedSvg}
+            src={isSelected(VoteDirection.For, UNITS_STRONG) || (hasForPosition && heldPositionIsStrong) ? upSvg : upNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconStrong}`}
           />
         </button>

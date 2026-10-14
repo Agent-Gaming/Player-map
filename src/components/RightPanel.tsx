@@ -34,7 +34,7 @@ interface RightPanelProps {
   myTriples?: any[];
   myPositions?: any[];
   myActivities?: any[];
-  myConnections?: { follows: any[]; followers: any[] };
+  myConnections?: { follows: any[]; followers: any[]; followingCount: number; followersCount: number };
   sidebarLoading?: boolean;
   sidebarError?: string | null;
 
@@ -184,7 +184,7 @@ const ProfileTabs: React.FC<{
 
 const ProfileContent: React.FC<{
   atomDetails: any;
-  connections: { follows: any[]; followers: any[] };
+  connections: { follows: any[]; followers: any[]; followingCount: number; followersCount: number };
   activities: any[];
   positions?: any[];
   triples?: any[];
@@ -572,7 +572,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   myActivities = [],
   myPositions = [],
   myTriples = [],
-  myConnections = { follows: [], followers: [] },
+  myConnections = { follows: [], followers: [], followingCount: 0, followersCount: 0 },
   sidebarLoading,
   sidebarError,
   selectedAtomDetails,

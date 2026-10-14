@@ -3,6 +3,8 @@ import { VoteItem, VoteDirection } from "../types/vote";
 import { Network, API_URLS } from "./useAtomData";
 import { useGameContext } from '../contexts/GameContext';
 import { useFetchTripleDetails, TripleDetails } from "./useFetchTripleDetails";
+import { fetchWindowedNetPositions } from "../api/fetchWindowedPositions";
+import { estimateHeldUnits } from "./useSubmitVotes";
 
 interface UseVoteItemsManagementProps {
   network?: Network;
@@ -18,6 +20,17 @@ interface UseVoteItemsManagementProps {
   // — when omitted, score_type is looked up from activeGame.claims instead
   // (the Feedback tab's own per-claim classification).
   scoreTypeOverride?: Record<string, string | undefined>;
+  // Per-triple attestation type for the Campaign tab, same pattern as
+  // scoreTypeOverride above.
+  typeOverride?: Record<string, string | undefined>;
+  // Campaign tab only: when set, also resolves a position scoped strictly to
+  // this date window (campaignHasPosition/campaignPositionDirection/
+  // campaignPositionUnits on each VoteItem) from deposits/redemptions, NOT
+  // the account's real all-time vault balance. Deliberately never touches
+  // userHasPosition/userPositionDirection/userShares/userPositionTermId —
+  // those must stay the real balance since useSubmitVotes needs it to
+  // compute correct on-chain redeem amounts.
+  positionWindowOverride?: { start: string; end: string };
 }
 
 export const useVoteItemsManagement = ({
@@ -26,6 +39,8 @@ export const useVoteItemsManagement = ({
   onError,
   tripleIdsOverride,
   scoreTypeOverride,
+  typeOverride,
+  positionWindowOverride,
 }: UseVoteItemsManagementProps) => {
   const [voteItems, setVoteItems] = useState<VoteItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +49,8 @@ export const useVoteItemsManagement = ({
   const PREDEFINED_CLAIM_IDS = tripleIdsOverride ?? (activeGame?.claims.map(c => c.atomId) ?? []);
   const scoreTypeByClaimId: Record<string, string | undefined> =
     scoreTypeOverride ?? Object.fromEntries((activeGame?.claims ?? []).map(c => [c.atomId, c.score_type]));
+  const typeByClaimId: Record<string, string | undefined> = typeOverride ?? {};
+  const [windowedNetByTermId, setWindowedNetByTermId] = useState<Map<string, bigint>>(new Map());
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
   const [userSharesMap, setUserSharesMap] = useState<Record<string, { termId: string; shares: bigint; curveId: bigint }>>({});
@@ -51,10 +68,21 @@ export const useVoteItemsManagement = ({
     setIsLoading(true);
   }, [activeGame?.atomId, tripleIdsOverride?.join(',')]);
 
+  // Called right after a deposit/redeem confirms on-chain — but the subgraph
+  // the position/vote-count data comes from lags the chain by a few seconds
+  // (same class of delay useArchetypeSubmission.ts's pollUntilCompletionIndexed
+  // works around), so a single immediate refetch often still shows the
+  // pre-vote state. Re-triggers twice more over the next few seconds instead
+  // of just once, so the UI catches up without the user needing to reload.
   const refreshPositions = () => {
-    setHasLoadedTripleDetails(false);
-    setUserPositionsData(null);
-    setRefreshKey(k => k + 1);
+    const trigger = () => {
+      setHasLoadedTripleDetails(false);
+      setUserPositionsData(null);
+      setRefreshKey(k => k + 1);
+    };
+    trigger();
+    setTimeout(trigger, 2500);
+    setTimeout(trigger, 5000);
   };
 
   // Use our hook for fetching triple details
@@ -72,6 +100,7 @@ export const useVoteItemsManagement = ({
     const fetchUserPositionsBatch = async () => {
       if (!walletAddress || !PREDEFINED_CLAIM_IDS || PREDEFINED_CLAIM_IDS.length === 0) {
         setLoadingPositions(false);
+        setWindowedNetByTermId(new Map());
         return;
       }
 
@@ -121,14 +150,20 @@ export const useVoteItemsManagement = ({
             }
           `;
 
-          const positionsResponse = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              query: positionsQuery,
-              variables: { termIds: allTermIds, walletAddress: walletAddress.toLowerCase() }
-            })
-          });
+          const [positionsResponse, windowedNet] = await Promise.all([
+            fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query: positionsQuery,
+                variables: { termIds: allTermIds, walletAddress: walletAddress.toLowerCase() }
+              })
+            }),
+            positionWindowOverride
+              ? fetchWindowedNetPositions(allTermIds as string[], walletAddress, positionWindowOverride, network)
+              : Promise.resolve(new Map<string, bigint>()),
+          ]);
+          setWindowedNetByTermId(windowedNet);
 
           const positionsResult = await positionsResponse.json();
           if (!positionsResult.errors) {
@@ -147,6 +182,8 @@ export const useVoteItemsManagement = ({
               });
             });
           }
+        } else {
+          setWindowedNetByTermId(new Map());
         }
 
         const positionsData: any = { triples: [] };
@@ -187,7 +224,7 @@ export const useVoteItemsManagement = ({
     };
 
     fetchUserPositionsBatch();
-  }, [walletAddress, PREDEFINED_CLAIM_IDS.join(','), network, refreshKey]);
+  }, [walletAddress, PREDEFINED_CLAIM_IDS.join(','), network, refreshKey, positionWindowOverride?.start, positionWindowOverride?.end]);
 
   // Process user positions data when it arrives
   useEffect(() => {
@@ -440,17 +477,29 @@ export const useVoteItemsManagement = ({
             userHasPosition: false,
             userPositionDirection: VoteDirection.None,
             score_type: scoreTypeByClaimId[id],
+            attestation_type: typeByClaimId[id],
           } as VoteItem;
         }
 
         // Check if user has a position on this triple
         // Normaliser les IDs pour correspondance : utiliser term_id du details (plus fiable)
         const normalizedId = details.term_id || String(id);
-        const userPositionDirection = positionsToUse[normalizedId] || 
-                                     positionsToUse[String(id)] || 
+        const userPositionDirection = positionsToUse[normalizedId] ||
+                                     positionsToUse[String(id)] ||
                                      VoteDirection.None;
 
         const sharesInfo = sharesToUse[normalizedId] || sharesToUse[String(id)];
+
+        let campaignHasPosition: boolean | undefined;
+        let campaignPositionDirection: VoteDirection | undefined;
+        let campaignPositionUnits: number | undefined;
+        if (positionWindowOverride) {
+          const netFor = windowedNetByTermId.get(details.term_id ?? '') ?? 0n;
+          const netAgainst = details.counter_term_id ? (windowedNetByTermId.get(details.counter_term_id) ?? 0n) : 0n;
+          campaignPositionDirection = netFor > 0n ? VoteDirection.For : netAgainst > 0n ? VoteDirection.Against : VoteDirection.None;
+          campaignPositionUnits = estimateHeldUnits(campaignPositionDirection === VoteDirection.For ? netFor : netAgainst);
+          campaignHasPosition = campaignPositionDirection !== VoteDirection.None;
+        }
 
         return {
           id: BigInt(details.id),
@@ -475,6 +524,10 @@ export const useVoteItemsManagement = ({
           userShares: sharesInfo?.shares,
           userCurveId: sharesInfo?.curveId,
           score_type: scoreTypeByClaimId[id],
+          attestation_type: typeByClaimId[id],
+          campaignHasPosition,
+          campaignPositionDirection,
+          campaignPositionUnits,
         } as VoteItem;
       });
 

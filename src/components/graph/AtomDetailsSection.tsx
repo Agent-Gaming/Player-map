@@ -14,8 +14,8 @@ interface AtomDetailsSectionProps {
   connections: {
     follows: any[];
     followers: any[];
-    followingCount: number;
-    followersCount: number;
+    followingCount?: number;
+    followersCount?: number;
   };
   walletAddress?: string;
   showDescription?: boolean;

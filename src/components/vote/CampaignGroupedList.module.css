@@ -1,0 +1,128 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.subjectImage {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.subjectLabel {
+  font-size: 14px;
+  color: #d9d9d9;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.typeLabel {
+  font-size: 12px;
+  color: var(--text-grey);
+}
+
+.groupItems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Loading skeleton — same visual recipe as ClaimList.module.css, grouped. */
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.skeletonGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.skeletonHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 25px;
+}
+
+.skeletonCircleSmall {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #292929;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonBar {
+  height: 14px;
+  width: 140px;
+  border-radius: 7px;
+  background: #292929;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonBarNarrow {
+  height: 14px;
+  width: 100px;
+  border-radius: 7px;
+  margin-left: 40px;
+  background: #292929;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+.skeletonActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.skeletonCircle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #292929;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}

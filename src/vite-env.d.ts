@@ -17,11 +17,7 @@ interface ImportMetaEnv {
   readonly VITE_VALUE_PER_TRIPLE: string;
   readonly VITE_ATOM_CONTRACT_CHAIN_ID: string;
 
-  // Quête "Archetype" — mode mock activable pour les tests locaux sans worker
-  // (voir missions/global/archetype/hooks/archetypeApi.ts)
   readonly VITE_WORKER_URL?: string;
-  readonly VITE_USE_MOCK_ARCHETYPE_API?: string;
-  readonly VITE_MOCK_ARCHETYPE_FORCE_COMPLETED?: string;
 }
 
 interface ImportMeta {

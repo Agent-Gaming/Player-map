@@ -77,9 +77,9 @@ export const fetchFollowsAndFollowers = async (
       account_id: p.account_id,
     }));
 
-    return { follows, followers };
+    return { follows, followers, followingCount: follows.length, followersCount: followers.length };
   } catch (error) {
     console.error('Error fetching follows and followers:', error);
-    return { follows: [], followers: [] };
+    return { follows: [], followers: [], followingCount: 0, followersCount: 0 };
   }
 };

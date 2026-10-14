@@ -15,6 +15,8 @@ interface SidebarData {
   connections: {
     follows: any[];
     followers: any[];
+    followingCount: number;
+    followersCount: number;
   };
   loading: boolean;
   error: string | null;
@@ -25,9 +27,11 @@ export const useSidebarData = (
   network: Network = Network.MAINNET
 ): SidebarData => {
   const [triples, setTriples] = useState<any[]>([]);
-  const [connections, setConnections] = useState<{ follows: any[]; followers: any[] }>({
+  const [connections, setConnections] = useState<{ follows: any[]; followers: any[]; followingCount: number; followersCount: number }>({
     follows: [],
-    followers: []
+    followers: [],
+    followingCount: 0,
+    followersCount: 0,
   });
 
   // Récupère les alias du joueur — le primary alias donne le pseudo + image

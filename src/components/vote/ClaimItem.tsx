@@ -43,6 +43,13 @@ interface ClaimItemProps {
   // own per-row use for it (it currently shows the subject in its group
   // header instead and also passes false).
   showSubjectPill?: boolean;
+  // Campaign tab only, Global-type attestations that also exist in this
+  // game's Feedback claim list: there is only one on-chain vault for them
+  // (Feedback and every campaign reusing the triple share it), so voting
+  // here IS voting in Feedback — useCampaignPosition is false for these,
+  // and this badge makes that explicit instead of the matching button just
+  // looking disabled with no explanation.
+  sharedWithFeedback?: boolean;
 }
 
 export const ClaimItem: React.FC<ClaimItemProps> = ({
@@ -53,6 +60,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   network = Network.MAINNET,
   useCampaignPosition = false,
   showSubjectPill = false,
+  sharedWithFeedback = false,
 }) => {
   const {
     id,
@@ -210,6 +218,15 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
           <span className={styles.pillLabel}>{object}</span>
 
         </div>
+
+        {sharedWithFeedback && (
+          <span
+            className={styles.sharedBadge}
+            title="This attestation is also tracked in Feedback — voting here updates that position too, it isn't scoped to this campaign."
+          >
+            i
+          </span>
+        )}
 
           {hasAnyPosition && (
             <span

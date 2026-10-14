@@ -3,6 +3,7 @@ import { VoteItem, VoteDirection } from "../../types/vote";
 import { ClaimItem } from "./ClaimItem";
 import { Network } from "../../hooks/useAtomData";
 import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
+import { useGameContext } from "../../contexts/GameContext";
 import SafeImage from "../SafeImage";
 import styles from "./CampaignGroupedList.module.css";
 
@@ -23,7 +24,15 @@ interface CampaignGroupedListProps {
 // by Feedback, just with its own subject pill hidden (shown once per group
 // here instead) and useCampaignPosition set, so "already voted" reflects
 // activity within the campaign window rather than the account's real,
-// all-time vault balance.
+// all-time vault balance — EXCEPT for Global-type attestations that also
+// exist in this game's Feedback claim list: only "Global" (subject = the
+// game itself) can ever coincide with a Feedback triple, since Feedback is
+// always game-scoped and Maps/Characters/Mods/Weapons attestations are
+// about a different subject entirely. For those, there is only one real
+// on-chain vault shared with Feedback — windowing it would misrepresent an
+// existing Feedback vote as "not yet voted" rather than correctly reusing
+// it, so these read the real, unscoped position instead (same as Feedback)
+// and get a badge explaining why.
 export const CampaignGroupedList: React.FC<CampaignGroupedListProps> = ({
   isLoading,
   voteItems,
@@ -32,6 +41,12 @@ export const CampaignGroupedList: React.FC<CampaignGroupedListProps> = ({
   walletAddress = "",
   network = Network.MAINNET,
 }) => {
+  const { activeGame } = useGameContext();
+  const feedbackTripleIds = useMemo(
+    () => new Set((activeGame?.claims ?? []).map((c) => BigInt(c.atomId))),
+    [activeGame?.claims]
+  );
+
   const groups = useMemo(() => {
     const map = new Map<string, VoteItem[]>();
     for (const item of voteItems) {
@@ -91,18 +106,24 @@ export const CampaignGroupedList: React.FC<CampaignGroupedListProps> = ({
               )}
             </div>
             <div className={styles.groupItems}>
-              {items.map((item) => (
-                <ClaimItem
-                  key={item.id.toString()}
-                  voteItem={item}
-                  onChangeUnits={onChangeUnits}
-                  isVoteDirectionAllowed={isVoteDirectionAllowed}
-                  walletAddress={walletAddress}
-                  network={network}
-                  useCampaignPosition
-                  showSubjectPill={false}
-                />
-              ))}
+              {items.map((item) => {
+                const isSharedWithFeedback =
+                  item.attestation_type === "Global" && feedbackTripleIds.has(item.id);
+
+                return (
+                  <ClaimItem
+                    key={item.id.toString()}
+                    voteItem={item}
+                    onChangeUnits={onChangeUnits}
+                    isVoteDirectionAllowed={isVoteDirectionAllowed}
+                    walletAddress={walletAddress}
+                    network={network}
+                    useCampaignPosition={!isSharedWithFeedback}
+                    showSubjectPill={false}
+                    sharedWithFeedback={isSharedWithFeedback}
+                  />
+                );
+              })}
             </div>
           </div>
         );

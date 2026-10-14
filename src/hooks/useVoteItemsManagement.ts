@@ -51,10 +51,21 @@ export const useVoteItemsManagement = ({
     setIsLoading(true);
   }, [activeGame?.atomId, tripleIdsOverride?.join(',')]);
 
+  // Called right after a deposit/redeem confirms on-chain — but the subgraph
+  // the position/vote-count data comes from lags the chain by a few seconds
+  // (same class of delay useArchetypeSubmission.ts's pollUntilCompletionIndexed
+  // works around), so a single immediate refetch often still shows the
+  // pre-vote state. Re-triggers twice more over the next few seconds instead
+  // of just once, so the UI catches up without the user needing to reload.
   const refreshPositions = () => {
-    setHasLoadedTripleDetails(false);
-    setUserPositionsData(null);
-    setRefreshKey(k => k + 1);
+    const trigger = () => {
+      setHasLoadedTripleDetails(false);
+      setUserPositionsData(null);
+      setRefreshKey(k => k + 1);
+    };
+    trigger();
+    setTimeout(trigger, 2500);
+    setTimeout(trigger, 5000);
   };
 
   // Use our hook for fetching triple details

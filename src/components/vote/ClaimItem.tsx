@@ -13,6 +13,7 @@ import controllerIcon from '../img/controller.png';
 import upIcon from './icons/up.png';
 import downIcon from './icons/down.png';
 import { SCORE_TYPE_LABEL, SCORE_TYPE_ICON, FeedbackScoreType } from '../../config/scoreType';
+import { UNIT_VALUE } from '../../utils/constants';
 
 // Same strong/weak amount convention as the archetype quiz
 // (useArchetypeSubmission.ts's AMOUNT_FAIBLE/AMOUNT_FORT, 0.01/0.03 TRUST) —
@@ -56,6 +57,7 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     counter_term_position_count = 0,
     userHasPosition = false,
     userPositionDirection = VoteDirection.None,
+    userShares,
     score_type,
   } = voteItem;
 
@@ -78,8 +80,23 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   const hasAgainstPosition = userHasPosition && userPositionDirection === VoteDirection.Against;
   const hasAnyPosition = userHasPosition && userPositionDirection !== VoteDirection.None;
 
-  const upDisabled = hasForPosition;
-  const downDisabled = hasAgainstPosition;
+  // curve_id 1 (the only one this app ever deposits into) is a fixed 1:1
+  // price curve — confirmed live against the subgraph (a vault's
+  // total_shares == total_assets, current_share_price == 1e18) — so shares
+  // already directly approximate the deposited amount in wei, no separate
+  // vault/share-price lookup needed. Midpoint between weak (1 unit) and
+  // strong (3 units) to classify which one an existing position came from.
+  const heldPositionIsStrong = (userShares ?? 0n) >= 2n * UNIT_VALUE; // midpoint of 1 and 3 units
+
+  // Disabled only for the exact button that matches the position already
+  // held (clicking it would be a true no-op) — every other button, same
+  // direction or opposite, stays clickable: useSubmitVotes now handles a
+  // same-direction intensity change as a top-up/partial-redeem instead of
+  // requiring the whole direction to be locked out.
+  const downStrongDisabled = hasAgainstPosition && heldPositionIsStrong;
+  const downWeakDisabled = hasAgainstPosition && !heldPositionIsStrong;
+  const upWeakDisabled = hasForPosition && !heldPositionIsStrong;
+  const upStrongDisabled = hasForPosition && heldPositionIsStrong;
 
   const isSelected = (d: VoteDirection, u: number) => direction === d && units === u;
 
@@ -190,49 +207,49 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
       <div className={styles.voteGroup}>
         <button
           type="button"
-          onClick={downDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_STRONG)}
-          disabled={downDisabled}
+          onClick={downStrongDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_STRONG)}
+          disabled={downStrongDisabled}
           className={styles.voteBtn}
           aria-label="Strongly disagree"
         >
           <img
-            src={isSelected(VoteDirection.Against, UNITS_STRONG) || hasAgainstPosition ? downSvg : downNotSelectedSvg}
+            src={isSelected(VoteDirection.Against, UNITS_STRONG) || (hasAgainstPosition && heldPositionIsStrong) ? downSvg : downNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconStrong}`}
           />
         </button>
         <button
           type="button"
-          onClick={downDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_WEAK)}
-          disabled={downDisabled}
+          onClick={downWeakDisabled ? undefined : () => handleVoteClick(VoteDirection.Against, UNITS_WEAK)}
+          disabled={downWeakDisabled}
           className={styles.voteBtn}
           aria-label="Disagree"
         >
           <img
-            src={isSelected(VoteDirection.Against, UNITS_WEAK) ? downSvg : downNotSelectedSvg}
+            src={isSelected(VoteDirection.Against, UNITS_WEAK) || (hasAgainstPosition && !heldPositionIsStrong) ? downSvg : downNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconWeak}`}
           />
         </button>
         <button
           type="button"
-          onClick={upDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_WEAK)}
-          disabled={upDisabled}
+          onClick={upWeakDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_WEAK)}
+          disabled={upWeakDisabled}
           className={styles.voteBtn}
           aria-label="Agree"
         >
           <img
-            src={isSelected(VoteDirection.For, UNITS_WEAK) ? upSvg : upNotSelectedSvg}
+            src={isSelected(VoteDirection.For, UNITS_WEAK) || (hasForPosition && !heldPositionIsStrong) ? upSvg : upNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconWeak}`}
           />
         </button>
         <button
           type="button"
-          onClick={upDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_STRONG)}
-          disabled={upDisabled}
+          onClick={upStrongDisabled ? undefined : () => handleVoteClick(VoteDirection.For, UNITS_STRONG)}
+          disabled={upStrongDisabled}
           className={styles.voteBtn}
           aria-label="Strongly agree"
         >
           <img
-            src={isSelected(VoteDirection.For, UNITS_STRONG) || hasForPosition ? upSvg : upNotSelectedSvg}
+            src={isSelected(VoteDirection.For, UNITS_STRONG) || (hasForPosition && heldPositionIsStrong) ? upSvg : upNotSelectedSvg}
             className={`${styles.voteIcon} ${styles.voteIconStrong}`}
           />
         </button>

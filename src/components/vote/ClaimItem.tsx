@@ -32,6 +32,17 @@ interface ClaimItemProps {
   ) => boolean;
   walletAddress?: string;
   network?: Network;
+  // Campaign tab only: drives hasForPosition/hasAgainstPosition/
+  // heldPositionIsStrong (and therefore the disabled-button flags below)
+  // from the campaign-window-scoped fields instead of the account's real,
+  // all-time vault position. Default false — Feedback is unaffected.
+  useCampaignPosition?: boolean;
+  // The subject/predicate pill was already hidden (commented out) before
+  // this session's Campaign work — default false keeps that. Only
+  // CampaignGroupedList will ever flip it true, and only once it has its
+  // own per-row use for it (it currently shows the subject in its group
+  // header instead and also passes false).
+  showSubjectPill?: boolean;
 }
 
 export const ClaimItem: React.FC<ClaimItemProps> = ({
@@ -40,6 +51,8 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   isVoteDirectionAllowed = () => true,
   walletAddress = "",
   network = Network.MAINNET,
+  useCampaignPosition = false,
+  showSubjectPill = false,
 }) => {
   const {
     id,
@@ -59,7 +72,18 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     userPositionDirection = VoteDirection.None,
     userShares,
     score_type,
+    campaignHasPosition = false,
+    campaignPositionDirection = VoteDirection.None,
+    campaignPositionUnits = 0,
   } = voteItem;
+
+  // Campaign tab: "already voted" state reflects activity strictly within
+  // the campaign window, not the account's real all-time vault balance (see
+  // useVoteItemsManagement.ts's positionWindowOverride) — display only,
+  // never fed into useSubmitVotes, which still needs the real balance to
+  // compute correct on-chain redeem amounts.
+  const effectiveHasPosition = useCampaignPosition ? campaignHasPosition : userHasPosition;
+  const effectivePositionDirection = useCampaignPosition ? campaignPositionDirection : userPositionDirection;
 
   const isValidScoreType = (v?: string): v is FeedbackScoreType => !!v && v in SCORE_TYPE_LABEL;
 
@@ -76,9 +100,9 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   const isSelectedFor = direction === VoteDirection.For && units > 0;
   const isSelectedAgainst = direction === VoteDirection.Against && units > 0;
 
-  const hasForPosition = userHasPosition && userPositionDirection === VoteDirection.For;
-  const hasAgainstPosition = userHasPosition && userPositionDirection === VoteDirection.Against;
-  const hasAnyPosition = userHasPosition && userPositionDirection !== VoteDirection.None;
+  const hasForPosition = effectiveHasPosition && effectivePositionDirection === VoteDirection.For;
+  const hasAgainstPosition = effectiveHasPosition && effectivePositionDirection === VoteDirection.Against;
+  const hasAnyPosition = effectiveHasPosition && effectivePositionDirection !== VoteDirection.None;
 
   // curve_id 1 (the only one this app ever deposits into) is a fixed 1:1
   // price curve — confirmed live against the subgraph (a vault's
@@ -86,7 +110,11 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   // already directly approximate the deposited amount in wei, no separate
   // vault/share-price lookup needed. Midpoint between weak (1 unit) and
   // strong (3 units) to classify which one an existing position came from.
-  const heldPositionIsStrong = (userShares ?? 0n) >= 2n * UNIT_VALUE; // midpoint of 1 and 3 units
+  // Campaign mode already gets a unit count (not raw shares) from
+  // useVoteItemsManagement, so it compares directly against that midpoint.
+  const heldPositionIsStrong = useCampaignPosition
+    ? campaignPositionUnits >= 2
+    : (userShares ?? 0n) >= 2n * UNIT_VALUE; // midpoint of 1 and 3 units
 
   // Disabled only for the exact button that matches the position already
   // held (clicking it would be a true no-op) — every other button, same
@@ -137,25 +165,27 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     >
       {/* Triple details */}
       <div className={styles.tripleWrapper}>
-        {/*
-        <div className={styles.pill}>
-          {showSubjectImage && (
-            <SafeImage
-              src={subject_image}
-              alt=""
-              className={styles.pillImage}
-              placeholderElement={<span />}
-            />
-          )}
-          <span className={styles.pillLabel}>{subject}</span>
-        </div>
-        <span
-          title={predicate}
-          className={styles.predicate}
-        >
-          {predicate}
-        </span>
-        */}
+        {showSubjectPill && (
+          <>
+            <div className={styles.pill}>
+              {showSubjectImage && (
+                <SafeImage
+                  src={subject_image}
+                  alt=""
+                  className={styles.pillImage}
+                  placeholderElement={<span />}
+                />
+              )}
+              <span className={styles.pillLabel}>{subject}</span>
+            </div>
+            <span
+              title={predicate}
+              className={styles.predicate}
+            >
+              {predicate}
+            </span>
+          </>
+        )}
         <div className={styles.itemsTriplesContainer}>
           <img
             src={isValidScoreType(score_type) ? SCORE_TYPE_ICON[score_type] : controllerIcon}

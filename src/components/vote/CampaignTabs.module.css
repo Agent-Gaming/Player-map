@@ -1,0 +1,62 @@
+/* Copied from RightPanel.module.css's speakUpTabs/speakUpTab recipe — same
+   pill-tab look, scoped locally since CSS Modules classes can't be shared
+   across files. */
+
+.tabsRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  border-radius: 20px;
+  padding-left: 5px;
+  padding-right: 5px;
+  background-color: #151515;
+  border: 1px solid #181818;
+  align-self: flex-start;
+  flex-wrap: wrap;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 170px;
+  font-size: 13px;
+  height: 30px;
+  border-radius: 20px;
+  color: rgb(158, 158, 158);
+  padding-left: 10px;
+  padding-right: 10px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--color-secondary);
+  background-color: #262626;
+}
+
+.tabActive {
+  color: #FFFFFF;
+  background-color: #262626;
+}
+
+.liveTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4caf50;
+  background: rgba(0, 128, 0, 0.1);
+  padding: 2px 8px;
+  border-radius: 999px;
+}

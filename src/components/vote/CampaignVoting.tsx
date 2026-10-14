@@ -4,9 +4,8 @@ import { useSubmitVotes } from "../../hooks/useSubmitVotes";
 import { useVoteItemsManagement } from "../../hooks/useVoteItemsManagement";
 import { useCampaigns } from "../../hooks/useCampaigns";
 import { TransactionInfo } from "./TransactionInfo";
-import { ClaimList } from "./ClaimList";
-import { CampaignList } from "./CampaignList";
-import { Countdown } from "./Countdown";
+import { CampaignGroupedList } from "./CampaignGroupedList";
+import { CampaignTabs } from "./CampaignTabs";
 import { TransactionStatusDisplay } from "./TransactionStatus";
 import { ConnectWalletModal } from "../modals";
 import { usePositions } from "../../hooks/usePositions";
@@ -14,7 +13,6 @@ import { useGameContext } from "../../contexts/GameContext";
 import { PREDICATES } from "../../utils/constants";
 import { useNetworkCheck } from "../../shared/hooks/useNetworkCheck";
 import { NetworkSwitchMessage } from "../../shared/components/NetworkSwitchMessage";
-import { DEV_STEP_LABEL, DEV_STEP_COLOR } from "../../config/devStep";
 import { FeedbackScoreType } from "../../config/scoreType";
 import styles from "./CampaignVoting.module.css";
 
@@ -64,12 +62,21 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
   const { campaigns, isLoading: campaignsLoading } = useCampaigns(gameAtomId);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
-  // Auto-select the only campaign there is — a list with one row to click
-  // through would just be an extra step.
+  // Default tab: the Active campaign if there is one (you can vote right
+  // now), else the Draft launching soonest, else the most recent version.
+  // Re-runs whenever the current selection no longer points at a real
+  // campaign in the list (first load, or the list changed under it).
   useEffect(() => {
-    if (!selectedCampaignId && campaigns.length === 1) {
-      setSelectedCampaignId(campaigns[0].id);
-    }
+    if (campaigns.length === 0) return;
+    if (selectedCampaignId && campaigns.some((c) => c.id === selectedCampaignId)) return;
+
+    const active = campaigns.find((c) => c.status === "Active");
+    const soonestDraft = [...campaigns]
+      .filter((c) => c.status === "Draft")
+      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())[0];
+    const mostRecent = [...campaigns].sort((a, b) => b.sequence_number - a.sequence_number)[0];
+
+    setSelectedCampaignId((active ?? soonestDraft ?? mostRecent).id);
   }, [campaigns, selectedCampaignId]);
 
   const campaign = campaigns.find((c) => c.id === selectedCampaignId) ?? null;
@@ -99,6 +106,12 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
     tripleIdsOverride,
     scoreTypeOverride: isActive
       ? Object.fromEntries(campaign!.attestations.map((a) => [a.triple_id, a.score_type ?? undefined]))
+      : undefined,
+    typeOverride: isActive
+      ? Object.fromEntries(campaign!.attestations.map((a) => [a.triple_id, a.type]))
+      : undefined,
+    positionWindowOverride: isActive
+      ? { start: campaign!.start_date, end: campaign!.end_date }
       : undefined,
     onError: (message) => {
       setTransactionStatus({ status: "error", message });
@@ -155,45 +168,27 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
   }
 
   if (!campaign) {
-    return <CampaignList campaigns={campaigns} onSelect={setSelectedCampaignId} />;
+    return null;
   }
 
   return (
     <div className={styles.root}>
-      {campaigns.length > 1 && (
-        <button type="button" className={styles.backButton} onClick={() => setSelectedCampaignId(null)}>
-          ‹ All campaigns
-        </button>
-      )}
+      <CampaignTabs
+        campaigns={campaigns}
+        selectedCampaignId={selectedCampaignId}
+        onSelect={setSelectedCampaignId}
+      />
 
-      <div className={styles.campaignHeader}>
-        <div className={styles.campaignHeaderTop}>
-          <span
-            className={styles.devStepBadge}
-            style={{
-              color: DEV_STEP_COLOR[campaign.dev_step],
-              borderColor: `${DEV_STEP_COLOR[campaign.dev_step]}40`,
-              background: `${DEV_STEP_COLOR[campaign.dev_step]}14`,
-            }}
-          >
-            {DEV_STEP_LABEL[campaign.dev_step]}
-          </span>
-          <span className={styles.gameVersion}>v{campaign.game_version}</span>
-          {isActive ? (
-            <span className={styles.liveTag}>
-              <span className="pm-live-dot" /> Live
-            </span>
-          ) : (
-            <Countdown targetDate={campaign.start_date} />
-          )}
+      {campaign.description && (
+        <div className={styles.campaignHeader}>
+          <p className={styles.description}>{campaign.description}</p>
         </div>
-        {campaign.description && <p className={styles.description}>{campaign.description}</p>}
-      </div>
+      )}
 
       {isActive ? (
         <>
           <div className={styles.scrollList} data-scroll-list>
-            <ClaimList
+            <CampaignGroupedList
               isLoading={isLoading}
               voteItems={filteredVoteItems}
               onChangeUnits={handleChangeUnits}

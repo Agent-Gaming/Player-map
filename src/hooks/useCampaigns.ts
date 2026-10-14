@@ -2,9 +2,11 @@ import { useWorkerResource } from './useWorkerResource';
 import { workerKeys } from './workerQueryKeys';
 import type { DevStep } from '../config/devStep';
 
+export type AttestationType = 'Maps' | 'Characters' | 'Mods' | 'Weapons' | 'Global';
+
 export interface PublicCampaignAttestation {
   triple_id: string;
-  type: string;
+  type: AttestationType;
   score_type: 'experience' | 'community' | 'monetization' | 'trust' | null;
   label: string | null;
 }

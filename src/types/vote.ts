@@ -35,6 +35,16 @@ export interface VoteItem extends Claim {
   subject_description?: string | null;
   object_description?: string | null;
   score_type?: string; // FeedbackScoreType — see src/config/scoreType.ts
+  attestation_type?: string; // 'Maps'|'Characters'|'Mods'|'Weapons'|'Global' — Campaign tab only
+  // Campaign tab only: position held strictly within the campaign's voting
+  // window (deposits minus redemptions in [start_date, end_date]), distinct
+  // from userHasPosition/userPositionDirection/userShares above — those stay
+  // wired to the user's REAL, all-time vault balance because useSubmitVotes
+  // needs the real balance to compute correct on-chain redeem amounts. Never
+  // mix the two: these three drive display only (badges/disabled buttons).
+  campaignHasPosition?: boolean;
+  campaignPositionDirection?: VoteDirection;
+  campaignPositionUnits?: number;
 }
 
 // Response structure after a transaction

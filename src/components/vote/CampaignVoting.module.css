@@ -48,56 +48,10 @@
   text-align: center;
 }
 
-.backButton {
-  align-self: flex-start;
-  background: transparent;
-  color: var(--text-grey);
-  font-size: 13px;
-  cursor: pointer;
-  padding: 4px 0;
-}
-
-.backButton:hover {
-  color: var(--color-secondary);
-}
-
 .campaignHeader {
   display: flex;
   flex-direction: column;
   gap: 6px;
-}
-
-.campaignHeaderTop {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.devStepBadge {
-  font-size: 10px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 999px;
-  border: 1px solid;
-}
-
-.gameVersion {
-  font-size: 12px;
-  color: var(--text-grey);
-}
-
-.liveTag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #4caf50;
-  background: rgba(0, 128, 0, 0.1);
-  padding: 2px 8px;
-  border-radius: 999px;
-  margin-left: auto;
 }
 
 .countdown {

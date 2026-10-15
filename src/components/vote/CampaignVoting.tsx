@@ -3,7 +3,6 @@ import { Network } from "../../hooks/useAtomData";
 import { useSubmitVotes } from "../../hooks/useSubmitVotes";
 import { useVoteItemsManagement } from "../../hooks/useVoteItemsManagement";
 import { useCampaigns } from "../../hooks/useCampaigns";
-import { useCountdown } from "../../hooks/useCountdown";
 import { TransactionInfo } from "./TransactionInfo";
 import { CampaignGroupedList } from "./CampaignGroupedList";
 import { CampaignTabs } from "./CampaignTabs";
@@ -60,37 +59,28 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
     setIsWalletReady(hasConnectedWallet);
   }, [walletAddress]);
 
-  const { campaigns, isLoading: campaignsLoading } = useCampaigns(gameAtomId);
+  const { campaigns: allCampaigns, isLoading: campaignsLoading } = useCampaigns(gameAtomId);
+  // Upcoming (Draft) campaigns aren't shown at all — only one a player can
+  // actually act on right now.
+  const campaigns = useMemo(() => allCampaigns.filter((c) => c.status === "Active"), [allCampaigns]);
   const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
 
-  // Default tab: the Active campaign if there is one (you can vote right
-  // now), else the Draft launching soonest, else the most recent version.
-  // Re-runs whenever the current selection no longer points at a real
-  // campaign in the list (first load, or the list changed under it).
+  // Default tab: the lowest sequence_number Active campaign. Re-runs
+  // whenever the current selection no longer points at a real campaign in
+  // the list (first load, or the list changed under it).
   useEffect(() => {
     if (campaigns.length === 0) return;
     if (selectedCampaignId && campaigns.some((c) => c.id === selectedCampaignId)) return;
 
-    const active = campaigns.find((c) => c.status === "Active");
-    const soonestDraft = [...campaigns]
-      .filter((c) => c.status === "Draft")
-      .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())[0];
-    const mostRecent = [...campaigns].sort((a, b) => b.sequence_number - a.sequence_number)[0];
-
-    setSelectedCampaignId((active ?? soonestDraft ?? mostRecent).id);
+    const first = [...campaigns].sort((a, b) => a.sequence_number - b.sequence_number)[0];
+    setSelectedCampaignId(first.id);
   }, [campaigns, selectedCampaignId]);
 
   const campaign = campaigns.find((c) => c.id === selectedCampaignId) ?? null;
-  const isActive = campaign?.status === "Active";
-  const { label: countdownLabel, hasStarted } = useCountdown(campaign?.start_date);
 
-  // Only a real, non-empty triple list when voting is actually allowed
-  // (Active campaign selected) — Draft campaigns show a countdown only, no
-  // vote controls, since a deposit made before start_date is never counted
-  // by the backend's campaign-results window anyway.
   const tripleIdsOverride = useMemo(
-    () => (isActive ? campaign!.attestations.map((a) => a.triple_id) : []),
-    [isActive, campaign]
+    () => (campaign ? campaign.attestations.map((a) => a.triple_id) : []),
+    [campaign]
   );
 
   const {
@@ -106,14 +96,19 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
     network,
     walletAddress,
     tripleIdsOverride,
-    scoreTypeOverride: isActive
-      ? Object.fromEntries(campaign!.attestations.map((a) => [a.triple_id, a.score_type ?? undefined]))
+    scoreTypeOverride: campaign
+      ? Object.fromEntries(campaign.attestations.map((a) => [a.triple_id, a.score_type ?? undefined]))
       : undefined,
-    typeOverride: isActive
-      ? Object.fromEntries(campaign!.attestations.map((a) => [a.triple_id, a.type]))
+    typeOverride: campaign
+      ? Object.fromEntries(campaign.attestations.map((a) => [a.triple_id, a.type]))
       : undefined,
-    positionWindowOverride: isActive
-      ? { start: campaign!.start_date, end: campaign!.end_date }
+    voterCountOverride: campaign
+      ? Object.fromEntries(
+          campaign.attestations.map((a) => [a.triple_id, { for_voters: a.for_voters, against_voters: a.against_voters }])
+        )
+      : undefined,
+    positionWindowOverride: campaign
+      ? { start: campaign.start_date, end: campaign.end_date }
       : undefined,
     onError: (message) => {
       setTransactionStatus({ status: "error", message });
@@ -181,55 +176,38 @@ export const CampaignVoting: React.FC<CampaignVotingProps> = ({
         onSelect={setSelectedCampaignId}
       />
 
-      {isActive && campaign.description && (
-        <div className={styles.campaignHeader}>
-          <p className={styles.description}>{campaign.description}</p>
-        </div>
-      )}
+      <div className={styles.scrollList} data-scroll-list>
+        <CampaignGroupedList
+          isLoading={isLoading}
+          voteItems={filteredVoteItems}
+          onChangeUnits={handleChangeUnits}
+          isVoteDirectionAllowed={isVoteDirectionAllowed}
+          walletAddress={walletAddress}
+          network={network}
+        />
+      </div>
 
-      {isActive ? (
-        <>
-          <div className={styles.scrollList} data-scroll-list>
-            <CampaignGroupedList
-              isLoading={isLoading}
-              voteItems={filteredVoteItems}
-              onChangeUnits={handleChangeUnits}
-              isVoteDirectionAllowed={isVoteDirectionAllowed}
-              walletAddress={walletAddress}
-              network={network}
-            />
-          </div>
-
-          <div className={styles.footer}>
-            <TransactionInfo
-              numberOfTransactions={numberOfTransactions}
-              totalUnits={totalUnits}
-              onResetAll={resetAllVotes}
-              onSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              isDepositLoading={isDepositLoading}
-            />
-            <TransactionStatusDisplay
-              transactionStatus={transactionStatus}
-              onDismiss={() => setTransactionStatus({ status: "idle", message: "" })}
-            />
-            {!isCorrectNetwork && (
-              <NetworkSwitchMessage
-                allowedChainIds={allowedChainIds}
-                currentChainId={currentChainId}
-                targetChainId={targetChainId}
-              />
-            )}
-          </div>
-        </>
-      ) : (
-        <div className={styles.draftCountdown}>
-          <span className={styles.draftCountdownValue}>
-            {hasStarted ? "Starting…" : countdownLabel}
-          </span>
-          <span className={styles.draftCountdownLabel}>until voting opens</span>
-        </div>
-      )}
+      <div className={styles.footer}>
+        <TransactionInfo
+          numberOfTransactions={numberOfTransactions}
+          totalUnits={totalUnits}
+          onResetAll={resetAllVotes}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          isDepositLoading={isDepositLoading}
+        />
+        <TransactionStatusDisplay
+          transactionStatus={transactionStatus}
+          onDismiss={() => setTransactionStatus({ status: "idle", message: "" })}
+        />
+        {!isCorrectNetwork && (
+          <NetworkSwitchMessage
+            allowedChainIds={allowedChainIds}
+            currentChainId={currentChainId}
+            targetChainId={targetChainId}
+          />
+        )}
+      </div>
     </div>
   );
 };

@@ -9,6 +9,10 @@ export interface PublicCampaignAttestation {
   type: AttestationType;
   score_type: 'experience' | 'community' | 'monetization' | 'trust' | null;
   label: string | null;
+  // Present only once the campaign is Active — see worker's
+  // CampaignAttestationResult for what these mean.
+  for_voters?: number;
+  against_voters?: number;
 }
 
 export interface PublicCampaign {

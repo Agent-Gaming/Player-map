@@ -23,6 +23,12 @@ interface UseVoteItemsManagementProps {
   // Per-triple attestation type for the Campaign tab, same pattern as
   // scoreTypeOverride above.
   typeOverride?: Record<string, string | undefined>;
+  // Per-triple voter counts computed server-side within the campaign's
+  // window (worker's CampaignAttestationResult), shown instead of the
+  // account's real, all-time term_position_count/counter_term_position_count
+  // for a campaign-exclusive triple. Same override pattern as scoreType/type
+  // above — undefined for Feedback.
+  voterCountOverride?: Record<string, { for_voters?: number; against_voters?: number } | undefined>;
   // Campaign tab only: when set, also resolves a position scoped strictly to
   // this date window (campaignHasPosition/campaignPositionDirection/
   // campaignPositionUnits on each VoteItem) from deposits/redemptions, NOT
@@ -40,6 +46,7 @@ export const useVoteItemsManagement = ({
   tripleIdsOverride,
   scoreTypeOverride,
   typeOverride,
+  voterCountOverride,
   positionWindowOverride,
 }: UseVoteItemsManagementProps) => {
   const [voteItems, setVoteItems] = useState<VoteItem[]>([]);
@@ -50,6 +57,8 @@ export const useVoteItemsManagement = ({
   const scoreTypeByClaimId: Record<string, string | undefined> =
     scoreTypeOverride ?? Object.fromEntries((activeGame?.claims ?? []).map(c => [c.atomId, c.score_type]));
   const typeByClaimId: Record<string, string | undefined> = typeOverride ?? {};
+  const voterCountByClaimId: Record<string, { for_voters?: number; against_voters?: number } | undefined> =
+    voterCountOverride ?? {};
   const [windowedNetByTermId, setWindowedNetByTermId] = useState<Map<string, bigint>>(new Map());
   const [totalUnits, setTotalUnits] = useState(0);
   const [userPositions, setUserPositions] = useState<Record<string, VoteDirection>>({});
@@ -478,6 +487,8 @@ export const useVoteItemsManagement = ({
             userPositionDirection: VoteDirection.None,
             score_type: scoreTypeByClaimId[id],
             attestation_type: typeByClaimId[id],
+            campaignForVoters: voterCountByClaimId[id]?.for_voters,
+            campaignAgainstVoters: voterCountByClaimId[id]?.against_voters,
           } as VoteItem;
         }
 
@@ -528,6 +539,8 @@ export const useVoteItemsManagement = ({
           campaignHasPosition,
           campaignPositionDirection,
           campaignPositionUnits,
+          campaignForVoters: voterCountByClaimId[id]?.for_voters,
+          campaignAgainstVoters: voterCountByClaimId[id]?.against_voters,
         } as VoteItem;
       });
 

@@ -45,6 +45,14 @@ export interface VoteItem extends Claim {
   campaignHasPosition?: boolean;
   campaignPositionDirection?: VoteDirection;
   campaignPositionUnits?: number;
+  // Campaign tab only: voter counts computed server-side within the
+  // campaign's window (worker's computeCampaignVoteTotals), shown instead
+  // of term_position_count/counter_term_position_count (the account's
+  // real, all-time voter counts) for the same reason as the fields above —
+  // except for a Global attestation shared with Feedback, which keeps
+  // showing the real counts since that's the one true shared vault.
+  campaignForVoters?: number;
+  campaignAgainstVoters?: number;
 }
 
 // Response structure after a transaction

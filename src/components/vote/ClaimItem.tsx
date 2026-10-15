@@ -83,6 +83,8 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
     campaignHasPosition = false,
     campaignPositionDirection = VoteDirection.None,
     campaignPositionUnits = 0,
+    campaignForVoters = 0,
+    campaignAgainstVoters = 0,
   } = voteItem;
 
   // Campaign tab: "already voted" state reflects activity strictly within
@@ -92,6 +94,11 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
   // compute correct on-chain redeem amounts.
   const effectiveHasPosition = useCampaignPosition ? campaignHasPosition : userHasPosition;
   const effectivePositionDirection = useCampaignPosition ? campaignPositionDirection : userPositionDirection;
+  // Same campaign/real split for the displayed voter counts: a campaign-
+  // exclusive triple shows voters within the window, a Global one shared
+  // with Feedback shows the real counts (consistent with the position above).
+  const displayedForCount = useCampaignPosition ? campaignForVoters : term_position_count;
+  const displayedAgainstCount = useCampaignPosition ? campaignAgainstVoters : counter_term_position_count;
 
   const isValidScoreType = (v?: string): v is FeedbackScoreType => !!v && v in SCORE_TYPE_LABEL;
 
@@ -233,17 +240,17 @@ export const ClaimItem: React.FC<ClaimItemProps> = ({
               className={`${styles.voteCount} ${(isSelectedFor || hasForPosition) ? styles.voteCountFor : styles.voteCountDefault}`}
             >
                <img src={upSvg} className={styles.upIcon} />
-              {term_position_count}
+              {displayedForCount}
             </span>
           )}
-          
+
           {hasAnyPosition && (
-            
+
             <span
               className={`${styles.voteCount} ${(isSelectedAgainst || hasAgainstPosition) ? styles.voteCountAgainst : styles.voteCountDefault}`}
             >
               <img src={downSvg} className={styles.downIcon} />
-              {counter_term_position_count}
+              {displayedAgainstCount}
             </span>
           )}
       </div>

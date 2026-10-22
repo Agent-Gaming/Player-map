@@ -196,6 +196,8 @@
 
 .txBtnSubmit {
   border-radius: 20px;
+  background-color: #FFFFFF;
+  color: #111111;
 }
 
 .txBtnReset {

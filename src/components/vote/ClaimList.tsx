@@ -37,6 +37,8 @@ export const ClaimList: React.FC<ClaimListProps> = ({
             <div className={styles.skeletonActions}>
               <div className={styles.skeletonCircle} />
               <div className={styles.skeletonCircle} />
+              <div className={styles.skeletonCircle} />
+              <div className={styles.skeletonCircle} />
             </div>
           </div>
         ))}

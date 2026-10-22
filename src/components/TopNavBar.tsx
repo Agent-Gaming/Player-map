@@ -212,6 +212,28 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
           )}
         </div>
      </div>
+
+{/* ── Feedback button ─────────────────────────── */}
+<button
+  className={`${styles.feedbackBtn} ${
+    rightPanelMode === "speakup"
+      ? styles.feedbackBtnDisabled
+      : styles.feedbackBtnActive
+  }`}
+  onClick={() => {
+    if (rightPanelMode !== "speakup") {
+      onPanelModeChange("speakup");
+    }
+  }}
+  disabled={rightPanelMode === "speakup"}
+  aria-label="Feedback"
+  title="Feedback"
+>
+  <span className={styles.backBtnFeedback}>
+  Feedback
+  </span>
+</button>
+
       </div>
 
       {/* ── Spacer ──────────────────────────────────── */}

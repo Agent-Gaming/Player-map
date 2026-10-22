@@ -102,7 +102,7 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
         onControlsReady={onControlsReady}
       />
 
-      {/* Bouton SPEAK UP — overlay centré en bas du graphe */}
+      {/* Bouton SPEAK UP — overlay centré en bas du graphe 
       {onSpeakUpClick && (
         <div className={styles.speakUpOverlay}>
           <button
@@ -118,6 +118,7 @@ const PlayerMapGraph: React.FC<PlayerMapGraphProps> = ({
           </button>
         </div>
       )}
+        */}
     </div>
   );
 };

@@ -3,9 +3,6 @@
   --color-secondary: #ffffff;
   --color-background-primary: transparent;
   --color-background-secondary: rgba(255, 255, 255, 0.03);
-  --color-daily: #ffbb00;
-  --color-global: #ffbb00;
-  --color-social: #ffbb00;
 
   --primary-grey: #111111;
   --secondary-grey: rgb(34, 34, 34);
@@ -24,6 +21,10 @@
 
   --border-grey: rgb(26, 26, 26);
   --bg-grey: rgba(157, 157, 157, 0.05);
+
+  --color-daily: #27AE60;
+  --color-global: #3B82F6;
+  --color-social: #F8C34A;
 }
 
 /* Pulsing "live" indicator — same green/size/radius as TopNavBar's static

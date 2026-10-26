@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { FaUser } from "react-icons/fa";
 import FollowButton from "./graph/FollowButton";
 import { RightPanelMode } from "./TopNavBar";
 import { ClaimVoting } from "./vote/ClaimVoting";
@@ -17,6 +16,7 @@ import { useCampaigns } from "../hooks/useCampaigns";
 import { FEEDBACK_SCORE_TYPES_ORDER, SCORE_TYPE_LABEL, FeedbackScoreType } from "../config/scoreType";
 import { usePlayerArchetype } from "../missions/global/archetype/hooks/usePlayerArchetype";
 import tripleSvg from "../assets/img/triple.svg";
+import defaultAvatar from "./img/user-icon.png";
 import styles from "./RightPanel.module.css";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
@@ -260,7 +260,7 @@ const ProfileContent: React.FC<{
         }}
         walletAddress={walletAddress}
         showDescription={false}
-        placeholderElement={<FaUser size={60} color="#ffd32a" />}
+        placeholderElement={<img src={defaultAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />}
         cosmeticBadge={
           archetype?.cosmetics?.[0]
             ? { ...archetype.cosmetics[0], description: archetype.description }
@@ -305,7 +305,7 @@ const ProfileContent: React.FC<{
       <div className={styles.statsRowContainer}>
 
       <div className={styles.statContainer}>
-          <span className={styles.labelStat}>Player</span>
+          <span className={styles.labelStat}>Votes</span>
           <PlayerStatBlock
           label="Votes"
           value={totalVotes}
@@ -321,7 +321,7 @@ const ProfileContent: React.FC<{
         />
           </div>
         <div className={styles.statContainer}>
-          <span className={styles.labelStat}>Votes</span>
+          <span className={styles.labelStat}>Value</span>
           <PlayerStatBlock
           label="Value"
           value={totalValue}
@@ -409,7 +409,7 @@ const OtherPlayerProfileContent: React.FC<{
   }}
   walletAddress={undefined}
   showDescription={false}
-  placeholderElement={<FaUser size={60} color="#ffd32a" />}
+  placeholderElement={<img src={defaultAvatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />}
   cosmeticBadge={
     archetype?.cosmetics?.[0]
       ? {
@@ -440,7 +440,7 @@ const OtherPlayerProfileContent: React.FC<{
 
 
         <div className={styles.statContainer}>
-          <span className={styles.labelStat}>Player</span>
+          <span className={styles.labelStat}>Votes</span>
           <PlayerStatBlock
             label="Votes"
             value={totalVotes}
@@ -456,9 +456,9 @@ const OtherPlayerProfileContent: React.FC<{
             imageSrc={tripleSvg}
           />
           </div>
- 
+
         <div className={styles.statContainer}>
-          <span className={styles.labelStat}>Votes</span>
+          <span className={styles.labelStat}>Value</span>
           <PlayerStatBlock
             label="Value"
             value={totalValue}

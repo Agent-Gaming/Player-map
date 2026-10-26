@@ -6,6 +6,7 @@ import { ClaimError } from '../missions/shared/claimApi';
 import MissionCard from '../missions/shared/MissionCard';
 import type { Mission } from '../types/Missions';
 import MissionsExpanded from './MissionsExpanded';
+import SafeImage from './SafeImage';
 import styles from './MissionsSimple.module.css';
 import UserIcon from './img/user-icon.png';
 import ClosePanel from './img/close-panel.png';
@@ -215,10 +216,12 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
        
           <div className={styles.rangUser}>
            <div className={styles.userIconContainer}>
-           <img
-              src={UserIcon}
+           <SafeImage
+              src={myAtomDetails?.image}
               alt="User Icon"
               className={styles.userIcon}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+              placeholderElement={<img src={UserIcon} alt="" className={styles.userIcon} />}
             />
             <div className={styles.dot}></div>
            </div>

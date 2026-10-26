@@ -57,11 +57,12 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity }) => {
   };
   
   
-  // Vote counts
-  const forCount = isFor ? (term?.positions_aggregate?.aggregate?.count ?? 0) : 0;
-  const againstCount = isAgainst
-    ? (term?.positions_aggregate?.aggregate?.count ?? 0)
-    : (term?.triple?.counter_term?.positions_aggregate?.aggregate?.count ?? 0);
+  // Vote counts — effectiveTriple always carries the full canonical triple
+  // (both for- and against-side counts), regardless of whether this
+  // activity's own term_id is the FOR vault or the counter (AGAINST) one —
+  // confirmed live, so no isFor/isAgainst branching is needed here.
+  const forCount = effectiveTriple?.positions_aggregate?.aggregate?.count ?? 0;
+  const againstCount = effectiveTriple?.counter_term?.positions_aggregate?.aggregate?.count ?? 0;
 
   // Labels + images
   const activityComponents = getActivityComponents();

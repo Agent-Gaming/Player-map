@@ -46,6 +46,45 @@ const fetchAllWithPagination = async (
   return allResults;
 };
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+// An unbounded `where: { id: { _in: [...] } }` query (no limit/offset)
+// silently caps at the subgraph's default page size instead of erroring —
+// confirmed live: 124 requested term_ids returned only 100 rows, the
+// missing 24 silently becoming "term: null" -> "Unknown" in the UI, for no
+// data-related reason at all. A limit/offset loop doesn't help an _in
+// filter (each page would just re-apply the same 100-row cap); chunking
+// the id list into parallel requests does.
+const CHUNK_SIZE = 50;
+async function fetchChunkedByIds(
+  apiUrl: string,
+  query: string,
+  idVariableName: string,
+  ids: string[],
+  dataPath: string
+): Promise<any[]> {
+  const results = await Promise.all(
+    chunk(ids, CHUNK_SIZE).map(async (idsChunk) => {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: { [idVariableName]: idsChunk } }),
+      });
+      const data = await response.json();
+      if (data.errors) {
+        console.error('[fetchActivityHistory] chunked query errors:', data.errors);
+        return [];
+      }
+      return data.data?.[dataPath] || [];
+    })
+  );
+  return results.flat();
+}
+
 export const fetchActivityHistory = async (
   accountId: string,
   network: Network = Network.MAINNET
@@ -84,66 +123,63 @@ export const fetchActivityHistory = async (
 
         if (allTermIds.length === 0) return [];
 
-        // Step 2: single query — terms with atom + triple (+ subject_term) embedded
-        const termsResponse = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query GetTermsWithDetails($termIds: [String!]!) {
-                terms(where: { id: { _in: $termIds } }) {
-                  id
-                  total_market_cap
-                  total_assets
-                  atom_id
-                  triple_id
+        // Step 2: terms with atom + triple (+ subject_term) embedded, chunked
+        // (see fetchChunkedByIds — an unbounded _in query silently truncates).
+        const termsRows = await fetchChunkedByIds(
+          apiUrl,
+          `
+            query GetTermsWithDetails($termIds: [String!]!) {
+              terms(where: { id: { _in: $termIds } }) {
+                id
+                total_market_cap
+                total_assets
+                atom_id
+                triple_id
+                positions_aggregate(where: { shares: { _gt: 0 } }) {
+                  aggregate { count }
+                }
+                atom {
+                  term_id
+                  label
+                  image
+                }
+                triple {
+                  term_id
+                  subject_id
+                  predicate_id
+                  object_id
+                  counter_term_id
                   positions_aggregate(where: { shares: { _gt: 0 } }) {
                     aggregate { count }
                   }
-                  atom {
-                    term_id
-                    label
-                    image
-                  }
-                  triple {
-                    term_id
-                    subject_id
-                    predicate_id
-                    object_id
-                    counter_term_id
-                    subject { term_id label image }
-                    predicate { term_id label }
-                    object { term_id label image }
-                    subject_term {
-                      id
-                      triple {
-                        subject { label term_id }
-                        predicate { label }
-                        object { label image term_id }
-                      }
+                  subject { term_id label image }
+                  predicate { term_id label }
+                  object { term_id label image }
+                  subject_term {
+                    id
+                    triple {
+                      subject { label term_id }
+                      predicate { label }
+                      object { label image term_id }
                     }
-                    counter_term {
-                      id
-                      positions_aggregate(where: { shares: { _gt: 0 } }) {
-                        aggregate { count }
-                      }
+                  }
+                  counter_term {
+                    id
+                    positions_aggregate(where: { shares: { _gt: 0 } }) {
+                      aggregate { count }
                     }
                   }
                 }
               }
-            `,
-            variables: { termIds: allTermIds },
-          }),
-        });
-
-        const termsData = await termsResponse.json();
-        if (termsData.errors) {
-          console.error('[fetchActivityHistory] terms query errors:', termsData.errors);
-          return [];
-        }
+            }
+          `,
+          'termIds',
+          allTermIds,
+          'terms'
+        );
 
         const termsMap = new Map(
-          (termsData.data?.terms || []).map((t: any) => {
+          termsRows.map((t: any) => {
             const enriched = t.triple ? { ...t, triple: filterTripleImages(t.triple) } : t;
             return [t.id, enriched];
           })
@@ -157,33 +193,32 @@ export const fetchActivityHistory = async (
 
         const originalTripleMap = new Map<string, any>();
         if (counterTermIds.length > 0) {
-          const ctRes = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              query: `
-                query OriginalTriples($ids: [String!]!) {
-                  triples(where: { counter_term_id: { _in: $ids } }) {
-                    term_id counter_term_id subject_id predicate_id object_id
-                    subject { term_id label image }
-                    predicate { term_id label }
-                    object { term_id label image }
-                    subject_term {
-                      id
-                      triple { subject { label term_id } predicate { label } object { label image term_id } }
-                    }
-                    counter_term {
-                      id
-                      positions_aggregate(where: { shares: { _gt: 0 } }) { aggregate { count } }
-                    }
+          const originalTriples = await fetchChunkedByIds(
+            apiUrl,
+            `
+              query OriginalTriples($ids: [String!]!) {
+                triples(where: { counter_term_id: { _in: $ids } }) {
+                  term_id counter_term_id subject_id predicate_id object_id
+                  positions_aggregate(where: { shares: { _gt: 0 } }) { aggregate { count } }
+                  subject { term_id label image }
+                  predicate { term_id label }
+                  object { term_id label image }
+                  subject_term {
+                    id
+                    triple { subject { label term_id } predicate { label } object { label image term_id } }
+                  }
+                  counter_term {
+                    id
+                    positions_aggregate(where: { shares: { _gt: 0 } }) { aggregate { count } }
                   }
                 }
-              `,
-              variables: { ids: counterTermIds },
-            }),
-          });
-          const ctData = await ctRes.json();
-          for (const t of ctData.data?.triples ?? []) {
+              }
+            `,
+            'ids',
+            counterTermIds,
+            'triples'
+          );
+          for (const t of originalTriples) {
             if (t.counter_term_id) originalTripleMap.set(t.counter_term_id, t);
           }
         }
@@ -220,6 +255,14 @@ export const fetchActivityHistory = async (
               predicate: triple.predicate || { label: '' },
               object: triple.object || { label: '' },
               _innerTriple: innerTriple,
+              // The triple's own positions_aggregate is always the FOR-side
+              // count, regardless of whether this activity's own term_id is
+              // the FOR or the counter (AGAINST) vault — confirmed live:
+              // querying `triple { positions_aggregate }` from either side's
+              // term returns the identical for-count. Without this, an
+              // AGAINST deposit's row had no way to show the FOR count at
+              // all (it only ever carried the counter vault's own count).
+              positions_aggregate: triple.positions_aggregate ?? null,
               counter_term: triple.counter_term ? {
                 id: triple.counter_term.id,
                 positions_aggregate: triple.counter_term.positions_aggregate ?? null,
@@ -241,6 +284,7 @@ export const fetchActivityHistory = async (
                 predicate: orig.predicate || { label: '' },
                 object: orig.object || { label: '' },
                 _innerTriple: inner,
+                positions_aggregate: orig.positions_aggregate ?? null,
                 counter_term: orig.counter_term ? {
                   id: orig.counter_term.id,
                   positions_aggregate: orig.counter_term.positions_aggregate ?? null,

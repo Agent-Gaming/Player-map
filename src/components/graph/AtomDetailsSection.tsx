@@ -6,8 +6,10 @@ import SafeImage from "../SafeImage";
 import { getAtomVerificationStatus } from "../../config/verifiedAtoms";
 import verifiedIcon from "../../assets/img/verified.svg";
 import communityIcon from "../../assets/img/community.svg";
+import customProfilIcon from "../../assets/img/customProfil.svg";
 import styles from "./AtomDetailsSection.module.css";
-import dynamicDecoration from "../img/dynamic.png";
+import { DecorationOverlay } from "../../missions/global/cosmetics/components/DecorationOverlay";
+import type { CosmeticItem } from "../../missions/global/cosmetics/cosmeticsLoadoutApi";
 
 interface AtomDetailsSectionProps {
   atomDetails: any;
@@ -22,6 +24,17 @@ interface AtomDetailsSectionProps {
   placeholderElement?: React.ReactNode;
   actionElement?: React.ReactNode;
   cosmeticBadge?: { image_url: string; name: string; description: string } | null;
+  // Player-profile cosmetics (banner + avatar decoration) — only passed by
+  // ProfileContent/OtherPlayerProfileContent in RightPanel.tsx, never by the
+  // generic AtomContent, so a non-player atom renders none of this (same
+  // presence-gates-visibility convention already used by cosmeticBadge).
+  banner?: CosmeticItem | null;
+  decoration?: CosmeticItem | null;
+  defaultBannerUrl?: string;
+  reducedMotion?: boolean;
+  // Opens the cosmetics library picker — only passed for the connected
+  // player's own profile (ProfileContent), never for a viewed player.
+  onOpenLibrary?: () => void;
 }
 
 const CosmeticBadgeDisplay: React.FC<{
@@ -72,6 +85,11 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
   placeholderElement,
   actionElement,
   cosmeticBadge,
+  banner,
+  decoration,
+  defaultBannerUrl,
+  reducedMotion,
+  onOpenLibrary,
 }) => {
   const [ipfsMetadata, setIpfsMetadata] = useState<any>(null);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
@@ -206,9 +224,34 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
             <div className={styles.headerContent}>
 
                <div className={styles.profileBann}>
-          
+                 {(banner || defaultBannerUrl) && (
+                   <SafeImage
+                     src={
+                       banner
+                         ? reducedMotion
+                           ? banner.src_static
+                           : banner.src
+                         : defaultBannerUrl
+                     }
+                     fallbackSrc={defaultBannerUrl}
+                     showPlaceholder={false}
+                     alt={banner?.name ?? "Profile banner"}
+                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                   />
+                 )}
+                 {onOpenLibrary && (
+                   <button
+                     type="button"
+                     className={styles.profileBannCustomizeBtn}
+                     onClick={onOpenLibrary}
+                     aria-label="Customize profile"
+                     title="Customize profile"
+                   >
+                     <img src={customProfilIcon} alt="" className={styles.profileBannCustomizeIcon} />
+                   </button>
+                 )}
           </div>
-         
+
               {verification.status === "verified" ? (
                 
                 // ─── ATOME VÉRIFIÉ ─────────────────────────────────────
@@ -226,7 +269,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       showPlaceholder={true}
                     />
                    
-                    <img src={dynamicDecoration} alt="Dynamic Decoration" className={styles.dynamicDecorationImage} />
+                    <DecorationOverlay decoration={decoration} reducedMotion={!!reducedMotion} className={styles.dynamicDecorationImage} />
                   </div>
 <div className={styles.rightColumnWrapper}>
                   {/* Colonne droite: nom + badge + description */}
@@ -348,7 +391,7 @@ const AtomDetailsSection: React.FC<AtomDetailsSectionProps> = ({
                       placeholderElement={placeholderElement}
                       showPlaceholder={true}
                     />
-                    <img src={dynamicDecoration} alt="Dynamic Decoration" className={styles.dynamicDecorationImage} />
+                    <DecorationOverlay decoration={decoration} reducedMotion={!!reducedMotion} className={styles.dynamicDecorationImage} />
                   </div>
 
                   {/* Colonne droite: nom + description */}

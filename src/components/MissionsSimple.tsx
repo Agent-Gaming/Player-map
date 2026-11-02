@@ -7,6 +7,8 @@ import MissionCard from '../missions/shared/MissionCard';
 import type { Mission } from '../types/Missions';
 import MissionsExpanded from './MissionsExpanded';
 import SafeImage from './SafeImage';
+import { useLoadout } from '../missions/global/cosmetics/useLoadout';
+import { DecorationOverlay } from '../missions/global/cosmetics/components/DecorationOverlay';
 import styles from './MissionsSimple.module.css';
 import UserIcon from './img/user-icon.png';
 import ClosePanel from './img/close-panel.png';
@@ -129,6 +131,7 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
   });
 
   const userName = myAtomDetails?.label as string | undefined;
+  const { loadout } = useLoadout(walletAddress);
 
   const { grouped, totalXp, categoryXp, isLoading, error } = useMissions(walletAddress);
   const claimMutation = useClaimMission({ address: walletAddress, getAccessToken });
@@ -224,6 +227,12 @@ const MissionsSimple: React.FC<MissionsSimpleProps> = ({ walletAddress, getAcces
               placeholderElement={<img src={UserIcon} alt="" className={styles.userIcon} />}
             />
             <div className={styles.dot}></div>
+            {/* Mini-avatar: decoration only, always static, no banner. */}
+            <DecorationOverlay
+              decoration={loadout?.avatar_decoration}
+              reducedMotion={true}
+              className={styles.decorationOverlay}
+            />
            </div>
 
             {userName && (

@@ -4,6 +4,8 @@ import { SmartSearchInterface } from "playermap_graph";
 import { useGameContext } from "../contexts/GameContext";
 import { ipfsToHttpUrl } from "../utils/pinata";
 import SafeImage from "./SafeImage";
+import { useLoadout } from "../missions/global/cosmetics/useLoadout";
+import { DecorationOverlay } from "../missions/global/cosmetics/components/DecorationOverlay";
 import searchIconUrl from "../assets/img/search.png";
 import agentLogoUrl from "../assets/img/agent.svg";
 import infoIconUrl from "../assets/img/info.png";
@@ -44,6 +46,8 @@ interface TopNavBarProps {
   onPanelModeChange: (mode: RightPanelMode) => void;
   /** Logged-in user atom details (for avatar + name) */
   myAtomDetails?: any;
+  /** Connected wallet address, used to fetch the equipped avatar decoration */
+  walletAddress?: string;
 }
 
 // ─── Composant ─────────────────────────────────────────────────────────────────
@@ -54,7 +58,10 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
   rightPanelMode,
   onPanelModeChange,
   myAtomDetails,
+  walletAddress,
 }) => {
+  const { loadout } = useLoadout(walletAddress);
+
   // Game context
   const { games, activeGame, setActiveGameId } = useGameContext();
   const [selectorOpen, setSelectorOpen] = useState(false);
@@ -271,7 +278,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({
 
 
             <div className={styles.dot}></div>
-  
+            {/* Decoration only, always static, no banner. */}
+            <DecorationOverlay
+              decoration={loadout?.avatar_decoration}
+              reducedMotion={true}
+              className={styles.decorationOverlay}
+            />
+
         </div>
         {userName && <span className={styles.profileName}>{userName}</span>}
        </div>

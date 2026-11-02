@@ -228,15 +228,39 @@
 }
 
 .profileBann {
-  background-image: url('../img/bannGame.png');
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-
   height: 160px;
   width: 100%;
   border-bottom: 1px solid var(--primary-border);
   overflow: hidden;
+  position: relative;
+  background-color: #000;
+}
+
+.profileBannCustomizeBtn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  z-index: 11;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--primary-border);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.profileBannCustomizeBtn:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.profileBannCustomizeIcon {
+  width: 18px;
+  height: 18px;
 }
 
 .followStats {

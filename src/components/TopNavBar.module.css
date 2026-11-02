@@ -322,6 +322,20 @@
   bottom: -2px;
 }
 
+/* 1.25x the 24px avatar — overflows 3px each side, fits inside the 6px
+   padding/gap around .avatarContainer (no overflow:hidden set on it, no
+   clipping; absolutely positioned, no layout shift). */
+.decorationOverlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 30px;
+  z-index: 3;
+  pointer-events: none;
+}
+
 .feedbackBtn {
   display: flex;
   align-items: center;

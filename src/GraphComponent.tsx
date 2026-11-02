@@ -363,6 +363,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
             rightPanelMode={rightPanelMode}
             onPanelModeChange={handlePanelModeChange}
             myAtomDetails={myAtomDetails}
+            walletAddress={walletAddress}
           />
 
           {/* Corps : missions (gauche) + graphe + panneau droit */}
@@ -391,6 +392,7 @@ const GraphComponentInner: React.FC<GraphComponentProps> = ({
               <RightPanel
                 mode={rightPanelMode}
                 walletAddress={walletAddress}
+                getAccessToken={getAccessToken}
                 walletConnected={walletConnected}
                 wagmiConfig={wagmiConfig}
                 myAtomDetails={myAtomDetails}

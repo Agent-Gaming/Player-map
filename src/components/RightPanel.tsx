@@ -15,6 +15,10 @@ import { useGameContext } from "../contexts/GameContext";
 import { useCampaigns } from "../hooks/useCampaigns";
 import { FEEDBACK_SCORE_TYPES_ORDER, SCORE_TYPE_LABEL, FeedbackScoreType } from "../config/scoreType";
 import { usePlayerArchetype } from "../missions/global/archetype/hooks/usePlayerArchetype";
+import { useLoadout } from "../missions/global/cosmetics/useLoadout";
+import { useReducedMotion } from "../hooks/useReducedMotion";
+import { CosmeticsLibraryModal } from "../missions/global/cosmetics/components/CosmeticsLibraryModal";
+import type { CosmeticItem } from "../missions/global/cosmetics/cosmeticsLoadoutApi";
 import tripleSvg from "../assets/img/triple.svg";
 import defaultAvatar from "./img/user-icon.png";
 import styles from "./RightPanel.module.css";
@@ -28,6 +32,7 @@ interface RightPanelProps {
   walletAddress?: string;
   walletConnected?: any;
   wagmiConfig?: any;
+  getAccessToken?: () => Promise<string | null>;
 
   // données "mon profil"
   myAtomDetails?: any;
@@ -191,6 +196,7 @@ const ProfileContent: React.FC<{
   walletAddress?: string;
   walletConnected?: any;
   publicClient?: any;
+  getAccessToken?: () => Promise<string | null>;
   loading?: boolean;
   error?: string | null;
 }> = ({
@@ -202,11 +208,29 @@ const ProfileContent: React.FC<{
   walletAddress,
   walletConnected,
   publicClient,
+  getAccessToken,
   loading,
   error,
 }) => {
   const { archetype } = usePlayerArchetype(walletAddress);
+  const { loadout } = useLoadout(walletAddress);
+  const reducedMotion = useReducedMotion();
   const [activeChoice, setActiveChoice] = useState<"ecosystem" | "player" | "activity">("ecosystem");
+  const [libraryOpen, setLibraryOpen] = useState(false);
+  const [draftBanner, setDraftBanner] = useState<CosmeticItem | null>(null);
+  const [draftDecoration, setDraftDecoration] = useState<CosmeticItem | null>(null);
+
+  const openLibrary = () => {
+    setDraftBanner(loadout?.banner ?? null);
+    setDraftDecoration(loadout?.avatar_decoration ?? null);
+    setLibraryOpen(true);
+  };
+
+  // Preview-before-confirm: while the modal is open, the profile shows the
+  // in-progress draft selection; cancel/close just stops overriding and the
+  // real (unchanged) loadout shows again.
+  const displayedBanner = libraryOpen ? draftBanner : loadout?.banner ?? null;
+  const displayedDecoration = libraryOpen ? draftDecoration : loadout?.avatar_decoration ?? null;
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
@@ -266,8 +290,25 @@ const ProfileContent: React.FC<{
             ? { ...archetype.cosmetics[0], description: archetype.description }
             : null
         }
+        banner={displayedBanner}
+        decoration={displayedDecoration}
+        defaultBannerUrl={loadout?.default_banner_url}
+        reducedMotion={reducedMotion}
+        onOpenLibrary={openLibrary}
       />
-    
+      <CosmeticsLibraryModal
+        isOpen={libraryOpen}
+        address={walletAddress}
+        getAccessToken={getAccessToken}
+        draftBanner={draftBanner}
+        draftDecoration={draftDecoration}
+        onSelectBanner={setDraftBanner}
+        onSelectDecoration={setDraftDecoration}
+        currentBannerId={loadout?.banner?.id ?? null}
+        currentDecorationId={loadout?.avatar_decoration?.id ?? null}
+        reducedMotion={reducedMotion}
+        onClose={() => setLibraryOpen(false)}
+      />
       </div>
       <div className={styles.navProfil}>
   <button
@@ -374,6 +415,8 @@ const OtherPlayerProfileContent: React.FC<{
   myPositions?: any[];
 }> = ({ atomDetails, activities, positions = [], walletAddress, connections, loading, error, myAccountAtomId, walletConnected, publicClient, currentWalletAddress, myPositions = [] }) => {
   const { archetype } = usePlayerArchetype(walletAddress ?? undefined);
+  const { loadout } = useLoadout(walletAddress ?? undefined);
+  const reducedMotion = useReducedMotion();
   if (loading) return <p className={styles.stateMessage}>Loading…</p>;
   if (error) return <p className={styles.stateMessageError}>{error}</p>;
   if (!atomDetails)
@@ -418,6 +461,10 @@ const OtherPlayerProfileContent: React.FC<{
         }
       : null
   }
+  banner={loadout?.banner}
+  decoration={loadout?.avatar_decoration}
+  defaultBannerUrl={loadout?.default_banner_url}
+  reducedMotion={reducedMotion}
   actionElement={
     <FollowButton
       walletConnected={walletConnected}
@@ -568,6 +615,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
   walletAddress,
   walletConnected,
   wagmiConfig,
+  getAccessToken,
   myAtomDetails,
   myActivities = [],
   myPositions = [],
@@ -653,6 +701,7 @@ const RightPanel: React.FC<RightPanelProps> = ({
             walletAddress={walletAddress}
             walletConnected={walletConnected}
             publicClient={wagmiConfig?.publicClient}
+            getAccessToken={getAccessToken}
             loading={sidebarLoading}
             error={sidebarError}
           />

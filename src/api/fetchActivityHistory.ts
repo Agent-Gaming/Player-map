@@ -102,14 +102,14 @@ export const fetchActivityHistory = async (
         const [deposits, redemptions] = await Promise.all([
           fetchAllWithPagination(apiUrl, `
             query GetDeposits($accountId: String!, $limit: Int!, $offset: Int!) {
-              deposits(limit: $limit, offset: $offset, where: { sender_id: { _eq: $accountId } }) {
+              deposits(limit: $limit, offset: $offset, where: { receiver_id: { _eq: $accountId } }) {
                 id shares assets_after_fees created_at vault_type term_id
               }
             }
           `, { accountId }, 'deposits'),
           fetchAllWithPagination(apiUrl, `
             query GetRedemptions($accountId: String!, $limit: Int!, $offset: Int!) {
-              redemptions(limit: $limit, offset: $offset, where: { sender_id: { _eq: $accountId } }) {
+              redemptions(limit: $limit, offset: $offset, where: { receiver_id: { _eq: $accountId } }) {
                 id shares assets created_at vault_type term_id
               }
             }

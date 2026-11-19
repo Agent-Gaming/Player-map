@@ -25,7 +25,7 @@ export async function fetchWindowedNetPositions(
         query: `
           query GetWindowedNetPositions($termIds: [String!]!, $accountId: String!, $start: timestamptz!, $end: timestamptz!) {
             deposits(where: {
-              sender_id: { _ilike: $accountId }
+              receiver_id: { _ilike: $accountId }
               term_id: { _in: $termIds }
               created_at: { _gte: $start, _lte: $end }
             }) {
@@ -33,7 +33,7 @@ export async function fetchWindowedNetPositions(
               shares
             }
             redemptions(where: {
-              sender_id: { _ilike: $accountId }
+              receiver_id: { _ilike: $accountId }
               term_id: { _in: $termIds }
               created_at: { _gte: $start, _lte: $end }
             }) {

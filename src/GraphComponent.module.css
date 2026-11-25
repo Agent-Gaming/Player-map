@@ -81,6 +81,20 @@
   position: relative;
 }
 
+@media screen and (max-width: 1000px) {
+  .body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .root {
+    position: relative;
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+  }
+}
+
 .graphPane {
   flex: 1;
   min-width: 0;
@@ -133,5 +147,4 @@
     transform: rotate(360deg);
   }
 }
-
 

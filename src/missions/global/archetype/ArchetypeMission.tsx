@@ -149,9 +149,7 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
   if (completionLoading) {
     return (
       <div className={styles.overlay}>
-        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
-          <FaTimes style={{ width: 14, height: 14, flexShrink: 0 }} />
-        </button>
+       
         <p className={styles.loadingText}>Loading...</p>
       </div>
     );
@@ -160,6 +158,10 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
   if (phase === 'intro') {
     return (
       <div className={styles.overlay}>
+        <div className={styles.card}>
+        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+          <FaTimes style={{ width: 14, height: 14, flexShrink: 0 }} />
+        </button>
         <div className={styles.introContent}>
           <div className={styles.introBlock}>
             <img src={archetypeAgentImg} alt="" className={styles.introImage} />
@@ -183,6 +185,7 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
             Start
           </button>
         </div>
+      </div>
       </div>
     );
   }
@@ -227,10 +230,12 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.contentWrapper}>
-      <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+             <div className={styles.card}>
+             <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
         <FaTimes style={{ width: 14, height: 14, flexShrink: 0 }} />
       </button>
+      <div className={styles.contentWrapper}>
+  
 
       <div className={styles.progressHeader}>
         <div className={styles.progressHeaderRow}>
@@ -358,6 +363,7 @@ const ArchetypeMission: React.FC<ArchetypeMissionProps> = ({
             {isLastStep ? 'Finish' : 'Next ›'}
           </button>
         )}
+      </div>
       </div>
     </div>
   );

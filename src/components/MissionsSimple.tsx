@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaChevronDown, FaChevronRight, FaClock, FaFire } from 'react-icons/fa';
+import { FaChevronDown, FaChevronRight, FaClock, FaGlobe, FaUsers, FaFire } from 'react-icons/fa';
 import { useMissions } from '../missions/shared/useMissions';
 import { useClaimMission } from '../missions/shared/useClaimMission';
 import { ClaimError } from '../missions/shared/claimApi';
@@ -42,6 +42,13 @@ interface MissionBlockProps {
   walletAddress?: string;
 }
 
+
+const CATEGORY_ICONS: Record<MissionCategory, React.ComponentType<{ className?: string }>> = {
+  daily: FaClock,
+  global: FaGlobe,
+  social: FaUsers,
+};
+
 const MissionBlock: React.FC<MissionBlockProps> = ({
   title,
   colorVariant,
@@ -71,9 +78,16 @@ const MissionBlock: React.FC<MissionBlockProps> = ({
     
         <div className={styles.headerMissionBlock}>
         <span className={styles.blockTitle}>
-          <span className={styles.blockDot} style={{ backgroundColor: `var(--color-${colorVariant})` }} />
-          {title}
-        </span>
+  <span
+    className={styles.categoryIcon}
+    style={{ color: `var(--color-${colorVariant})` }}
+  >
+    {React.createElement(CATEGORY_ICONS[colorVariant], {
+      className: styles.categoryIconSvg,
+    })}
+  </span>
+  <span>{title}</span>
+</span>
         <span className={styles.blockHeaderRight}>
           {!!streak && (
             <span className={styles.streakBadge}>

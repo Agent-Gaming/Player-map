@@ -6,37 +6,44 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.96);
-  backdrop-filter: blur(2px);
-  /* Same stacking rationale as ArchetypeMission.module.css — must paint
-     above Graph2D/Graph3D's legend (2000) and MissionsExpanded's overlay
-     (3000), regardless of DOM mount order. */
-  z-index: 3100;
+  z-index: 10000;
   display: flex;
-  flex-direction: column;
-  /* flex-start, not center: with overflow-y:auto, a centered column whose
-     content is taller than the viewport clips its top out of scroll range
-     in most browsers (scroll starts at the centered offset, not at the
-     content's actual top) — the close button and title become unreachable
-     on short screens. Top padding keeps content clear of the fixed close
-     button; bottom padding gives the last row breathing room. */
-  justify-content: flex-start;
-  padding: 72px 0 24px;
-  overflow-y: auto;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  box-sizing: border-box;
 }
 
 .contentWrapper {
   position: relative;
   width: 100%;
-  max-width: 720px;
+  padding-left: 20px;
+  padding-right: 20px;
   margin: 0 auto;
+}
+
+.card {
+  width: min(94vw, 980px);
+  height: min(86vh, 680px);
+  display: flex;
+  flex-direction: column;
+  background-color: #0a0a0a;
+  background: #111111;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--primary-border);
+  border-radius: 40px;
+  overflow: hidden;
+  padding: 5px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
 }
 
 .closeBtn {
   /* Fixed to the viewport, not the content column — on a short screen the
      content can overflow and scroll, but the close button must always stay
      reachable regardless of scroll position or content height. */
-  position: fixed;
+  position: absolute;
   top: 16px;
   right: 16px;
   width: 36px;
@@ -247,11 +254,11 @@
 .navRow {
   display: flex;
   justify-content: space-between;
-  max-width: 720px;
   width: 100%;
   margin: 0 auto;
   padding: 16px 24px 24px;
   box-sizing: border-box;
+  margin-top: auto;
 }
 
 .prevBtn {

@@ -114,9 +114,7 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
   if (completionLoading) {
     return (
       <div className={styles.overlay}>
-        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
-          <FaTimes style={{ width: 14, height: 14, flexShrink: 0 }} />
-        </button>
+       
         <p className={styles.loadingText}>Loading...</p>
       </div>
     );
@@ -125,6 +123,10 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
   if (phase === 'intro') {
     return (
       <div className={styles.overlay}>
+        <div className={styles.card}>
+        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+          <FaTimes style={{ width: 14, height: 14, flexShrink: 0 }} />
+        </button>
         <div className={styles.introContent}>
           <div className={styles.introBlock}>
             {/* TODO: swap in the real preferences-intro artwork once available (mirrors archetype-agent.png) */}
@@ -149,6 +151,7 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
           </button>
         </div>
       </div>
+      </div>
     );
   }
 
@@ -156,10 +159,11 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
     const selectedTripleIds = new Set(completion.selectedTripleIds);
     return (
       <div className={styles.overlay}>
-        <div className={styles.contentWrapper}>
-          <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
             <FaTimes style={{ width: 14, height: 14, flexShrink: 0 }} />
           </button>
+        <div className={styles.contentWrapper}>
+          
         </div>
         <div className={styles.resultsWrapper}>
           <span className={styles.doneTitle}>Your preferences</span>
@@ -217,10 +221,12 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.contentWrapper}>
-        <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
+      <div className={styles.card}>
+      <button type="button" className={styles.closeBtn} onClick={onClose} aria-label="Close">
           <FaTimes style={{ width: 14, height: 14, flexShrink: 0 }} />
         </button>
+      <div className={styles.contentWrapper}>
+       
 
         <div className={styles.progressHeader}>
           <div className={styles.progressHeaderRow}>
@@ -271,6 +277,7 @@ const PreferencesMission: React.FC<PreferencesMissionProps> = ({
           {isLastStep ? 'Finish' : 'Next ›'}
         </button>
       </div>
+    </div>
     </div>
   );
 };
